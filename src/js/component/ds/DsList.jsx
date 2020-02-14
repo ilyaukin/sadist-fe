@@ -28,6 +28,13 @@ class DsList extends Component {
         }).catch((err) => {
             ErrorDialog.raise('Error fetching data: ' + err.toString())
         })
+
+        // wired-combo does not have react-native events, so doing this way
+        this.combo.addEventListener('selected', (e) => this.onDsSelected(e, e.detail?.selected))
+    }
+
+    onDsSelected(event, value) {
+        console.log(value)
     }
 
     render() {
@@ -35,7 +42,7 @@ class DsList extends Component {
         const { loading, list } = this.state;
 
         return <div style={{ margin: '10px' }}>
-            <wired-combo disabled={loading ? true : undefined}>
+            <wired-combo disabled={loading ? true : undefined} ref={(combo) => this.combo = combo}>
                 {list.map(
                     item => <wired-item
                         key={item.id}
