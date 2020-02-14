@@ -1,0 +1,14 @@
+* {
+    font-family: Verdana, monospace;
+}
+
+h1, h2, h3 {
+    text-align: center;
+}
+
+.content {
+    max-width: 900px;
+    margin: 0 auto;
+    height: 100%;
+    background-color: #ccffff;
+}
