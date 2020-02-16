@@ -1,3 +1,4 @@
+import '@webcomponents/custom-elements'
 import React, { Component } from 'react';
 import ReactDom from 'react-dom';
 import { WiredDivider } from 'wired-elements';
