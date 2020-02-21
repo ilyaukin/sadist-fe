@@ -12,3 +12,76 @@ h1, h2, h3 {
     height: 100%;
     background-color: #ccffff;
 }
+
+table, tr, th, td {
+    border: solid 1px;
+    border-collapse: collapse;
+    margin: 10px;
+}
+
+img.item {
+    width: 16px;
+    right: 16px;
+    vertical-align: middle;
+    margin-right: 7px;
+}
+
+.new-dialog {
+    min-height: 100px;
+    min-width: 600px;
+}
+
+.new-dialog .main-pane {
+}
+
+.new-dialog .left-pane {
+    display: inline-block;
+    position: relative;
+    float: left;
+    width: 50%;
+    min-height: 100px;
+}
+
+.new-dialog .right-pane {
+    display: inline-block;
+    position: relative;
+    float: right;
+    width: 50%;
+    min-height: 100px;
+}
+
+.new-dialog .button-pane {
+    display: inline-block;
+    position: relative;
+    width: 100%;
+}
+
+.new-dialog wired-button {
+    margin: 10px;
+    float: right;
+}
+
+.close-icon {
+    width: 16px;
+    height: 16px;
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    cursor: pointer;
+}
+
+wired-spinner#loader {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    margin-top: -40px;
+    margin-left: -38px;
+}
+
+wired-dialog {
+    --wired-dialog-z-index: 0;
+}
+
+wired-dialog#error-dialog {
+    --wired-dialog-z-index: 1;
+}

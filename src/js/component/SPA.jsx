@@ -5,34 +5,59 @@ import { WiredDivider } from 'wired-elements';
 import DsList from './ds/DsList';
 import './index.css';
 import ErrorDialog from "./common/ErrorDialog";
+import DsTable from "./ds/DsTable";
 
 class SPA extends Component {
-    constructor(props) {
-        super(props);
-        this.state = {};
-        ErrorDialog.raise = (err) => this.setState({ err });
-        ErrorDialog.close = () => this.setState({ err: undefined });
-    }
+  constructor(props) {
+    super(props);
+    this.state = {
+      dsId: null,
+      ds: []
+    };
+    ErrorDialog.raise = (err) => this.setState({ err });
+    ErrorDialog.close = () => this.setState({ err: undefined });
+  }
 
-    render() {
-        return (
-            <div className="content">
-                <ErrorDialog err={this.state.err}/>
-                <h1>
-                My handicapped pet project....
-                </h1>
-                <wired-divider/>
+  getTitle() {
+    const titles = [
+      'My handicapped pet project....',
+      'Let steal the beggars!',
+    ];
+    const choose = Math.floor(Math.random() * titles.length);
+    return titles[choose];
+  }
 
-                <h2>1. Get the data</h2>
-                {/*list existing data source using /ls api*/}
-                <DsList />
-            </div>
-        );
-    }
+  setDsId = (value, d) => {
+    const { cols } = d;
+    this.setState({ dsId: value, cols });
+  }
+
+  setDs = (value) => {
+    this.setState({ ds: value });
+  }
+
+  render() {
+    const { dsId, cols, ds, err } = this.state;
+    return (
+      <div className="content">
+        <ErrorDialog err={err}/>
+        <h1>
+          {this.getTitle()}
+        </h1>
+        <wired-divider/>
+
+        <h2>1. Get the data</h2>
+        {/*list existing data source using /ls api*/}
+        <DsList onDsSelected={this.setDsId}/>
+        {/*show top from selected ds*/}
+        <DsTable dsId={dsId} cols={cols} onLoadDs={this.setDs} ds={ds}/>
+      </div>
+    );
+  }
 
 }
 
 export default SPA;
 
 const wrapper = document.getElementById('container');
-wrapper ? ReactDom.render(<SPA />, wrapper) : false;
+wrapper ? ReactDom.render(<SPA/>, wrapper) : false;

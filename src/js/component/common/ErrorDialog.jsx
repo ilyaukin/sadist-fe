@@ -14,7 +14,7 @@ class ErrorDialog extends Component {
         const { err } = this.props;
         return (
             <div>
-                <wired-dialog open={err}>
+                <wired-dialog open={err} id="error-dialog">
                     <wired-card elevation="3" fill="darkred">
                         {err}
                     </wired-card>
