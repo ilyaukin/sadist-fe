@@ -1,12 +1,11 @@
 import React, { Component } from 'react';
-import PropTypes from 'proptypes';
-
-import Icon from "../Icon";
 import { isVal } from "../../helper/wired-helper";
 import { GoogleSheetProviderDetails } from "../provider/GoogleSheetProviderDetails";
 import NullProvider from "../provider/NullProvider";
 import GoogleSheetProvider from "../provider/GoogleSheetProvider";
 import ErrorDialog from "../common/ErrorDialog";
+import * as PropTypes from "proptypes";
+import { Loader } from "../common/Loader";
 
 class DsNew extends Component {
   _nullProvider = new NullProvider();
@@ -109,7 +108,7 @@ class DsNew extends Component {
 
   render() {
     return <div className="new-dialog">
-      {this.state.loading ? <wired-spinner spinning id="loader"/> : ''}
+      <Loader loading={this.state.loading}/>
       <form>
         <div>
           <div className="left-pane">

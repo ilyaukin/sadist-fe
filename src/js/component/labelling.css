@@ -1,0 +1,26 @@
+.text {
+    font-size: 28px;
+    margin-bottom: 20px;
+}
+
+.labels {
+    font-size: 20px;
+}
+
+.label {
+    text-align: left;
+    margin-left: calc(50% - 100px);
+}
+
+table, tr, th, td {
+    border: none;
+    text-align: left;
+    vertical-align: bottom;
+    margin: 0 auto;
+}
+
+td {
+    min-width: 120px;
+    max-width: 300px;
+    padding: 4px;
+}

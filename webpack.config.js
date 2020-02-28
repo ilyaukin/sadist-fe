@@ -3,6 +3,13 @@ const HtmlWebPackPlugin = require("html-webpack-plugin");
 const express = require('express');
 
 module.exports = {
+  entry: {
+    root: ['./src/index.js'],
+    labelling: ['./src/labelling.js'],
+  },
+  output: {
+    filename: '[name].js'
+  },
   module: {
     rules: [
       {
@@ -35,8 +42,14 @@ module.exports = {
   },
   plugins: [
     new HtmlWebPackPlugin({
-      "template": "./src/index.html",
-      "filename": "./index.html"
+      template: "./src/index.html",
+      filename: "./index.html",
+      chunks: ["root"]
+    }),
+    new HtmlWebPackPlugin({
+      template: "./src/labelling.html",
+      filename: "./labelling.html",
+      chunks: ["labelling"]
     })
   ],
   resolve: {
@@ -98,6 +111,68 @@ module.exports = {
           success: true
         })
       })
+      app.get('/dl/session/s1234', function (req, res) {
+        res.send({
+          text: 'slowo za slowo',
+          success: true
+        })
+      });
+      app.post('/dl/session/s1234', function (req, res) {
+        res.send({
+          text: 'hue´m po stolu',
+          success: true
+        })
+      })
+
+
+      // app.post('/dl/session/s1234', function (req, res) {
+      //   res.send({
+      //     status: 'finished',
+      //     success: true
+      //   })
+      // })
+      // app.post('/dl/session/s1234/merge', function (req, res) {
+      //   res.send({
+      //     status: 'merging',
+      //     conflicts: [
+      //       {
+      //         text: 'Washington, DC',
+      //         diff: [
+      //           {
+      //             label: 'city',
+      //             source:
+      //               'master'
+      //           },
+      //           {
+      //             label: 'trash',
+      //             source: 'session'
+      //           }
+      //         ]
+      //       },
+      //       {
+      //         text: 'Singapore',
+      //         diff: [
+      //           {
+      //             label: 'city',
+      //             source: 'both'
+      //           },
+      //           {
+      //             label: 'country',
+      //             source: 'master'
+      //           }
+      //         ]
+      //       }
+      //     ],
+      //     success: true
+      //   })
+      // })
+      // app.post('/dl/session/s1234/resolve-conflicts', function (req, res) {
+      //   res.send({
+      //     status: 'merged',
+      //     success: true
+      //   })
+      // })
+
     }
   }
 }

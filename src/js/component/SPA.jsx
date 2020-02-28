@@ -1,11 +1,10 @@
 import '@webcomponents/custom-elements'
 import React, { Component } from 'react';
-import ReactDom from 'react-dom';
-import { WiredDivider } from 'wired-elements';
 import DsList from './ds/DsList';
 import './index.css';
 import ErrorDialog from "./common/ErrorDialog";
 import DsTable from "./ds/DsTable";
+import { renderPage } from "../helper/react-helper";
 
 class SPA extends Component {
   constructor(props) {
@@ -59,5 +58,4 @@ class SPA extends Component {
 
 export default SPA;
 
-const wrapper = document.getElementById('container');
-wrapper ? ReactDom.render(<SPA/>, wrapper) : false;
+renderPage(<SPA />);

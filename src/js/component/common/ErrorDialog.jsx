@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import PropTypes from 'proptypes';
 import WiredDialog from 'wired-dialog';
 import WiredCard from 'wired-card';
 import WiredButton from 'wired-button';
@@ -28,6 +29,10 @@ class ErrorDialog extends Component {
             </div>
         );
     }
+}
+
+ErrorDialog.props = {
+    err: PropTypes.string
 }
 
 export default ErrorDialog;
