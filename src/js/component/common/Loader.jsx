@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import PropTypes from "proptypes";
+import { WiredSpinner } from "wired-elements";
 
 export class Loader extends Component {
   render() {
