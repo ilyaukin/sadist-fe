@@ -33,7 +33,7 @@ class LabellingPage extends Component {
         } else {
           // all labeled, ask to merge
           const { status, conflicts } = data;
-          this.setState({ text: undefined, status, conflicts });
+          this.setState({ text: undefined, status, conflicts, loading: false });
         }
       } else {
         ErrorDialog.raise('Error: ' + (data.error || 'Unknown error'));
@@ -130,6 +130,7 @@ class LabellingPage extends Component {
             this.setState({ status, conflicts, loading: false });
           } else {
             ErrorDialog.raise('Error: ' + (data.error || 'Unknown error'));
+            this.setState({ loading: false });
           }
         }).catch((e) => {
           ErrorDialog.raise('Error parsing json: ' + e.toString());
