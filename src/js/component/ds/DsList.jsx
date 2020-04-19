@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import PropTypes from "proptypes";
+import PropTypes from "prop-types";
 import { WiredCombo, WiredDialog } from 'wired-elements';
 import ErrorDialog from "../common/ErrorDialog";
 import Icon from "../Icon";
@@ -45,13 +45,12 @@ class DsList extends Component {
       return;
     }
 
-    // pass cols of ds to display cols in table
-    // in the proper order
-    const cols = this.state.list.find(item => item.id === value)?.cols;
+    // pass DS list record (meta information about DS) as a 2nd param
+    const meta = this.state.list.find(item => item.id === value) || {};
 
     const { onDsSelected } = this.props;
     this.dsValue = this.combo.value;
-    onDsSelected(value, { cols });
+    onDsSelected(value, meta);
   }
 
   onDsCreated = (item) => {

@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
-import PropTypes from 'proptypes';
+import PropTypes from 'prop-types';
 import ErrorDialog from "../common/ErrorDialog";
+import types from "../../helper/types";
+import ColFilter from "./ColFilter";
 
 class DsTable extends Component {
   constructor(props) {
@@ -39,6 +41,22 @@ class DsTable extends Component {
     ErrorDialog.raise(err);
   }
 
+  renderColHeader = colSpec => {
+    const { onUpdateColSpec } = this.props;
+
+    return <th key={colSpec.name}>
+      <div className="col-space">
+        {colSpec.name}
+        {colSpec.groupings ?
+          <ColFilter
+            colSpec={colSpec}
+            onUpdateColSpec={onUpdateColSpec}
+          /> :
+          ''}
+      </div>
+    </th>;
+  };
+
   renderRow(ds_row, colnames) {
     const cols = [];
     for (let i = 0; i < colnames.length; i++) {
@@ -51,23 +69,23 @@ class DsTable extends Component {
   }
 
   render() {
-    const { cols, ds } = this.props;
+    let { colSpecs, ds } = this.props;
 
     if (ds && !!ds.length) {
-      const colnames = cols ||
+      const colnames = colSpecs.map(colSpec => colSpec.name) ||
         Object.keys(ds[0]).filter(key => key !== 'id');
 
       return <table cellPadding="2">
         <thead>
         <tr>
-          {colnames.map(colname => <th key={colname}>{colname}</th>)}
+          {colSpecs.map(this.renderColHeader)}
         </tr>
         </thead>
         <tbody>
         {ds.slice(0, 10).map((ds_row) => <tr key={ds_row.id}>
           {this.renderRow(ds_row, colnames)}
         </tr>)}
-        {ds.length > 10 ? <tr><td colSpan={colnames.length}>...</td></tr> : ''}
+        {ds.length > 10 ? <tr><td colSpan={colnames.length}>...</td></tr> : []}
         </tbody>
       </table>
     }
@@ -78,7 +96,8 @@ class DsTable extends Component {
 
 DsTable.propTypes = {
   dsId: PropTypes.string,
-  cols: PropTypes.arrayOf(PropTypes.string),
+  colSpecs: types.colSpecs,
+  onUpdateColSpec: PropTypes.func,
   onLoadDs: PropTypes.func,
   ds: PropTypes.arrayOf(PropTypes.object)
 };

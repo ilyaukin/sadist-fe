@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import PropTypes from 'proptypes';
+import PropTypes from 'prop-types';
 import { WiredRadioGroup } from 'wired-radio-group';
 import { WiredRadio } from 'wired-radio';
 import { WiredButton } from 'wired-button';

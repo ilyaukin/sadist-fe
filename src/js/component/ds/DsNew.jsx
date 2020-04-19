@@ -4,8 +4,9 @@ import { GoogleSheetProviderDetails } from "../provider/GoogleSheetProviderDetai
 import NullProvider from "../provider/NullProvider";
 import GoogleSheetProvider from "../provider/GoogleSheetProvider";
 import ErrorDialog from "../common/ErrorDialog";
-import * as PropTypes from "proptypes";
+import PropTypes from "prop-types";
 import { Loader } from "../common/Loader";
+import DelayedRender from "../common/DelayedRender";
 
 class DsNew extends Component {
   _nullProvider = new NullProvider();
@@ -13,21 +14,12 @@ class DsNew extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      readyToRenderCombo: false,
       loading: false,
       provider: this._nullProvider
     };
     this.providers = [
       new GoogleSheetProvider()
     ];
-  }
-
-  componentDidMount() {
-    // workaround to https://github.com/wiredjs/wired-elements/issues/114
-    if (!this.combo) {
-      setTimeout(() => this.setState({ readyToRenderCombo: true }), 1000);
-      return;
-    }
   }
 
   componentDidUpdate() {
@@ -80,11 +72,7 @@ class DsNew extends Component {
   }
 
   renderTypeCombo() {
-    if (!this.state.readyToRenderCombo) {
-      return '';
-    }
-
-    return <div>
+    return <DelayedRender>
       Source Type:<br/>
       <wired-combo
         ref={(combo) => {
@@ -99,7 +87,7 @@ class DsNew extends Component {
           )
         }
       </wired-combo>
-    </div>
+    </DelayedRender>
   }
 
   renderProviderDetails() {

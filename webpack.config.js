@@ -71,12 +71,26 @@ module.exports = {
             {
               id: '1111',
               name: 'Data Set 1111',
-              type: 'GoogleSheet'
+              type: 'GoogleSheet',
+              cols: ['Fruit', 'On Counter', 'Sold Out'],
+              classification: {
+                status: 'finished'
+              }
             },
             {
               id: '2222',
               name: 'Data Set 2222',
-              type: 'GoogleSheet'
+              type: 'GoogleSheet',
+              cols: ['Location', 'Comment'],
+              classification: {
+                status: 'finished'
+              },
+              detailization: {
+                Location: {
+                  status: 'finished',
+                  labels: ['city', 'country']
+                }
+              }
             }
           ],
           success: true
@@ -101,6 +115,34 @@ module.exports = {
           success: true
         })
       });
+      app.get('/ds/2222', function (req, res) {
+        res.send({
+          list: [
+            {
+              id: '1313523',
+              'Location': 'Moscow',
+              'Comment': 'Capital of Russia'
+            },
+            {
+              id: '1325235',
+              'Location': 'Paris',
+              'Comment': 'LAlala'
+            },
+            {
+              id: '3211123',
+              'Location': 'MOscow',
+              'Comment': 'The 3rd Reich'
+            },
+            {
+              id: '1532535',
+              'Location': 'New York',
+              'Comment': ''
+            }
+          ],
+          success: true
+        })
+
+      })
       app.put('/ds', function (req, res) {
         res.send({
           item: {
