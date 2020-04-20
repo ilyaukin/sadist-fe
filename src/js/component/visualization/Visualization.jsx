@@ -4,6 +4,7 @@ import moment from "moment";
 import CountDownClock from "./CountDownClock";
 import ErrorDialog from "../common/ErrorDialog";
 import types from "../../helper/types";
+import Loader from "../common/Loader";
 
 class Visualization extends Component {
   constructor(props) {
@@ -11,8 +12,45 @@ class Visualization extends Component {
     this.state = {};
   }
 
-  componentDidUpdate() {
+  componentDidUpdate(prevProps, prevState) {
     this.scheduleUpdateStatus();
+
+    const { queryNo, dsId, colSpecs } = this.props;
+    if (prevProps.queryNo !== queryNo) {
+      // new query should be made
+      const actions = this.getActions(colSpecs);
+
+      if (!actions.length) {
+        this.setState({ groups: undefined });
+        return;
+      }
+
+      this.setState({ loading: true, queryNo }, () => {
+        fetch(`/ds/${dsId}/visualization?queryNo=${queryNo}&` +
+          `actions=${encodeURIComponent(JSON.stringify(actions))}`).then((response) => {
+          response.json().then((data) => {
+            if (queryNo !== this.state.queryNo) {
+              // state has been changed since start of this query,
+              // so drop result
+              return;
+            }
+
+            if (data.success) {
+              this.setState({ loading: undefined, groups: data.groups });
+            } else {
+              ErrorDialog.raise('Error: ' + (data.error || 'Unknown error'));
+              this.setState({ loading: undefined });
+            }
+          }).catch((e) => {
+            ErrorDialog.raise('Error parsing JSON response: ' + e.toString());
+            this.setState({ loading: undefined });
+          })
+        }).catch((e) => {
+          ErrorDialog.raise('Error fetching data: ' + e.toString());
+          this.setState({ loading: undefined });
+        });
+      });
+    }
   }
 
   componentWillUnmount() {
@@ -64,8 +102,36 @@ class Visualization extends Component {
     }, 1000);
   }
 
+  /**
+   * get an action list which is more-or-less
+   * literally mapped to mongo's aggregation pipeline
+   * @param types.colSpecs
+   * @returns [] of actions
+   */
+  getActions(colSpecs) {
+    let actions = [];
+
+    // 1. find city/country grouping, in order if we should display geo map
+    let selectedGrouping;
+    let colSpec = colSpecs.find(colSpec =>
+      selectedGrouping = colSpec.groupings?.find(grouping => grouping.selected &&
+        ['city', 'country'].indexOf(grouping.key) !== -1));
+    if (colSpec && selectedGrouping) {
+      actions.push({
+        col: colSpec.name,
+        label: selectedGrouping.key,
+      });
+    }
+
+    // 2., ... other groupings, aggregations
+    // todo
+
+    return actions;
+  }
+
   render() {
     const { meta } = this.props;
+    const { loading, groups } = this.state;
 
     // here can be several situations.
     // (1) a user didn't yet select any filter,
@@ -76,7 +142,14 @@ class Visualization extends Component {
     // (3) data is ready. display corresponding
     //     graph(s).
 
-    // todo implement (2) and (3)
+    if (loading) {
+      return <Loader loading={true}/>;
+    }
+
+    if (groups) {
+      // todo implement (3)
+
+    }
 
     // display status of classification
     let { classification, detailization } = meta;
@@ -150,7 +223,8 @@ Visualization.propTypes = {
   meta: PropTypes.object,
   setMeta: PropTypes.func,
   colSpecs: types.colSpecs,
-  onUpdateColSpec: PropTypes.func
+  onUpdateColSpec: PropTypes.func,
+  queryNo: PropTypes.number
 }
 
 export default Visualization;

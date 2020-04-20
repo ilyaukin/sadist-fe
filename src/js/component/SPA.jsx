@@ -8,7 +8,18 @@ import DsTable from "./ds/DsTable";
 import Visualization from "./visualization/Visualization";
 import { renderPage } from "../helper/react-helper";
 
+const FROM_TABLE = 1;
+const FROM_VISUALIZATION = 2;
+
 class SPA extends Component {
+
+  // global number of visualization query,
+  // to communicate Visualization that new query
+  // must be made, and prevent inconsistency on
+  // concurrent queries
+  // (todo: consider flux/redux to get rid of this stunt)
+  static queryNo = 0;
+
   constructor(props) {
     super(props);
     this.state = {
@@ -78,7 +89,7 @@ class SPA extends Component {
     return true;
   }
 
-  updateColSpec = (colSpec) => {
+  updateColSpec = (colSpec, source) => {
     // todo
     // here we just put new col spec, but actually
     // we should check constraints and update other
@@ -87,7 +98,15 @@ class SPA extends Component {
     const colSpecs = this.state.colSpecs
       .map(storedColSpec => storedColSpec.name === colSpec.name ? colSpec : storedColSpec);
 
-    this.setState({ colSpecs });
+    if (equal(colSpecs, this.state.colSpecs)) {
+      return;
+    }
+
+    let partialState = { colSpecs };
+    if (source === FROM_TABLE) {
+      partialState = { ...partialState, queryNo: ++SPA.queryNo }
+    }
+    this.setState(partialState);
   }
 
   setDs = (value) => {
@@ -95,7 +114,7 @@ class SPA extends Component {
   }
 
   renderVisualization() {
-    const { dsId, meta, colSpecs } = this.state;
+    const { dsId, meta, colSpecs, queryNo } = this.state;
     if (!dsId) {
       return '';
     }
@@ -109,7 +128,8 @@ class SPA extends Component {
         meta={meta}
         setMeta={this.updateDsMeta}
         colSpecs={colSpecs}
-        onUpdateColSpec={this.updateColSpec}
+        onUpdateColSpec={(colSpec) => this.updateColSpec(colSpec, FROM_VISUALIZATION)}
+        queryNo={queryNo}
       />
     </div>;
   }
@@ -131,7 +151,7 @@ class SPA extends Component {
         <DsTable
           dsId={dsId}
           colSpecs={colSpecs}
-          onUpdateColSpec={this.updateColSpec}
+          onUpdateColSpec={(colspec) => this.updateColSpec(colspec, FROM_TABLE)}
           onLoadDs={this.setDs}
           ds={ds}
         />
