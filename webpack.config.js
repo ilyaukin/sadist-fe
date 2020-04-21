@@ -142,7 +142,26 @@ module.exports = {
           success: true
         })
 
-      })
+      });
+      app.get('/ds/2222/visualization', function (req, res) {
+        res.send({
+          groups: [
+            {
+              'id': 'Moscow',
+              'count': 2
+            },
+            {
+              'id': 'Paris',
+              'count': 1
+            },
+            {
+              'id': 'New York',
+              'count': 1
+            }
+          ],
+          success: true
+        })
+      });
       app.put('/ds', function (req, res) {
         res.send({
           item: {
