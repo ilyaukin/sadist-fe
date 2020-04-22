@@ -8,17 +8,7 @@ import DsTable from "./ds/DsTable";
 import Visualization from "./visualization/Visualization";
 import { renderPage } from "../helper/react-helper";
 
-const FROM_TABLE = 1;
-const FROM_VISUALIZATION = 2;
-
 class SPA extends Component {
-
-  // global number of visualization query,
-  // to communicate Visualization that new query
-  // must be made, and prevent inconsistency on
-  // concurrent queries
-  // (todo: consider flux/redux to get rid of this stunt)
-  static queryNo = 0;
 
   constructor(props) {
     super(props);
@@ -102,11 +92,7 @@ class SPA extends Component {
       return;
     }
 
-    let partialState = { colSpecs };
-    if (source === FROM_TABLE) {
-      partialState = { ...partialState, queryNo: ++SPA.queryNo }
-    }
-    this.setState(partialState);
+    this.setState({ colSpecs }, () => this.visualization.refresh());
   }
 
   setDs = (value) => {
@@ -114,7 +100,7 @@ class SPA extends Component {
   }
 
   renderVisualization() {
-    const { dsId, meta, colSpecs, queryNo } = this.state;
+    const { dsId, meta, colSpecs } = this.state;
     if (!dsId) {
       return '';
     }
@@ -124,12 +110,12 @@ class SPA extends Component {
 
       <h2>2. Visualize</h2>
       <Visualization
+        ref={(visualization => this.visualization = visualization)}
         dsId={dsId}
         meta={meta}
         setMeta={this.updateDsMeta}
         colSpecs={colSpecs}
-        onUpdateColSpec={(colSpec) => this.updateColSpec(colSpec, FROM_VISUALIZATION)}
-        queryNo={queryNo}
+        onUpdateColSpec={this.updateColSpec}
       />
     </div>;
   }
@@ -151,7 +137,7 @@ class SPA extends Component {
         <DsTable
           dsId={dsId}
           colSpecs={colSpecs}
-          onUpdateColSpec={(colspec) => this.updateColSpec(colspec, FROM_TABLE)}
+          onUpdateColSpec={this.updateColSpec}
           onLoadDs={this.setDs}
           ds={ds}
         />

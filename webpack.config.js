@@ -145,7 +145,7 @@ module.exports = {
       });
       app.get('/ds/2222/visualization', function (req, res) {
         res.send({
-          groups: [
+          list: [
             {
               'id': 'Moscow',
               'count': 2

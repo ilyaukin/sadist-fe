@@ -1,56 +1,27 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import moment from "moment";
+import equal from 'deep-equal';
 import CountDownClock from "./CountDownClock";
 import ErrorDialog from "../common/ErrorDialog";
 import types from "../../helper/types";
 import Loader from "../common/Loader";
+import { GeoMap } from "./GeoMap";
 
 class Visualization extends Component {
+  queryNo = 0;
+
   constructor(props) {
     super(props);
     this.state = {};
   }
 
-  componentDidUpdate(prevProps, prevState) {
+  componentDidMount() {
+    this.refresh();
+  }
+
+  componentDidUpdate() {
     this.scheduleUpdateStatus();
-
-    const { queryNo, dsId, colSpecs } = this.props;
-    if (prevProps.queryNo !== queryNo) {
-      // new query should be made
-      const actions = this.getActions(colSpecs);
-
-      if (!actions.length) {
-        this.setState({ groups: undefined });
-        return;
-      }
-
-      this.setState({ loading: true, queryNo }, () => {
-        fetch(`/ds/${dsId}/visualization?queryNo=${queryNo}&` +
-          `actions=${encodeURIComponent(JSON.stringify(actions))}`).then((response) => {
-          response.json().then((data) => {
-            if (queryNo !== this.state.queryNo) {
-              // state has been changed since start of this query,
-              // so drop result
-              return;
-            }
-
-            if (data.success) {
-              this.setState({ loading: undefined, groups: data.groups });
-            } else {
-              ErrorDialog.raise('Error: ' + (data.error || 'Unknown error'));
-              this.setState({ loading: undefined });
-            }
-          }).catch((e) => {
-            ErrorDialog.raise('Error parsing JSON response: ' + e.toString());
-            this.setState({ loading: undefined });
-          })
-        }).catch((e) => {
-          ErrorDialog.raise('Error fetching data: ' + e.toString());
-          this.setState({ loading: undefined });
-        });
-      });
-    }
   }
 
   componentWillUnmount() {
@@ -102,14 +73,69 @@ class Visualization extends Component {
     }, 1000);
   }
 
+  refresh() {
+    const { dsId, colSpecs } = this.props;
+    const pipeline = this.getPipeline(colSpecs);
+
+    if (equal(pipeline, this.state.pipeline)) {
+      return;
+    }
+
+    if (!pipeline.length) {
+      this.setState({ result: undefined });
+      return;
+    }
+
+    let queryNo = ++this.queryNo;
+    this.setState({ loading: true, queryNo, pipeline }, () => {
+
+      fetch(`/ds/${dsId}/visualization?queryNo=${queryNo}&` +
+        `pipeline=${encodeURIComponent(JSON.stringify(pipeline))}`).then((response) => {
+        response.json().then((data) => {
+          if (queryNo !== this.state.queryNo) {
+            // state has been changed since start of this query,
+            // so drop result
+            return;
+          }
+
+          if (data.success) {
+            this.setState({ loading: undefined, result: data.list });
+          } else {
+            this.handleError('Error: ' + (data.error || 'Unknown error'));
+          }
+        }).catch((e) => {
+          this.handleError('Error parsing JSON response: ' + e.toString());
+        })
+      }).catch((e) => {
+        this.handleError('Error fetching data: ' + e.toString());
+      });
+    });
+  }
+
+  handleError(err) {
+    ErrorDialog.raise(err);
+    this.setState({ loading: undefined });
+  }
+
   /**
-   * get an action list which is more-or-less
+   * get "visualization pipeline" which is more-or-less
    * literally mapped to mongo's aggregation pipeline
    * @param types.colSpecs
-   * @returns [] of actions
+   * @returns [] of visualization pipeline items, which are
+   *   are of form:
+   *   {
+   *     "group": {
+   *       "col":  <column name>,
+   *       "key": <grouping key of classification details>,
+   *       "fields": {
+   *         <grouped values, such as mean or median of other col, format tbd>
+   *       },
+   *       ...
+   *     }
+   *   }
    */
-  getActions(colSpecs) {
-    let actions = [];
+  getPipeline(colSpecs) {
+    let pipeline = [];
 
     // 1. find city/country grouping, in order if we should display geo map
     let selectedGrouping;
@@ -117,21 +143,21 @@ class Visualization extends Component {
       selectedGrouping = colSpec.groupings?.find(grouping => grouping.selected &&
         ['city', 'country'].indexOf(grouping.key) !== -1));
     if (colSpec && selectedGrouping) {
-      actions.push({
+      pipeline.push({
         col: colSpec.name,
-        label: selectedGrouping.key,
+        key: selectedGrouping.key,
       });
     }
 
     // 2., ... other groupings, aggregations
     // todo
 
-    return actions;
+    return pipeline;
   }
 
   render() {
     const { meta } = this.props;
-    const { loading, groups } = this.state;
+    const { loading, pipeline, result } = this.state;
 
     // here can be several situations.
     // (1) a user didn't yet select any filter,
@@ -146,9 +172,14 @@ class Visualization extends Component {
       return <Loader loading={true}/>;
     }
 
-    if (groups) {
-      // todo implement (3)
+    if (pipeline && pipeline.length && result) {
+      // 1. if pipeline 1st item is city/country, display geo map
+      if (['city', 'country'].indexOf(pipeline[0].key) !== -1) {
+        return <GeoMap result={result}/>;
+      }
 
+      // 2. other groupings, ...
+      // todo
     }
 
     // display status of classification
@@ -224,7 +255,6 @@ Visualization.propTypes = {
   setMeta: PropTypes.func,
   colSpecs: types.colSpecs,
   onUpdateColSpec: PropTypes.func,
-  queryNo: PropTypes.number
 }
 
 export default Visualization;
