@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
+import equal from 'deep-equal';
 import ErrorDialog from "../common/ErrorDialog";
 import types from "../../helper/types";
 import ColFilter from "./ColFilter";
@@ -13,26 +14,38 @@ class DsTable extends Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    const { dsId, onLoadDs } = this.props;
+    let query;
 
-    if (!dsId || dsId === prevProps.dsId) {
+    const { dsId, onLoadDs } = this.props;
+    if (!dsId) {
       return;
+    } else if (dsId === prevProps.dsId) {
+      const { colSpecs } = this.props;
+      query = this.getFilteringQuery(colSpecs);
+
+      if (equal(query, this.state.query)) {
+        return;
+      }
     }
 
-    fetch(`/ds/${dsId}`)
-      .then((response) => {
-        response.json().then((data) => {
-          if (data.success) {
-            onLoadDs(data.list);
-          } else {
-            this.handleError('Error: ' + (data.error || 'Unknown error'));
-          }
+    this.setState({ query },
+      () => fetch(!query ?
+        `/ds/${dsId}` :
+        `/ds/${dsId}/filter?query=${encodeURIComponent(JSON.stringify(query))}`)
+        .then((response) => {
+          response.json().then((data) => {
+            if (data.success) {
+              onLoadDs(data.list);
+            } else {
+              this.handleError('Error: ' + (data.error || 'Unknown error'));
+            }
+          }).catch((err) => {
+            this.handleError(`Error parsing json: ${err.toString()}`)
+          })
         }).catch((err) => {
-          this.handleError(`Error parsing json: ${err.toString()}`)
+          this.handleError(`Error fetching ${dsId}: ` + err.toString());
         })
-      }).catch((err) => {
-      this.handleError(`Error fetching ${dsId}: ` + err.toString());
-    })
+    );
   }
 
   handleError(err) {
@@ -68,6 +81,33 @@ class DsTable extends Component {
     return cols;
   }
 
+  /**
+   * get filtering query
+   * @param colSpecs {@see types.colSpecs}
+   * @returns [] (`query` argument) for /ds/{}/filter API.
+   * if no filtering, return undefined.
+   */
+  getFilteringQuery(colSpecs) {
+    let query = [];
+    colSpecs.forEach(colSpec => {
+      if (colSpec.filterings) {
+        colSpec.filterings.forEach(filtering => {
+          query.push({
+            col: colSpec.name,
+            key: filtering.key,
+            values: filtering.values
+          });
+        });
+      }
+    });
+
+    if (!query.length) {
+      return undefined;
+    }
+
+    return query;
+  }
+
   render() {
     let { colSpecs, ds } = this.props;
 
@@ -85,7 +125,9 @@ class DsTable extends Component {
         {ds.slice(0, 10).map((ds_row) => <tr key={ds_row.id}>
           {this.renderRow(ds_row, colnames)}
         </tr>)}
-        {ds.length > 10 ? <tr><td colSpan={colnames.length}>...</td></tr> : []}
+        {ds.length > 10 ? <tr>
+          <td colSpan={colnames.length}>...</td>
+        </tr> : []}
         </tbody>
       </table>
     }

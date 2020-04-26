@@ -89,7 +89,7 @@ class Visualization extends Component {
     let queryNo = ++this.queryNo;
     this.setState({ loading: true, queryNo, pipeline }, () => {
 
-      fetch(`/ds/${dsId}/visualization?queryNo=${queryNo}&` +
+      fetch(`/ds/${dsId}/visualize?queryNo=${queryNo}&` +
         `pipeline=${encodeURIComponent(JSON.stringify(pipeline))}`).then((response) => {
         response.json().then((data) => {
           if (queryNo !== this.state.queryNo) {
@@ -155,6 +155,55 @@ class Visualization extends Component {
     return pipeline;
   }
 
+  /**
+   * get list of filtering values for given column
+   * @param colSpecs {@see types.colSpecs}
+   * @param col column name
+   * @param key filtering key
+   */
+  getFilteringValues(colSpecs, col, key) {
+    return colSpecs.find(colSpec => colSpec.name === col)
+      ?.filterings?.find(filtering => filtering.key === key)
+      ?.values;
+  }
+
+  /**
+   * set list of filtering values for given column
+   * @param col column name
+   * @param key filtering key
+   * @param values filtering values
+   */
+  setFilteringValues(col, key, values) {
+    const { colSpecs, onUpdateColSpec } = this.props;
+    const colSpec = colSpecs.find(colSpec => colSpec.name === col);
+
+    if (!colSpec) {
+      return;
+    }
+
+    onUpdateColSpec({
+      ...colSpec,
+      filterings: [{ key, values }]
+    });
+  }
+
+  /**
+   * Drop filtering by given column
+   * @param col column name
+   */
+  dropFiltering(col) {
+    const { colSpecs, onUpdateColSpec } = this.props;
+    let colSpec = colSpecs.find(colSpec => colSpec.name === col);
+
+    if (!colSpec) {
+      return;
+    }
+
+    colSpec = {...colSpec};
+    delete colSpec['filterings'];
+    onUpdateColSpec(colSpec);
+  }
+
   render() {
     const { meta } = this.props;
     const { loading, pipeline, result } = this.state;
@@ -175,7 +224,12 @@ class Visualization extends Component {
     if (pipeline && pipeline.length && result) {
       // 1. if pipeline 1st item is city/country, display geo map
       if (['city', 'country'].indexOf(pipeline[0].key) !== -1) {
-        return <GeoMap result={result}/>;
+        return <GeoMap
+          result={result}
+          onUpdateFilteringValues={(values) => this.setFilteringValues(
+            pipeline[0].col, `${pipeline[0].key}.name`, values)}
+          onDropFiltering={() => this.dropFiltering(pipeline[0].col)}
+        />;
       }
 
       // 2. other groupings, ...

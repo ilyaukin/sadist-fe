@@ -22,7 +22,7 @@ const colSpec = PropTypes.shape({
       // filtering key relatively to `details` field
       key: PropTypes.string,
       // filtering value
-      value: PropTypes.string
+      values: PropTypes.arrayOf(PropTypes.string)
     })
   )
 });

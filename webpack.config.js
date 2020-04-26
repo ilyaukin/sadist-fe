@@ -143,20 +143,37 @@ module.exports = {
         })
 
       });
-      app.get('/ds/2222/visualization', function (req, res) {
+      app.get('/ds/2222/visualize', function (req, res) {
         res.send({
           list: [
             {
-              'id': 'Moscow',
+              'id': {'name': 'Moscow', "coordinates": [ 37.61556, 55.75222 ]},
               'count': 2
             },
             {
-              'id': 'Paris',
+              'id': {'name': 'Paris', "coordinates": [ 2.3488, 48.85341 ]},
               'count': 1
             },
             {
-              'id': 'New York',
+              'id': {'name': 'New York', "coordinates": [ -74.00597, 40.71427 ]},
               'count': 1
+            }
+          ],
+          success: true
+        })
+      });
+      app.get('/ds/2222/filter', function (req, res) {
+        res.send({
+          list: [
+            {
+              id: '1313523',
+              'Location': 'Moscow',
+              'Comment': 'Capital of Russia'
+            },
+            {
+              id: '3211123',
+              'Location': 'MOscow',
+              'Comment': 'The 3rd Reich'
             }
           ],
           success: true
