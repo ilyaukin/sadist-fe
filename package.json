@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "webpack --mode production && cp -r dist/*.js dist/img ../sadist-be/app/static ",
+    "build": "webpack --mode production ",
+    "build-n-copy": "webpack --mode production && cp -r dist/*.js dist/img ../sadist-be/app/static ",
     "start": "webpack-dev-server --mode development --open",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
