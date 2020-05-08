@@ -16,7 +16,13 @@ h1, h2, h3 {
 table, tr, th, td {
     border: solid 1px;
     border-collapse: collapse;
-    margin: 10px;
+}
+
+.fake-table {
+    position: relative;
+    overflow: auto;
+    width: 100%;
+    height: 0;
 }
 
 img.item {
@@ -76,6 +82,7 @@ wired-spinner#loader {
     top: 50%;
     margin-top: -40px;
     margin-left: -38px;
+    z-index: 99;
 }
 
 wired-dialog {

@@ -7,6 +7,7 @@ import ErrorDialog from "./common/ErrorDialog";
 import DsTable from "./ds/DsTable";
 import Visualization from "./visualization/Visualization";
 import { renderPage } from "../helper/react-helper";
+import Splitter from "./common/Splitter";
 
 class SPA extends Component {
 
@@ -15,6 +16,7 @@ class SPA extends Component {
     this.state = {
       dsId: null,
       meta: {},
+      tableContentHeight: Math.min(300, Math.max(100, Math.floor(window.innerHeight / 3))),
       ds: [],
       colSpecs: []
     };
@@ -60,7 +62,8 @@ class SPA extends Component {
   }
 
   setDsId = (dsId, meta) => {
-    this.setState({ dsId, meta, colSpecs: this.buildColSpecs({ meta }) });
+    this.setState({ dsId, meta, colSpecs: this.buildColSpecs({ meta }) },
+      () => this.visualization.refresh());
   }
 
   updateDsMeta = (dsId, meta) => {
@@ -106,7 +109,9 @@ class SPA extends Component {
     }
 
     return <div>
-      <wired-divider/>
+      <Splitter onSplit={(delta) => this.setState({
+        tableContentHeight: this.state.tableContentHeight + delta
+      })}/>
 
       <h2>2. Visualize</h2>
       <Visualization
@@ -121,7 +126,7 @@ class SPA extends Component {
   }
 
   render() {
-    const { dsId, colSpecs, ds, err } = this.state;
+    const { dsId, colSpecs, tableContentHeight, ds, err } = this.state;
     return (
       <div className="content">
         <ErrorDialog err={err}/>
@@ -135,6 +140,7 @@ class SPA extends Component {
         <DsList onDsSelected={this.setDsId}/>
         {/*show top from selected ds*/}
         <DsTable
+          tableContentHeight={tableContentHeight}
           dsId={dsId}
           colSpecs={colSpecs}
           onUpdateColSpec={this.updateColSpec}
