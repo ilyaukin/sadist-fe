@@ -108,7 +108,7 @@ class DsNew extends Component {
         </div>
         <div className="button-pane">
           <wired-button
-            disabled={isVal(!this.state.provider.type)}
+            disabled={isVal(!this.state.provider.type || this.state.loading)}
             onClick={this.onCreate}>Create
           </wired-button>
         </div>
