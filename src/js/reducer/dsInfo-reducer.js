@@ -141,7 +141,7 @@ const buildDsInfo = function ({
       })
     },
 
-    getHint: function () {
+    getHint: function ({ clockTimeout, onClockTimeout }) {
       // check error
       if (this.err) {
         return <p>Failed to get status ({this.err}). Please refresh the page.</p>
@@ -163,12 +163,11 @@ const buildDsInfo = function ({
           if (classification.started && classification.estimated) {
             let finished_estimation = moment(classification.started)
               .add(classification.estimated, 'millisecond')
-            let { clockTimeout } = this.state
             if (!clockTimeout) {
               hint.push(
                 <p><CountDownClock
                   to={finished_estimation}
-                  onClockTimeout={this.onClockTimeout}
+                  onClockTimeout={onClockTimeout}
                 /> left</p>
               )
             } else {

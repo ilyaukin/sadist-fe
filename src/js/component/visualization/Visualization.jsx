@@ -121,7 +121,7 @@ class Visualization extends Component {
 
   render() {
     const { dsInfo, dispatchDsInfo } = this.props;
-    const { loading, pipeline, result } = this.state;
+    const { loading, pipeline, result, clockTimeout } = this.state;
 
     // here can be several situations.
     // (1) a user didn't yet select any filter,
@@ -158,7 +158,7 @@ class Visualization extends Component {
       // todo
     }
 
-    return dsInfo.getHint();
+    return dsInfo.getHint({ clockTimeout, onClockTimeout: this.onClockTimeout });
   }
 }
 
