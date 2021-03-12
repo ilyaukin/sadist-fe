@@ -1,8 +1,8 @@
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
-import { WiredListbox } from 'wired-listbox';
-import types from "../../helper/types";
-import Icon from "../Icon";
+import React, { Component } from 'react'
+import PropTypes from 'prop-types'
+import types from '../../helper/types'
+import Icon from '../Icon'
+import { actionType } from '../../reducer/dsInfo-reducer'
 
 class ColFilter extends Component {
   constructor(props) {
@@ -37,13 +37,12 @@ class ColFilter extends Component {
   }
 
   onGroupingSelected = (event) => {
-    const { colSpec, onUpdateColSpec } = this.props;
-    let updatedColSpec = {
-      ...colSpec, groupings: colSpec.groupings.map(grouping => ({
-          ...grouping, selected: event.detail.selected === grouping.key
-      }))
-    };
-    onUpdateColSpec(updatedColSpec);
+    const { colSpec, dispatchDsInfo } = this.props;
+    dispatchDsInfo({
+      type: actionType.SELECT_GROUPING,
+      col: colSpec.name,
+      key: event.detail.selected
+    });
     this.setState({ open: false });
   }
 
@@ -95,7 +94,7 @@ class ColFilter extends Component {
 
 ColFilter.propTypes = {
   colSpec: types.colSpec.isRequired,
-  onUpdateColSpec: PropTypes.func
+  dispatchDsInfo: PropTypes.func
 }
 
 export default ColFilter;

@@ -45,12 +45,13 @@ class DsList extends Component {
       return;
     }
 
-    // pass DS list record (meta information about DS) as a 2nd param
-    const meta = this.state.list.find(item => item.id === value) || {};
+    // pass DS list record (meta information about DS)
+    const meta = this.state.list.find(item => item.id === value)
+      || {id: value};
 
     const { onDsSelected } = this.props;
     this.dsValue = this.combo.value;
-    onDsSelected(value, meta);
+    onDsSelected(meta);
   }
 
   onDsCreated = (item) => {

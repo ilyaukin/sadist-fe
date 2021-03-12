@@ -1,158 +1,77 @@
-import '@webcomponents/custom-elements'
-import React, { Component } from 'react';
-import equal from 'deep-equal';
+import '@webcomponents/custom-elements';
+import React from 'react';
 import DsList from './ds/DsList';
 import './index.css';
-import ErrorDialog from "./common/ErrorDialog";
-import DsTable from "./ds/DsTable";
-import Visualization from "./visualization/Visualization";
-import { renderPage } from "../helper/react-helper";
-import Splitter from "./common/Splitter";
+import ErrorDialog from './common/ErrorDialog';
+import DsTable from './ds/DsTable';
+import Visualization from './visualization/Visualization';
+import { renderPage } from '../helper/react-helper';
+import Splitter from './common/Splitter';
+import { buildDsInfo, actionType, reduceDsInfo } from '../reducer/dsInfo-reducer';
 
-class SPA extends Component {
+const SPA = () => {
 
-  constructor(props) {
-    super(props);
-    this.state = {
-      dsId: null,
-      meta: {},
-      tableContentHeight: Math.min(300, Math.max(100, Math.floor(window.innerHeight / 3))),
-      ds: [],
-      colSpecs: []
-    };
-    ErrorDialog.raise = (err) => this.setState({ err });
-    ErrorDialog.close = () => this.setState({ err: undefined });
-  }
+  const [err, setErr] = React.useState();
+  const [ds, setDs] = React.useState([]);
+  const [dsInfo, dispatchDsInfo] = React.useReducer(reduceDsInfo, buildDsInfo());
+  const [tableContentHeight, setTableContentHeight] = React.useState(
+    Math.min(300, Math.max(100, Math.floor(window.innerHeight / 3))));
 
-  getTitle() {
+  ErrorDialog.raise = setErr;
+  ErrorDialog.close = () => setErr(undefined);
+
+  const getTitle = function () {
     const titles = [
       'My handicapped pet project....',
       'Let steal the beggars!',
     ];
     const choose = Math.floor(Math.random() * titles.length);
     return titles[choose];
-  }
+  };
 
-  buildColSpecs({ meta }) {
-    let colSpecs = meta.cols.map(col => ({ name: col }));
-
-    if (meta.detailization) {
-      Object.entries(meta.detailization)
-        .filter(kv => kv[1].status === 'finished')
-        .forEach(kv => {
-          let col = kv[0];
-          let colSpec = colSpecs.find(colSpec => colSpec.name === col);
-          let labels = kv[1].labels;
-          if (labels) {
-            for (let label of labels) {
-              // if grouping is already known, keep it the same
-              let grouping = this.state?.colSpecs
-                ?.find(colSpec => colSpec.name === col)
-                ?.groupings
-                ?.find(grouping => grouping.key === label);
-
-              (colSpec.groupings = colSpec.groupings || [])
-                .push(grouping || { key: label });
-            }
-          }
-        });
-    }
-
-    return colSpecs;
-  }
-
-  setDsId = (dsId, meta) => {
-    this.setState({ dsId, meta, colSpecs: this.buildColSpecs({ meta }) },
-      () => this.visualization.refresh());
-  }
-
-  updateDsMeta = (dsId, meta) => {
-    // update Meta for given DS
-    if (dsId !== this.state.dsId) {
-      // dsId has changed so the meta is irrelevant
-      // todo what if state changed between check and set?
-      return false;
-    }
-    if (equal(meta, this.state.meta)) {
-      // return true but don't call setState in order
-      // not to cause unnecessary re-rendering
-      return true;
-    }
-    this.setState({ meta, colSpecs: this.buildColSpecs({ meta }) });
-    return true;
-  }
-
-  updateColSpec = (colSpec, source) => {
-    // todo
-    // here we just put new col spec, but actually
-    // we should check constraints and update other
-    // col specs if needed. e.g. grouping of type 'city'
-    // can be only one to show at one map
-    const colSpecs = this.state.colSpecs
-      .map(storedColSpec => storedColSpec.name === colSpec.name ? colSpec : storedColSpec);
-
-    if (equal(colSpecs, this.state.colSpecs)) {
-      return;
-    }
-
-    this.setState({ colSpecs }, () => this.visualization.refresh());
-  }
-
-  setDs = (value) => {
-    this.setState({ ds: value });
-  }
-
-  renderVisualization() {
-    const { dsId, meta, colSpecs } = this.state;
-    if (!dsId) {
+  const renderVisualization = function () {
+    if (!dsInfo.meta.id) {
       return '';
     }
 
     return <div>
-      <Splitter onSplit={(delta) => this.setState({
-        tableContentHeight: this.state.tableContentHeight + delta
-      })}/>
+      <Splitter onSplit={(delta) => setTableContentHeight(tableContentHeight + delta)}/>
 
       <h2>2. Visualize</h2>
       <Visualization
-        ref={(visualization => this.visualization = visualization)}
-        dsId={dsId}
-        meta={meta}
-        setMeta={this.updateDsMeta}
-        colSpecs={colSpecs}
-        onUpdateColSpec={this.updateColSpec}
+        dsId={dsInfo.meta.id}
+        dsInfo={dsInfo}
+        dispatchDsInfo={dispatchDsInfo}
       />
     </div>;
-  }
+  };
 
-  render() {
-    const { dsId, colSpecs, tableContentHeight, ds, err } = this.state;
-    return (
-      <div className="content">
-        <ErrorDialog err={err}/>
-        <h1>
-          {this.getTitle()}
-        </h1>
-        <wired-divider/>
+  return <div className="content">
+    <ErrorDialog err={err}/>
+    <h1>
+      {getTitle()}
+    </h1>
+    <wired-divider/>
 
-        <h2>1. Get the data</h2>
-        {/*list existing data source using /ls api*/}
-        <DsList onDsSelected={this.setDsId}/>
-        {/*show top from selected ds*/}
-        <DsTable
-          tableContentHeight={tableContentHeight}
-          dsId={dsId}
-          colSpecs={colSpecs}
-          onUpdateColSpec={this.updateColSpec}
-          onLoadDs={this.setDs}
-          ds={ds}
-        />
+    <h2>1. Get the data</h2>
+    {/*list existing data source using /ls api*/}
+    <DsList onDsSelected={(meta) => dispatchDsInfo({
+      type: actionType.SELECT_DS,
+      meta
+    })}/>
+    {/*show top from selected ds*/}
+    <DsTable
+      tableContentHeight={tableContentHeight}
+      dsId={dsInfo.meta.id}
+      colSpecs={dsInfo.colSpecs}
+      dispatchDsInfo={dispatchDsInfo}
+      onLoadDs={setDs}
+      ds={ds}
+    />
 
-        {this.renderVisualization()}
-      </div>
-    );
-  }
-}
+    {renderVisualization()}
+  </div>;
+};
 
 export default SPA;
 

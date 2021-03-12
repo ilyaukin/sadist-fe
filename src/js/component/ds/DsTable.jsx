@@ -118,7 +118,7 @@ class DsTable extends Component {
   };
 
   renderColHeader = (colSpec, n, isReal) => {
-    const { onUpdateColSpec } = this.props;
+    const { dispatchDsInfo } = this.props;
 
     const thProps = {
       key: colSpec.name
@@ -139,7 +139,7 @@ class DsTable extends Component {
         {colSpec.groupings && isReal ?
           <ColFilter
             colSpec={colSpec}
-            onUpdateColSpec={onUpdateColSpec}
+            dispatchDsInfo={dispatchDsInfo}
           /> :
           ''}
       </div>
@@ -277,7 +277,7 @@ DsTable.propTypes = {
 
   dsId: PropTypes.string,
   colSpecs: types.colSpecs,
-  onUpdateColSpec: PropTypes.func,
+  dispatchDsInfo: PropTypes.func,
   onLoadDs: PropTypes.func,
   ds: PropTypes.arrayOf(PropTypes.object)
 };

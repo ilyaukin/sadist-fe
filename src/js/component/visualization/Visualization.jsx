@@ -1,12 +1,11 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import moment from "moment";
 import equal from 'deep-equal';
-import CountDownClock from "./CountDownClock";
-import ErrorDialog from "../common/ErrorDialog";
-import types from "../../helper/types";
-import Loader from "../common/Loader";
-import { GeoMap } from "./GeoMap";
+import ErrorDialog from '../common/ErrorDialog';
+import types from '../../helper/types';
+import Loader from '../common/Loader';
+import { GeoMap } from './GeoMap';
+import { actionType } from '../../reducer/dsInfo-reducer';
 
 class Visualization extends Component {
   queryNo = 0;
@@ -20,7 +19,12 @@ class Visualization extends Component {
     this.refresh();
   }
 
-  componentDidUpdate() {
+  componentDidUpdate(prevProps, prevState) {
+    const { dsInfo } = this.props;
+    if (prevProps.dsInfo != dsInfo && dsInfo.shouldUpdateVisualization) {
+      this.refresh();
+    }
+
     this.scheduleUpdateStatus();
   }
 
@@ -32,19 +36,12 @@ class Visualization extends Component {
 
   onClockTimeout = () => {
     this.setState({ clockTimeout: true });
-  }
+  };
 
   scheduleUpdateStatus() {
-    const { dsId, meta, setMeta } = this.props;
+    const { dsId, dsInfo, dispatchDsInfo } = this.props;
 
-    let { classification, detailization } = meta;
-    classification = classification || {};
-    detailization = detailization || {};
-
-    if (classification.status === 'finished' &&
-      Object.entries(detailization)
-        .map(kv => kv[1].status === 'finished')
-        .reduce((a, b) => a && b, true)) {
+    if (dsInfo.isFinal()) {
       // everything finished, no need to update
       return;
     }
@@ -57,25 +54,30 @@ class Visualization extends Component {
       fetch(`/ls?id=${dsId}`).then((response) => {
         response.json().then((data) => {
           if (!data.success) {
-            ErrorDialog.raise('Error: ' + (data.error || 'Unknown error'));
+            this.handleUpdateStatusError(data.error || 'Unknown error');
           } else {
             const meta = data.list.find((record) => record.id === dsId);
             if (!meta) {
-              ErrorDialog.raise(`Server did not return record for id=${dsId}`);
+              this.handleUpdateStatusError(`Server did not return record for id=${dsId}`);
             } else {
-              if (setMeta(dsId, meta)) {
+              if (this.props.dsId === meta.id) {
+                dispatchDsInfo({ type: actionType.UPDATE_STATUS_SUCCESS, meta });
                 this.scheduleUpdateStatus();
               }
             }
           }
-        }).catch((e) => ErrorDialog.raise('Error parsing response: ' + e.toString()))
-      }).catch((e) => ErrorDialog.raise('Error fetching data: ' + e.toString()))
+        }).catch((e) => this.handleUpdateStatusError('Error parsing response: ' + e.toString()));
+      }).catch((e) => this.handleUpdateStatusError('Error fetching data: ' + e.toString()));
     }, 1000);
   }
 
+  handleUpdateStatusError(err) {
+    this.props.dispatchDsInfo({ type: actionType.UPDATE_STATUS_ERROR, err });
+  }
+
   refresh() {
-    const { dsId, colSpecs } = this.props;
-    const pipeline = this.getPipeline(colSpecs);
+    const { dsId, dsInfo } = this.props;
+    const pipeline = dsInfo.getPipeline();
 
     if (equal(pipeline, this.state.pipeline)) {
       return;
@@ -105,7 +107,7 @@ class Visualization extends Component {
           }
         }).catch((e) => {
           this.handleError('Error parsing JSON response: ' + e.toString());
-        })
+        });
       }).catch((e) => {
         this.handleError('Error fetching data: ' + e.toString());
       });
@@ -117,95 +119,8 @@ class Visualization extends Component {
     this.setState({ loading: undefined });
   }
 
-  /**
-   * get "visualization pipeline" which is more-or-less
-   * literally mapped to mongo's aggregation pipeline
-   * @param types.colSpecs
-   * @returns [] of visualization pipeline items, which are
-   *   are of form:
-   *   {
-   *     "group": {
-   *       "col":  <column name>,
-   *       "key": <grouping key of classification details>,
-   *       "fields": {
-   *         <grouped values, such as mean or median of other col, format tbd>
-   *       },
-   *       ...
-   *     }
-   *   }
-   */
-  getPipeline(colSpecs) {
-    let pipeline = [];
-
-    // 1. find city/country grouping, in order if we should display geo map
-    let selectedGrouping;
-    let colSpec = colSpecs.find(colSpec =>
-      selectedGrouping = colSpec.groupings?.find(grouping => grouping.selected &&
-        ['city', 'country'].indexOf(grouping.key) !== -1));
-    if (colSpec && selectedGrouping) {
-      pipeline.push({
-        col: colSpec.name,
-        key: selectedGrouping.key,
-      });
-    }
-
-    // 2., ... other groupings, aggregations
-    // todo
-
-    return pipeline;
-  }
-
-  /**
-   * get list of filtering values for given column
-   * @param colSpecs {@see types.colSpecs}
-   * @param col column name
-   * @param key filtering key
-   */
-  getFilteringValues(colSpecs, col, key) {
-    return colSpecs.find(colSpec => colSpec.name === col)
-      ?.filterings?.find(filtering => filtering.key === key)
-      ?.values;
-  }
-
-  /**
-   * set list of filtering values for given column
-   * @param col column name
-   * @param key filtering key
-   * @param values filtering values
-   */
-  setFilteringValues(col, key, values) {
-    const { colSpecs, onUpdateColSpec } = this.props;
-    const colSpec = colSpecs.find(colSpec => colSpec.name === col);
-
-    if (!colSpec) {
-      return;
-    }
-
-    onUpdateColSpec({
-      ...colSpec,
-      filterings: [{ key, values }]
-    });
-  }
-
-  /**
-   * Drop filtering by given column
-   * @param col column name
-   */
-  dropFiltering(col) {
-    const { colSpecs, onUpdateColSpec } = this.props;
-    let colSpec = colSpecs.find(colSpec => colSpec.name === col);
-
-    if (!colSpec) {
-      return;
-    }
-
-    colSpec = {...colSpec};
-    delete colSpec['filterings'];
-    onUpdateColSpec(colSpec);
-  }
-
   render() {
-    const { meta } = this.props;
+    const { dsInfo, dispatchDsInfo } = this.props;
     const { loading, pipeline, result } = this.state;
 
     // here can be several situations.
@@ -226,9 +141,16 @@ class Visualization extends Component {
       if (['city', 'country'].indexOf(pipeline[0].key) !== -1) {
         return <GeoMap
           result={result}
-          onUpdateFilteringValues={(values) => this.setFilteringValues(
-            pipeline[0].col, `${pipeline[0].key}.name`, values)}
-          onDropFiltering={() => this.dropFiltering(pipeline[0].col)}
+          onUpdateFilteringValues={(values) => dispatchDsInfo({
+            type: actionType.FILTER,
+            col: pipeline[0].col,
+            key: `${pipeline[0].key}.name`,
+            values
+          })}
+          onDropFiltering={() => dispatchDsInfo({
+            type: actionType.DROP_FILTER,
+            col: pipeline[0].col
+          })}
         />;
       }
 
@@ -236,79 +158,14 @@ class Visualization extends Component {
       // todo
     }
 
-    // display status of classification
-    let { classification, detailization } = meta;
-    classification = classification || {};
-    detailization = detailization || {};
-    if (classification.status !== 'finished') {
-      let hint = [
-        <p>Please wait while data classification is done.</p>
-      ];
-      if (classification.status) {
-        hint.push(
-          <p>Status: {classification.status}</p>
-        );
-        if (classification.started && classification.estimated) {
-          let finished_estimation = moment(classification.started)
-            .add(classification.estimated, "millisecond");
-          let { clockTimeout } = this.state;
-          if (!clockTimeout) {
-            hint.push(
-              <p><CountDownClock
-                to={finished_estimation}
-                onClockTimeout={this.onClockTimeout}
-              /> left</p>
-            );
-          } else {
-            hint.push(
-              <p>Seems classification needs too much time or it's hung,
-                please contact&nbsp;
-                <a
-                  href="mailto:kzerby@gmail.com"
-                  target="_blank">developer
-                </a>
-              </p>
-            );
-          }
-        }
-      }
-
-      return hint;
-    }
-
-    // display status of columns detailization
-    let detailizationByCol = Object.entries(detailization);
-    if (!detailizationByCol.length) {
-      return <p>Unfortunately, no columns are recognized as known data type.</p>
-    }
-
-    let hint = [];
-    hint.push(
-      <p>Analyzing the columns:</p>
-    );
-    hint.push(
-      <ul>{detailizationByCol.map((kv) => <li key={kv[0]}>{kv[0]}: {kv[1].status}</li>)}</ul>
-    );
-    if (detailizationByCol.find((kv) => kv[1].status === 'finished')) {
-      hint.push(
-        <p>Please use dropdowns near the table columns, to visualize data.</p>
-      );
-    } else {
-      hint.push(
-        <p>Please wait while columns analysis is done.</p>
-      );
-    }
-
-    return hint;
+    return dsInfo.getHint();
   }
 }
 
 Visualization.propTypes = {
   dsId: PropTypes.string,
-  meta: PropTypes.object,
-  setMeta: PropTypes.func,
-  colSpecs: types.colSpecs,
-  onUpdateColSpec: PropTypes.func,
-}
+  dsInfo: PropTypes.shape({ colSpecs: types.colSpecs, meta: PropTypes.object }),
+  dispatchDsInfo: PropTypes.func
+};
 
 export default Visualization;
