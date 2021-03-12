@@ -51,7 +51,7 @@ class ColFilter extends Component {
       return '';
     }
 
-    return <div className="col-filter-pane-item">
+    return <div className="col-filter-pane-item" key="groupings">
       <span className="col-filter-hint">Available grouping</span>
       <wired-listbox
         ref={groupings => this.groupings = groupings}
@@ -65,6 +65,68 @@ class ColFilter extends Component {
         </wired-item>)}
       </wired-listbox>
     </div>;
+  }
+
+  renderFilterings(filterings, selectedGrouping) {
+    if (!selectedGrouping) {
+      return '';
+    }
+
+    const { colSpec, dispatchDsInfo } = this.props;
+
+    const makeFilterElement = (text, active, activate) => {
+      return <span className="col-filter-element" key={text}>
+        {active ? <b>{text}</b> : <a href="#" onClick={activate}>{text}</a>}
+      </span>;
+    }
+
+    const filterElements = [];
+    filterElements.push(makeFilterElement(
+      '<All>',
+      !filterings,
+      () => {
+        dispatchDsInfo({
+          type: actionType.DROP_FILTER,
+          col: colSpec.name
+        });
+        this.setState({ open: false });
+      }
+    ))
+
+    const isUncategorizedFiltering = (filtering) => {
+      return filtering.values.length === 1 && filtering.values[0] == null;
+    }
+
+    filterElements.push(makeFilterElement(
+      '<Uncategorized>',
+      filterings?.find(filtering => isUncategorizedFiltering(filtering) &&
+        filtering.key === selectedGrouping.key),
+      () => {
+        dispatchDsInfo({
+          type: actionType.FILTER,
+          col: colSpec.name,
+          key: selectedGrouping.key,
+          values: [null]
+        })
+        this.setState({ open: false });
+      }
+    ))
+    if (filterings) {
+      filterings.forEach(filtering => {
+        if (!isUncategorizedFiltering(filtering)) {
+          filterElements.push(makeFilterElement(
+            filtering.values.join(' || '),
+            true,
+            undefined
+          ))
+        }
+      })
+    }
+
+    return <div className="col-filter-pane-item" key="filterings">
+      <span className="col-filter-hint">Filters</span>
+      {filterElements}
+    </div>
   }
 
   render() {
@@ -85,6 +147,7 @@ class ColFilter extends Component {
         open ?
           <div className="col-filter-pane">
             {this.renderGroupings(colSpec.groupings, selectedGrouping)}
+            {this.renderFilterings(colSpec.filterings, selectedGrouping)}
           </div> :
           ''
       }

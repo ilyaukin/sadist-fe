@@ -30,6 +30,10 @@ const buildDsInfo = function ({
     shouldUpdateVisualization,
 
     buildColSpecs: function ({ meta }) {
+      if (!meta?.cols) {
+        return [];
+      }
+
       let colSpecs = meta.cols.map(col => ({ name: col }))
 
       if (meta.detailization) {
@@ -135,10 +139,36 @@ const buildDsInfo = function ({
       return this.colSpecs.map(colSpec => {
         if (colSpec.name === col) {
           colSpec = { ...colSpec }
-          delete colSpec['filtering']
+          delete colSpec['filterings']
         }
         return colSpec
       })
+    },
+
+    /**
+     * get filtering query
+     * @returns [] (`query` argument) for /ds/{}/filter API.
+     * if no filtering, return undefined.
+     */
+    getFilteringQuery: function() {
+      let query = [];
+      this.colSpecs.forEach(colSpec => {
+        if (colSpec.filterings) {
+          colSpec.filterings.forEach(filtering => {
+            query.push({
+              col: colSpec.name,
+              key: filtering.key,
+              values: filtering.values
+            });
+          });
+        }
+      });
+
+      if (!query.length) {
+        return undefined;
+      }
+
+      return query;
     },
 
     getHint: function ({ clockTimeout, onClockTimeout }) {

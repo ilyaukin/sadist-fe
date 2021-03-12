@@ -164,7 +164,7 @@ class Visualization extends Component {
 
 Visualization.propTypes = {
   dsId: PropTypes.string,
-  dsInfo: PropTypes.shape({ colSpecs: types.colSpecs, meta: PropTypes.object }),
+  dsInfo: types.dsInfo,
   dispatchDsInfo: PropTypes.func
 };
 

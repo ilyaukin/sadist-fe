@@ -29,4 +29,6 @@ const colSpec = PropTypes.shape({
 
 const colSpecs = PropTypes.arrayOf(colSpec);
 
-export default { colSpec, colSpecs };
+const dsInfo = PropTypes.shape({ colSpecs: colSpecs, meta: PropTypes.object });
+
+export default { colSpec, colSpecs, dsInfo };

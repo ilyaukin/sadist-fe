@@ -33,7 +33,8 @@ class DsTable extends Component {
   componentDidUpdate(prevProps, prevState) {
     // console.log(this.colRefs?.map(colRef => colRef?.offsetWidth))
     if (this.colRefs) {
-      const { tableContentHeight, colSpecs, ds } = this.props;
+      const { tableContentHeight, dsInfo, ds } = this.props;
+      const { colSpecs } = dsInfo;
       appendElement(this.renderTable(colSpecs, ds, tableContentHeight), this.placeholder);
     }
 
@@ -43,8 +44,8 @@ class DsTable extends Component {
     if (!dsId) {
       return;
     } else if (dsId === prevProps.dsId) {
-      const { colSpecs } = this.props;
-      query = this.getFilteringQuery(colSpecs);
+      const { dsInfo } = this.props;
+      query = dsInfo.getFilteringQuery();
 
       if (equal(query, this.state.query)) {
         return;
@@ -57,7 +58,7 @@ class DsTable extends Component {
         `/ds/${dsId}/filter?query=${encodeURIComponent(JSON.stringify(query))}`)
         .then((response) => {
           response.json().then((data) => {
-            this.colRefs = new Array(this.props.colSpecs.length);
+            this.colRefs = new Array(this.props.dsInfo.colSpecs.length);
             if (data.success) {
               this.setState({ loading: false });
               onLoadDs(data.list);
@@ -78,33 +79,6 @@ class DsTable extends Component {
     const { onLoadDs } = this.props;
     onLoadDs([]);
     ErrorDialog.raise(err);
-  }
-
-  /**
-   * get filtering query
-   * @param colSpecs {@see types.colSpecs}
-   * @returns [] (`query` argument) for /ds/{}/filter API.
-   * if no filtering, return undefined.
-   */
-  getFilteringQuery(colSpecs) {
-    let query = [];
-    colSpecs.forEach(colSpec => {
-      if (colSpec.filterings) {
-        colSpec.filterings.forEach(filtering => {
-          query.push({
-            col: colSpec.name,
-            key: filtering.key,
-            values: filtering.values
-          });
-        });
-      }
-    });
-
-    if (!query.length) {
-      return undefined;
-    }
-
-    return query;
   }
 
   onScrollHorizontally = () => {
@@ -249,7 +223,8 @@ class DsTable extends Component {
   }
 
   render() {
-    let { dsId, colSpecs, ds } = this.props;
+    let { dsId, dsInfo, ds } = this.props;
+    let { colSpecs } = dsInfo;
 
     if (!dsId || !colSpecs) {
       return <br/>;
@@ -276,7 +251,7 @@ DsTable.propTypes = {
   tableContentHeight: PropTypes.number,
 
   dsId: PropTypes.string,
-  colSpecs: types.colSpecs,
+  dsInfo: types.dsInfo,
   dispatchDsInfo: PropTypes.func,
   onLoadDs: PropTypes.func,
   ds: PropTypes.arrayOf(PropTypes.object)

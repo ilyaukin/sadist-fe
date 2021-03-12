@@ -63,7 +63,7 @@ const SPA = () => {
     <DsTable
       tableContentHeight={tableContentHeight}
       dsId={dsInfo.meta.id}
-      colSpecs={dsInfo.colSpecs}
+      dsInfo={dsInfo}
       dispatchDsInfo={dispatchDsInfo}
       onLoadDs={setDs}
       ds={ds}

@@ -126,6 +126,12 @@ img.col-icon {
 
 .col-filter-hint {
     font-size: 8pt;
+    display: block;
+    margin-right: 20px;
+}
+
+.col-filter-element {
+    padding-right: 10px;
 }
 
 .clock {
