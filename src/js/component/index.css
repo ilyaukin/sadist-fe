@@ -115,6 +115,10 @@ img.col-icon {
 }
 
 .col-filter-pane {
+    position: relative;
+    left: 0;
+    top: 18px;
+    border: 1px solid #888;
     background: #ccc;
     min-width: 160px;
     text-align: right;

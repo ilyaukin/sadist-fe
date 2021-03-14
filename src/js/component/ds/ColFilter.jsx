@@ -1,8 +1,9 @@
-import React, { Component } from 'react'
-import PropTypes from 'prop-types'
-import types from '../../helper/types'
-import Icon from '../Icon'
-import { actionType } from '../../reducer/dsInfo-reducer'
+import React, { Component } from 'react';
+import ReactDom from 'react-dom';
+import PropTypes from 'prop-types';
+import types from '../../helper/types';
+import Icon from '../Icon';
+import { actionType } from '../../reducer/dsInfo-reducer';
 
 class ColFilter extends Component {
   constructor(props) {
@@ -13,16 +14,25 @@ class ColFilter extends Component {
   }
 
   componentDidMount() {
-    document.addEventListener("click", this.onClickOutside);
+    document.addEventListener('click', this.onClickOutside);
   }
 
   componentWillUnmount() {
-    document.removeEventListener("click", this.onClickOutside)
+    document.removeEventListener('click', this.onClickOutside);
   }
 
   componentDidUpdate() {
     if (this.groupings) {
-      this.groupings.addEventListener("selected", this.onGroupingSelected)
+      this.groupings.addEventListener('selected', this.onGroupingSelected);
+    }
+
+    // relocate filter pane if it happened behind the left boundary of content
+    const colFilter = ReactDom.findDOMNode(this);
+    const colSpace = colFilter.parentElement;
+    const left = colSpace.offsetLeft + colFilter.offsetLeft;
+
+    if (left < 0 && this.colFilterPane) {
+      this.colFilterPane.style.left = `${-left}px`;
     }
   }
 
@@ -34,7 +44,7 @@ class ColFilter extends Component {
     if (!this.dropdown.contains(event.target) && this.state.open) {
       this.setState({ open: false });
     }
-  }
+  };
 
   onGroupingSelected = (event) => {
     const { colSpec, dispatchDsInfo } = this.props;
@@ -44,7 +54,7 @@ class ColFilter extends Component {
       key: event.detail.selected
     });
     this.setState({ open: false });
-  }
+  };
 
   renderGroupings(groupings, selectedGrouping) {
     if (!groupings) {
@@ -78,7 +88,7 @@ class ColFilter extends Component {
       return <span className="col-filter-element" key={text}>
         {active ? <b>{text}</b> : <a href="#" onClick={activate}>{text}</a>}
       </span>;
-    }
+    };
 
     const filterElements = [];
     filterElements.push(makeFilterElement(
@@ -91,11 +101,11 @@ class ColFilter extends Component {
         });
         this.setState({ open: false });
       }
-    ))
+    ));
 
     const isUncategorizedFiltering = (filtering) => {
       return filtering.values.length === 1 && filtering.values[0] == null;
-    }
+    };
 
     filterElements.push(makeFilterElement(
       '<Uncategorized>',
@@ -107,10 +117,10 @@ class ColFilter extends Component {
           col: colSpec.name,
           key: selectedGrouping.key,
           values: [null]
-        })
+        });
         this.setState({ open: false });
       }
-    ))
+    ));
     if (filterings) {
       filterings.forEach(filtering => {
         if (!isUncategorizedFiltering(filtering)) {
@@ -118,15 +128,15 @@ class ColFilter extends Component {
             filtering.values.join(' || '),
             true,
             undefined
-          ))
+          ));
         }
-      })
+      });
     }
 
     return <div className="col-filter-pane-item" key="filterings">
       <span className="col-filter-hint">Filters</span>
       {filterElements}
-    </div>
+    </div>;
   }
 
   render() {
@@ -145,19 +155,22 @@ class ColFilter extends Component {
       </div>
       {
         open ?
-          <div className="col-filter-pane">
+          <div
+            ref={colFilterPane => this.colFilterPane = colFilterPane}
+            className="col-filter-pane"
+          >
             {this.renderGroupings(colSpec.groupings, selectedGrouping)}
             {this.renderFilterings(colSpec.filterings, selectedGrouping)}
           </div> :
           ''
       }
-    </div>
+    </div>;
   }
 }
 
 ColFilter.propTypes = {
   colSpec: types.colSpec.isRequired,
   dispatchDsInfo: PropTypes.func
-}
+};
 
 export default ColFilter;
