@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import WiredDialog from 'wired-dialog';
-import WiredCard from 'wired-card';
-import WiredButton from 'wired-button';
+import 'wired-dialog';
+import 'wired-card';
+import 'wired-button';
 
 class ErrorDialog extends Component {
     // will be overwritten by SPA

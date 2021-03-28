@@ -1,6 +1,9 @@
 import React, { Component } from 'react';
 import PropTypes from "prop-types";
-import { WiredCombo, WiredDialog } from 'wired-elements';
+import "@my-handicapped-pet/wired-combo";
+// import 'wired-combo';
+import 'wired-item';
+import "wired-dialog";
 import ErrorDialog from "../common/ErrorDialog";
 import Icon from "../Icon";
 import DsNew from "./DsNew";

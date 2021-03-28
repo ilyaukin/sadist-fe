@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { WiredDialog } from 'wired-dialog';
+import 'wired-dialog';
 import Icon from "../Icon";
 
 class CancelableDialog extends Component {
@@ -19,7 +19,8 @@ class CancelableDialog extends Component {
 }
 
 CancelableDialog.propTypes = {
-  ...WiredDialog.propTypes,
+  elevation: PropTypes.number,
+  open: PropTypes.bool,
   onCancel: PropTypes.func
 }
 

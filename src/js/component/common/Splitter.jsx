@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { WiredDivider } from 'wired-divider';
+import 'wired-divider';
 
 /**
  * Divider which allows splitting areas by drag&drop

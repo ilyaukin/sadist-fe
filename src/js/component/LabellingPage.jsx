@@ -1,9 +1,9 @@
 import React, { Component } from "react";
 import PropTypes from 'prop-types';
-import { WiredRadioGroup } from 'wired-radio-group';
-import { WiredRadio } from 'wired-radio';
-import { WiredButton } from 'wired-button';
-import { WiredCheckbox } from 'wired-checkbox';
+import 'wired-radio-group';
+import 'wired-radio';
+import 'wired-button';
+import 'wired-checkbox';
 import './index.css';
 import './labelling.css';
 import { renderPage } from "../helper/react-helper";
