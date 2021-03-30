@@ -1,16 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Labelling</title>
-    <script type="application/javascript">
-        window.data = {
-          sessionId: 's1234',
-          labels: ['city', 'country', 'number', 'phrase', 'trash']
-        }
-    </script>
+  <meta charset="UTF-8">
+  <title>Labelling</title>
+  <script type="application/javascript">
+    window.data = {
+      // type: 'class',
+      // prefix: '/dl',
+      // sessionId: 's1234',
+      // labels: ['city', 'country', 'number', 'phrase', 'trash']
+      type: 'geo',
+      prefix: '/dl',
+      sessionId: 's1234',
+      labels: [
+        { 'text': 'Moscow, Russia', 'value': '1234,ru' },
+        { 'text': 'Paris, France', value: '2314,fr' },
+        { 'text': 'New York, United States', value: '3455,us' }
+      ]
+    }
+  </script>
 </head>
 <body>
-    <div id="container"></div>
+<div id="container"></div>
 </body>
 </html>
