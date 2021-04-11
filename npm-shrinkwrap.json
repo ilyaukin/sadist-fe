@@ -986,9 +986,9 @@
       }
     },
     "@my-handicapped-pet/wired-combo-lazy": {
-      "version": "2.0.3",
-      "resolved": "https://registry.npmjs.org/@my-handicapped-pet/wired-combo-lazy/-/wired-combo-lazy-2.0.3.tgz",
-      "integrity": "sha512-l5YOzQmMPgAgwSKhjqbnqE3aNMzIUOqKLNd+Idpq6KjV5TbcDkfHNddTnno7pGJLsSSwHoIkFXNBeNritD3fVA==",
+      "version": "2.0.4",
+      "resolved": "https://registry.npmjs.org/@my-handicapped-pet/wired-combo-lazy/-/wired-combo-lazy-2.0.4.tgz",
+      "integrity": "sha512-K2xp8TpGPfL9zQCznVsJBNiK05Abvaq6MTdypvAARthX+XMV5cKpheDjNk0iLWe6HQuTHorfZkmMdczWUK142Q==",
       "requires": {
         "roughjs": "^4.3.1",
         "wired-card": "2.0.0",
