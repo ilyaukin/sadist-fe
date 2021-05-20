@@ -144,7 +144,7 @@ class Visualization extends Component {
           onUpdateFilteringValues={(values) => dispatchDsInfo({
             type: actionType.FILTER,
             col: pipeline[0].col,
-            key: `${pipeline[0].key}.name`,
+            key: `${pipeline[0].key}.id`,
             values
           })}
           onDropFiltering={() => dispatchDsInfo({

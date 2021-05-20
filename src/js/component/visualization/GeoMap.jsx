@@ -72,7 +72,7 @@ export class GeoMap extends Component {
     this.map.getMapObject().setSelectedMarkers(keys);
     onUpdateFilteringValues(this.points
       .filter((point, i) => keys[i])
-      .map(point => point.id.name));
+      .map(point => point.id.id));
   }
 
   render() {
