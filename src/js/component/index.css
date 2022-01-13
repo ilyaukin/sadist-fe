@@ -34,7 +34,7 @@ img.item {
 
 .new-dialog {
     min-height: 100px;
-    min-width: 600px;
+    width: 600px;
 }
 
 .new-dialog .main-pane {
@@ -91,6 +91,12 @@ wired-dialog {
 
 wired-dialog#error-dialog {
     --wired-dialog-z-index: 2;
+}
+
+.field-error {
+    color: maroon;
+    font-weight: bolder;
+    font-size: small;
 }
 
 p {

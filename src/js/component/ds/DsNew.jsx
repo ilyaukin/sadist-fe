@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { isVal } from "../../helper/wired-helper";
 import { GoogleSheetProviderDetails } from "../provider/GoogleSheetProviderDetails";
+import IProvider from "../provider/IProvider";
 import NullProvider from "../provider/NullProvider";
 import GoogleSheetProvider from "../provider/GoogleSheetProvider";
 import ErrorDialog from "../common/ErrorDialog";
@@ -101,6 +102,8 @@ class DsNew extends Component {
         <div>
           <div className="left-pane">
             {this.renderTypeCombo()}
+            <br/>
+            {this.state.provider.renderDescription()}
           </div>
           <div className="right-pane">
             {this.renderProviderDetails()}
