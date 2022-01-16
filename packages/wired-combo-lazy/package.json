@@ -1,0 +1,34 @@
+{
+  "name": "@my-handicapped-pet/wired-combo-lazy",
+  "version": "2.0.4",
+  "description": "fork of wiredjs.wired-elements/wired-combo, allows lazy item loadnig for big lists",
+  "main": "lib/wired-combo-lazy.js",
+  "scripts": {
+    "build": "rm -rf ./lib && tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/ilyaukin/wired-elements-customization.git"
+  },
+  "keywords": [
+    "combo",
+    "web-elements",
+    "webelements",
+    "sketchy",
+    "wired"
+  ],
+  "author": "Ilya Lyaukin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ilyaukin/wired-elements-customization/issues"
+  },
+  "homepage": "https://github.com/ilyaukin/wired-elements-customization#readme",
+  "dependencies": {
+    "@my-handicapped-pet/wired-base": "^2.0.5",
+    "@my-handicapped-pet/wired-card": "^2.0.0",
+    "@my-handicapped-pet/wired-item": "^2.0.0",
+    "@my-handicapped-pet/wired-lib": "^2.0.0",
+    "roughjs": "^4.3.1"
+  }
+}
