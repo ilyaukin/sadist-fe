@@ -56,6 +56,9 @@ export class WiredCard extends WiredBase {
 
   protected firstUpdated(_changedProperties: PropertyValues) {
     super.firstUpdated(_changedProperties);
+    if (this.fill && this.svg) {
+      this.svg.style.setProperty('--wired-card-background-fill', this.fill.trim());
+    }
     this.setAttribute(WiredBase.SHAPE_ATTR, `rectangle:offset=2,fill=hachure,elevation=${this.elevation},class=cardFill`);
   }
 
