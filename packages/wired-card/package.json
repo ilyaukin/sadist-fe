@@ -27,7 +27,9 @@
   "license": "MIT",
   "dependencies": {
     "@my-handicapped-pet/wired-base": "^2.0.5",
-    "@my-handicapped-pet/wired-lib": "^2.0.0"
+    "@my-handicapped-pet/wired-base-legacy": "^2.0.5",
+    "@my-handicapped-pet/wired-lib": "^2.0.0",
+    "roughjs": "^3.1.0"
   },
   "bugs": {
     "url": "https://github.com/wiredjs/wired-elements/issues"

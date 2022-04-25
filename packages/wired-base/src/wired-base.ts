@@ -1,5 +1,12 @@
 import { LitElement, PropertyValues, query } from "lit-element";
-import { debugLog, hachureFill, line, Point, polygon, rectangle } from "@my-handicapped-pet/wired-lib";
+import {
+  debugLog,
+  hachureFill,
+  line,
+  Point,
+  polygon,
+  rectangle
+} from "@my-handicapped-pet/wired-lib";
 
 export class WiredBase extends LitElement {
   @query('svg') protected svg?: SVGSVGElement;
@@ -156,3 +163,4 @@ export class WiredBase extends LitElement {
     });
   }
 }
+

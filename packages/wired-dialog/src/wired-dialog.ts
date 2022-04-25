@@ -1,6 +1,5 @@
 import { customElement, property, css, TemplateResult, html, CSSResult, LitElement, query } from 'lit-element';
-import { WiredCard } from 'wired-card/lib/wired-card.js';
-import 'wired-card/lib/wired-card.js';
+import { WiredCard } from '@my-handicapped-pet/wired-card';
 
 @customElement('wired-dialog')
 export class WiredDialog extends LitElement {
@@ -90,7 +89,7 @@ export class WiredDialog extends LitElement {
 
   updated() {
     if (this.card) {
-      this.card.wiredRender(true);
+      this.card.requestUpdate();
     }
   }
 }

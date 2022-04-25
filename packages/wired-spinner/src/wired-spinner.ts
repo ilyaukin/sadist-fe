@@ -1,9 +1,23 @@
-import { WiredBase, BaseCSS } from 'wired-lib/lib/wired-base';
-import { customElement, property, css, TemplateResult, html, CSSResultArray } from 'lit-element';
-import { ellipse, hachureEllipseFill, Point } from 'wired-lib';
+import {
+  css,
+  CSSResultArray,
+  customElement,
+  html,
+  property,
+  TemplateResult
+} from 'lit-element';
+import {
+  ellipse,
+  hachureEllipseFill,
+  Point
+} from '@my-handicapped-pet/wired-lib';
+import {
+  BaseCSS,
+  WiredBaseLegacy
+} from "@my-handicapped-pet/wired-base-legacy";
 
 @customElement('wired-spinner')
-export class WiredSpinner extends WiredBase {
+export class WiredSpinner extends WiredBaseLegacy {
   @property({ type: Boolean }) spinning = false;
   @property({ type: Number }) duration = 1500;
 

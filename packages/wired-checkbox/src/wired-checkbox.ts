@@ -1,9 +1,20 @@
-import { WiredBase, BaseCSS } from 'wired-lib/lib/wired-base';
-import { rectangle, line, Point, svgNode, fire } from 'wired-lib';
-import { customElement, property, query, css, TemplateResult, html, CSSResultArray } from 'lit-element';
+import {
+  css,
+  CSSResultArray,
+  customElement,
+  html,
+  property,
+  query,
+  TemplateResult
+} from 'lit-element';
+import { fire, line, Point, rectangle, svgNode } from '@my-handicapped-pet/wired-lib';
+import {
+  BaseCSS,
+  WiredBaseLegacy
+} from "@my-handicapped-pet/wired-base-legacy";
 
 @customElement('wired-checkbox')
-export class WiredCheckbox extends WiredBase {
+export class WiredCheckbox extends WiredBaseLegacy {
   @property({ type: Boolean }) checked = false;
   @property({ type: Boolean, reflect: true }) disabled = false;
   @property() private focused = false;

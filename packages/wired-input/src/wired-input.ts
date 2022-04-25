@@ -1,9 +1,20 @@
-import { rectangle, Point, fire } from 'wired-lib';
-import { WiredBase, BaseCSS } from 'wired-lib/lib/wired-base';
-import { customElement, property, query, css, TemplateResult, html, CSSResultArray } from 'lit-element';
+import { fire, Point, rectangle } from '@my-handicapped-pet/wired-lib';
+import {
+  css,
+  CSSResultArray,
+  customElement,
+  html,
+  property,
+  query,
+  TemplateResult
+} from 'lit-element';
+import {
+  BaseCSS,
+  WiredBaseLegacy
+} from "@my-handicapped-pet/wired-base-legacy";
 
 @customElement('wired-input')
-export class WiredInput extends WiredBase {
+export class WiredInput extends WiredBaseLegacy {
   @property({ type: Boolean, reflect: true }) disabled = false;
   @property({ type: String }) placeholder = '';
   @property({ type: String }) name?: string;

@@ -1,4 +1,4 @@
-import { BaseCSS, ResizeObserver } from '@my-handicapped-pet/wired-lib/lib/wired-base-legacy';
+import { BaseCSS, ResizeObserver } from '@my-handicapped-pet/wired-base-legacy';
 import { css, CSSResultArray, customElement, html, property, PropertyValues, TemplateResult } from 'lit-element';
 import { WiredBase } from "@my-handicapped-pet/wired-base";
 

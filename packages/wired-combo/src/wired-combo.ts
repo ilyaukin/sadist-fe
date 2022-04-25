@@ -1,4 +1,13 @@
-import { css, CSSResult, customElement, html, property, PropertyValues, query, TemplateResult } from 'lit-element';
+import {
+  css,
+  CSSResult,
+  customElement,
+  html,
+  property,
+  PropertyValues,
+  query,
+  TemplateResult
+} from 'lit-element';
 import { fire } from '@my-handicapped-pet/wired-lib';
 import { WiredBase } from "@my-handicapped-pet/wired-base";
 import { WiredCard } from '@my-handicapped-pet/wired-card';
@@ -121,6 +130,10 @@ export class WiredCombo extends WiredBase {
     `;
   }
 
+  // protected render(): unknown {
+  //   return html`<div>1111111111111111</div>`;
+  // }
+  //
   render(): TemplateResult {
     return html`
     <input id="searchInput" @keyup="${this.onSearch}">

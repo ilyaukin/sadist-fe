@@ -1,9 +1,17 @@
-import { WiredBase, BaseCSS, ResizeObserver } from 'wired-lib/lib/wired-base';
-import { rectangle, line, Point } from 'wired-lib';
-import { customElement, property, query, css, TemplateResult, html, CSSResultArray } from 'lit-element';
+import {
+  css,
+  CSSResultArray,
+  customElement,
+  html,
+  property,
+  query,
+  TemplateResult
+} from 'lit-element';
+import { line, Point, rectangle } from '@my-handicapped-pet/wired-lib';
+import { WiredBaseLegacy, BaseCSS, ResizeObserver } from "@my-handicapped-pet/wired-base-legacy";
 
 @customElement('wired-button')
-export class WiredButton extends WiredBase {
+export class WiredButton extends WiredBaseLegacy {
   @property({ type: Number }) elevation = 1;
   @property({ type: Boolean, reflect: true }) disabled = false;
 

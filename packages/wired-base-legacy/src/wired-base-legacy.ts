@@ -1,5 +1,5 @@
 import { LitElement, query, css, PropertyValues } from 'lit-element';
-import { Point } from './wired-lib';
+import { Point } from '@my-handicapped-pet/wired-lib';
 
 export type ResizeObserver = any;
 
@@ -57,5 +57,6 @@ export abstract class WiredBaseLegacy extends LitElement {
   }
 
   protected abstract canvasSize(): Point;
+
   protected abstract draw(svg: SVGSVGElement, size: Point): void;
 }

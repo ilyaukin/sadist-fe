@@ -1,6 +1,16 @@
-import { customElement, property, css, TemplateResult, html, CSSResultArray } from 'lit-element';
-import { WiredBase, BaseCSS } from 'wired-lib/lib/wired-base';
-import { rectangle, Point, fire } from 'wired-lib';
+import {
+  css,
+  CSSResultArray,
+  customElement,
+  html,
+  property,
+  TemplateResult
+} from 'lit-element';
+import { fire, Point, rectangle } from '@my-handicapped-pet/wired-lib';
+import {
+  BaseCSS,
+  WiredBaseLegacy
+} from "@my-handicapped-pet/wired-base-legacy";
 
 interface WiredComboItem extends HTMLElement {
   value: string;
@@ -13,7 +23,7 @@ interface ListboxValue {
 }
 
 @customElement('wired-listbox')
-export class WiredListbox extends WiredBase {
+export class WiredListbox extends WiredBaseLegacy {
   @property({ type: Object }) value?: ListboxValue;
   @property({ type: String }) selected?: string;
   @property({ type: Boolean }) horizontal = false;

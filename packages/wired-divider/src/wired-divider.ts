@@ -1,9 +1,19 @@
-import { customElement, property, css, TemplateResult, html, CSSResultArray } from 'lit-element';
-import { WiredBase, BaseCSS } from 'wired-lib/lib/wired-base';
-import { line, Point } from 'wired-lib';
+import {
+  css,
+  CSSResultArray,
+  customElement,
+  html,
+  property,
+  TemplateResult
+} from 'lit-element';
+import { line, Point } from '@my-handicapped-pet/wired-lib';
+import {
+  BaseCSS,
+  WiredBaseLegacy
+} from "@my-handicapped-pet/wired-base-legacy";
 
 @customElement('wired-divider')
-export class WiredDivider extends WiredBase {
+export class WiredDivider extends WiredBaseLegacy {
   @property({ type: Number }) elevation = 1;
 
   static get styles(): CSSResultArray {

@@ -53,10 +53,6 @@ module.exports = {
     })
   ],
   resolve: {
-    modules: [
-      path.resolve("./src"),
-      path.resolve("./node_modules")
-    ],
     extensions: [".js", ".jsx"]
   },
   // API mock
@@ -130,8 +126,8 @@ module.exports = {
             },
             {
               id: '3211123',
-              'Location': 'MOscow',
-              'Comment': 'The 3rd Reich'
+              'Location': 'Moscow',
+              'Comment': 'The 4th Reich'
             },
             {
               id: '1532535',
@@ -172,8 +168,8 @@ module.exports = {
             },
             {
               id: '3211123',
-              'Location': 'MOscow',
-              'Comment': 'The 3rd Reich'
+              'Location': 'Moscow',
+              'Comment': 'The 4th Reich'
             }
           ],
           success: true
