@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import 'wired-dialog';
+import '/packages/wired-dialog';
 import Icon from "../Icon";
 
 class CancelableDialog extends Component {

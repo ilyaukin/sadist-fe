@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
 import ReactDom from 'react-dom';
 import PropTypes from 'prop-types';
-import 'wired-listbox';
-import 'wired-item';
+import '/packages/wired-listbox';
+import '/packages/wired-item';
 import types from '../../helper/types';
 import Icon from '../Icon';
 import { actionType } from '../../reducer/dsInfo-reducer';

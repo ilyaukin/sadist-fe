@@ -1,12 +1,11 @@
-import '@webcomponents/custom-elements';
 import React from 'react';
-import DsList from './ds/DsList';
 import './index.css';
 import ErrorDialog from './common/ErrorDialog';
+import DsList from './ds/DsList';
 import DsTable from './ds/DsTable';
 import Visualization from './visualization/Visualization';
-import { renderPage } from '../helper/react-helper';
 import Splitter from './common/Splitter';
+import { renderPage } from '../helper/react-helper';
 import { buildDsInfo, actionType, reduceDsInfo } from '../reducer/dsInfo-reducer';
 
 const SPA = () => {

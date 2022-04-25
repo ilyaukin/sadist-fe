@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import 'wired-input';
+import '/packages/wired-input';
 
 class GoogleSheetProviderDetails extends Component {
   render() {
