@@ -6,20 +6,12 @@ import React from "react";
 class GoogleSheetProvider extends IProvider {
   type = 'GoogleSheet';
 
-  text = 'Google Sheets (Direct link)';
+  text = 'Google Sheets';
 
   icon = Icon.google;
 
   renderDescription() {
-    return <>
-      <p>Joel Spolsky’s observation that just starting to work on a small,
-        concrete, finishable problem puts your consciousness in a productive
-        state.
-      </p>
-      <strong>Corollary:</strong> Just do something concrete. Anything. Do your
-      laundry, or dust the counters, or add a single unit test. Just do
-      something
-    </>
+    return <p>Pick one of your Google Sheets to import; or use a direct link to the public sheet</p>;
   }
 
   renderDetails() {
