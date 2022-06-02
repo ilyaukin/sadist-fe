@@ -6,6 +6,9 @@
       "paths": [{
         "rootPathPrefix": "~/",
         "rootPathSuffix": "./src"
+      }, {
+        "rootPathPrefix": "/",
+        "rootPathSuffix": "./"
       }]
     }
   ]]
