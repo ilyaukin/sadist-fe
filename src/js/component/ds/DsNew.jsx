@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { isVal } from "../../helper/wired-helper";
-import { GoogleSheetProviderDetails } from "../provider/GoogleSheetProviderDetails";
 import IProvider from "../provider/IProvider";
+import ValidationError from "../provider/ValidationError";
 import NullProvider from "../provider/NullProvider";
 import GoogleSheetProvider from "../provider/GoogleSheetProvider";
 import ErrorDialog from "../common/ErrorDialog";
@@ -66,7 +66,11 @@ class DsNew extends Component {
           this.setState({ loading: false });
         })
       }).catch((e) => {
-        ErrorDialog.raise('Error fetching data source: ' + e.toString());
+        if (e instanceof ValidationError) {
+          //let user fix an error....
+        } else {
+          ErrorDialog.raise('Error fetching data source: ' + e.toString());
+        }
         this.setState({ loading: false });
       });
     })
