@@ -1,5 +1,5 @@
 import React from 'react';
-import './index.css';
+import './index.scss';
 import ErrorDialog from './common/ErrorDialog';
 import DsList from './ds/DsList';
 import DsTable from './ds/DsTable';

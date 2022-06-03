@@ -4,7 +4,7 @@ import '/packages/wired-radio-group';
 import '/packages/wired-radio';
 import '/packages/wired-button';
 import '/packages/wired-checkbox';
-import './index.css';
+import './index.scss';
 import './labelling.css';
 import { renderPage } from "../helper/react-helper";
 import LabellingInterface from "./labelling/LabellingInterface";

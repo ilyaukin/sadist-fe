@@ -58,8 +58,8 @@ class DsNew extends Component {
               }
               this.setState({ loading: false });
             }).catch((e) => {
-              ErrorDialog.raise('Error parsing json: ' + e.toString());
-              this.setState({ loading: false });
+            ErrorDialog.raise('Error parsing json: ' + e.toString());
+            this.setState({ loading: false });
           })
         }).catch((e) => {
           ErrorDialog.raise('Error putting data source: ' + e.toString());
@@ -76,6 +76,7 @@ class DsNew extends Component {
     return <DelayedRender>
       Source Type:<br/>
       <wired-combo
+        style={{ width: '100%' }}
         ref={(combo) => {
           this.combo = combo
         }}

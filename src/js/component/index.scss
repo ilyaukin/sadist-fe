@@ -32,34 +32,39 @@ img.item {
     margin-right: 7px;
 }
 
+:root {
+    --block-margin: 5px;
+}
+.block {
+    display: inline-block;
+    position: relative;
+    margin: var(--block-margin);
+}
+
 .new-dialog {
     min-height: 100px;
     width: 600px;
 }
 
 .new-dialog .main-pane {
+    min-height: 100px;
 }
 
 .new-dialog .left-pane {
-    display: inline-block;
-    position: relative;
+    @extend .block;
     float: left;
-    width: 50%;
-    min-height: 100px;
+    width: calc(50% - 2 * var(--block-margin));
 }
 
 .new-dialog .right-pane {
-    display: inline-block;
-    position: relative;
+    @extend .block;
     float: right;
-    width: 50%;
-    min-height: 100px;
+    width: calc(50% - 2 * var(--block-margin));
 }
 
 .new-dialog .button-pane {
-    display: inline-block;
-    position: relative;
-    width: 100%;
+    @extend .block;
+    width: calc(100% - 2 * var(--block-margin));
 }
 
 .new-dialog wired-button {
