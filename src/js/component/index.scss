@@ -7,6 +7,7 @@ h1, h2, h3 {
 }
 
 .content {
+    position: relative;
     max-width: 900px;
     margin: 0 auto;
     height: 100%;
@@ -104,6 +105,30 @@ wired-dialog#error-dialog {
     font-size: small;
 }
 
+.dropdown {
+    position: absolute;
+    right: 1px;
+    top: 1px;
+}
+
+.user-dropdown {
+    @extend .dropdown;
+    top: 10px;
+    right: 10px;
+}
+
+.user-dropdown img {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    float: right;
+}
+
+.user-dropdown .pane {
+    position: relative;
+    margin-top: 60px;
+}
+
 p {
     padding: 5px;
 }
@@ -114,9 +139,7 @@ p {
 }
 
 .col-filter {
-    position: absolute;
-    right: 1px;
-    top: 1px;
+    @extend .dropdown;
 }
 
 img.col-icon {
@@ -125,7 +148,7 @@ img.col-icon {
     float: right;
 }
 
-.col-filter-pane {
+.col-filter .pane {
     position: relative;
     left: 0;
     top: 18px;

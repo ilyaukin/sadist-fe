@@ -1,90 +1,50 @@
-import React, { Component } from 'react';
-import ReactDom from 'react-dom';
+import React, { useRef } from 'react';
 import PropTypes from 'prop-types';
-import '/packages/wired-listbox';
-import '/packages/wired-item';
 import types from '../../helper/types';
 import Icon from '../Icon';
 import { actionType } from '../../reducer/dsInfo-reducer';
+import Dropdown from '../common/Dropdown';
+import WiredListbox from '../common/WiredListbox';
+import WiredItem from '../common/WiredItem';
 
-class ColFilter extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      open: false
-    };
-  }
+const ColFilter = ({ colSpec, dispatchDsInfo }) => {
 
-  componentDidMount() {
-    document.addEventListener('click', this.onClickOutside);
-  }
+  const dropdownRef = useRef();
 
-  componentWillUnmount() {
-    document.removeEventListener('click', this.onClickOutside);
-  }
-
-  componentDidUpdate() {
-    if (this.groupings) {
-      this.groupings.addEventListener('selected', this.onGroupingSelected);
-    }
-
-    // relocate filter pane if it happened behind the left boundary of content
-    const colFilter = ReactDom.findDOMNode(this);
-    const colSpace = colFilter.parentElement;
-    const left = colSpace.offsetLeft + colFilter.offsetLeft;
-
-    if (left < 0 && this.colFilterPane) {
-      this.colFilterPane.style.left = `${-left}px`;
-    }
-  }
-
-  onOpen = () => {
-    this.setState({ open: !this.state.open });
-  };
-
-  onClickOutside = (event) => {
-    if (!this.dropdown.contains(event.target) && this.state.open) {
-      this.setState({ open: false });
-    }
-  };
-
-  onGroupingSelected = (event) => {
-    const { colSpec, dispatchDsInfo } = this.props;
+  const onGroupingSelected = (event) => {
     dispatchDsInfo({
       type: actionType.SELECT_GROUPING,
       col: colSpec.name,
       key: event.detail.selected
     });
-    this.setState({ open: false });
+    dropdownRef.current.collapse();
   };
 
-  renderGroupings(groupings, selectedGrouping) {
+  const renderGroupings = (groupings, selectedGrouping) => {
     if (!groupings) {
       return '';
     }
 
     return <div className="col-filter-pane-item" key="groupings">
-      <span className="col-filter-hint">Available grouping</span>
-      <wired-listbox
-        ref={groupings => this.groupings = groupings}
+      <span className="col-filter-hint">Group by...</span>
+      <WiredListbox
         selected={selectedGrouping?.key}
+        onSelected={onGroupingSelected}
       >
-        {groupings.map(grouping => <wired-item
+        {groupings.map(grouping => <WiredItem
           key={grouping.key}
           value={grouping.key}
         >
           {grouping.key}
-        </wired-item>)}
-      </wired-listbox>
+        </WiredItem>)}
+      </WiredListbox>
     </div>;
   }
 
-  renderFilterings(filterings, selectedGrouping) {
+  const renderFilterings = (filterings, selectedGrouping) => {
     if (!selectedGrouping) {
       return '';
     }
-
-    const { colSpec, dispatchDsInfo } = this.props;
 
     const makeFilterElement = (text, active, activate) => {
       return <span className="col-filter-element" key={text}>
@@ -101,7 +61,7 @@ class ColFilter extends Component {
           type: actionType.DROP_FILTER,
           col: colSpec.name
         });
-        this.setState({ open: false });
+        dropdownRef.current.collapse();
       }
     ));
 
@@ -120,7 +80,7 @@ class ColFilter extends Component {
           key: selectedGrouping.key,
           values: [null]
         });
-        this.setState({ open: false });
+        dropdownRef.current.collapse();
       }
     ));
     if (filterings) {
@@ -136,38 +96,24 @@ class ColFilter extends Component {
     }
 
     return <div className="col-filter-pane-item" key="filterings">
-      <span className="col-filter-hint">Filters</span>
+      <span className="col-filter-hint">Filter by {selectedGrouping.key}</span>
       {filterElements}
     </div>;
   }
 
-  render() {
-    const { colSpec } = this.props;
-    const { open } = this.state;
+  const selectedGrouping = colSpec.groupings
+    .find(grouping => grouping.selected);
+  const icon = selectedGrouping ? Icon.filterSelected : Icon.filter;
 
-    const selectedGrouping = colSpec.groupings
-      .find(grouping => grouping.selected);
-    const icon = selectedGrouping ? Icon.filterSelected : Icon.filter;
-
-    return <div className="col-filter">
-      <div style={{ width: "100%" }}>
-        <a ref={(dropdown => this.dropdown = dropdown)} href='#' onClick={this.onOpen}>
-          <img className="col-icon" src={icon} alt={`Group by ${colSpec.name}`}/>
-        </a>
-      </div>
-      {
-        open ?
-          <div
-            ref={colFilterPane => this.colFilterPane = colFilterPane}
-            className="col-filter-pane"
-          >
-            {this.renderGroupings(colSpec.groupings, selectedGrouping)}
-            {this.renderFilterings(colSpec.filterings, selectedGrouping)}
-          </div> :
-          ''
-      }
-    </div>;
-  }
+  return <Dropdown
+    ref={dropdownRef}
+    className="col-filter"
+    toggle={<img className="col-icon" src={icon} alt={`Group by ${colSpec.name}`}/>}
+    content={[
+      renderGroupings(colSpec.groupings, selectedGrouping),
+      renderFilterings(colSpec.filterings, selectedGrouping),
+    ]}
+  />;
 }
 
 ColFilter.propTypes = {

@@ -1,6 +1,7 @@
 import React from 'react';
 import './index.scss';
 import ErrorDialog from './common/ErrorDialog';
+import UserDropdown from './user/UserDropdown';
 import DsList from './ds/DsList';
 import DsTable from './ds/DsTable';
 import Visualization from './visualization/Visualization';
@@ -47,6 +48,7 @@ const SPA = () => {
 
   return <div className="content">
     <ErrorDialog err={err}/>
+    <UserDropdown/>
     <h1>
       {getTitle()}
     </h1>

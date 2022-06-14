@@ -61,6 +61,16 @@ module.exports = {
       app.use('/static/', express.static(path.join(__dirname, 'dist')))
     },
     after(app) {
+      app.get('/user/whoami', function (req, res) {
+        res.send({
+          user: {
+            'type': 'google',
+            'name': 'Ilya L.',
+            'avatar': 'https://lh3.googleusercontent.com/a/AATXAJwje0PGgbSrqZp0L1U3HtI7AZwwabLNw7-xhz8f=s96-c'
+          },
+          success: true
+        })
+      });
       app.get('/ls', function (req, res) {
         res.send({
           list: [
