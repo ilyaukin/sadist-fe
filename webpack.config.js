@@ -71,6 +71,24 @@ module.exports = {
           success: true
         })
       });
+      app.post('/user/login', function (req, res) {
+        res.send({
+          user: {
+            'type': 'google',
+            'name': 'Ilya L.',
+            'avatar': 'https://lh3.googleusercontent.com/a/AATXAJwje0PGgbSrqZp0L1U3HtI7AZwwabLNw7-xhz8f=s96-c'
+          },
+          success: true
+        })
+      });
+      app.post('/user/logout', function (req, res) {
+        res.send({
+          user: {
+            'type': 'anon'
+          },
+          success: true
+        })
+      });
       app.get('/ls', function (req, res) {
         res.send({
           list: [

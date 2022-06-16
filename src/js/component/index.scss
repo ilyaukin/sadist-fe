@@ -129,6 +129,13 @@ wired-dialog#error-dialog {
     margin-top: 60px;
 }
 
+.google-login-button {
+    @extend .block;
+    width: 100%;
+    cursor: pointer;
+    text-align: center;
+}
+
 p {
     padding: 5px;
 }
