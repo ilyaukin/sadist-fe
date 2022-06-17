@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import PropTypes from 'prop-types';
 import types from '../../helper/types';
-import Icon from '../Icon';
+import Icon from '../../icon/Icon';
 import { actionType } from '../../reducer/dsInfo-reducer';
 import Dropdown from '../common/Dropdown';
 import WiredListbox from '../common/WiredListbox';

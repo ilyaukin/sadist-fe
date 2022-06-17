@@ -4,7 +4,7 @@ import "/packages/wired-combo";
 import "/packages/wired-item";
 import "/packages/wired-dialog";
 import ErrorDialog from "../common/ErrorDialog";
-import Icon from "../Icon";
+import Icon from "../../icon/Icon";
 import DsNew from "./DsNew";
 import { isVal } from "../../helper/wired-helper";
 import CancelableDialog from "../common/CancelableDialog";

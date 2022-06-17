@@ -6,7 +6,7 @@ import WiredListbox from '../common/WiredListbox';
 import WiredItem from '../common/WiredItem';
 import UserLoginDialog from './UserLoginDialog';
 import ErrorDialog from '../common/ErrorDialog';
-import { useLogout } from '../../helper/user-hooks';
+import { useLogout } from '../../hook/user-hooks';
 import { isVal } from '../../helper/wired-helper';
 
 const UserDropdown = () => {

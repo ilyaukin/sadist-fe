@@ -1,6 +1,6 @@
 import IProvider from "./IProvider";
 import ValidationError from "./ValidationError";
-import Icon from "../Icon";
+import Icon from "../../icon/Icon";
 import GoogleSheetProviderDetails from "./GoogleSheetProviderDetails";
 import React from "react";
 

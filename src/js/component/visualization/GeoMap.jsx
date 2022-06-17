@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import PropTypes from "prop-types";
 import { VectorMap } from "react-jvectormap";
 import equal from 'deep-equal';
-import '../jquery-jvectormap.css'
+import '../../../css/jquery-jvectormap.css'
 
 // medium marker radius
 const MID_R = 10;

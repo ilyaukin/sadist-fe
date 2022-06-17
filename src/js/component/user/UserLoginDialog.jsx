@@ -2,7 +2,7 @@ import React from 'react';
 import GoogleLoginImage from '~/img/g-login.jpg';
 import CancelableDialog from '../common/CancelableDialog';
 import ErrorDialog from '../common/ErrorDialog';
-import { useLogin } from '../../helper/user-hooks';
+import { useLogin } from '../../hook/user-hooks';
 
 const UserLoginDialog = ({ open, onCancel, onSuccess }) => {
 

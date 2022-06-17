@@ -1,5 +1,5 @@
 import React from 'react';
-import './index.scss';
+import '../../css/index.scss';
 import ErrorDialog from './common/ErrorDialog';
 import UserDropdown from './user/UserDropdown';
 import DsList from './ds/DsList';
