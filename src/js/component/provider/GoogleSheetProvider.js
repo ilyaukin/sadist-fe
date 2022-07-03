@@ -12,7 +12,7 @@ class GoogleSheetProvider extends IProvider {
   icon = Icon.google;
 
   renderDescription() {
-    return <p>Pick one of your Google Sheets to import; or use a direct link to the public sheet</p>;
+    return <p>Pick one of your Google Sheets to import; or use the direct link to a public sheet</p>;
   }
 
   renderDetails() {

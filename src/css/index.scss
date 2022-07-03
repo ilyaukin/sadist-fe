@@ -105,6 +105,12 @@ wired-dialog#error-dialog {
     font-size: small;
 }
 
+.external-error {
+    color: maroon;
+    font-weight: bold;
+    font-size: small;
+}
+
 .dropdown {
     position: absolute;
     right: 1px;
@@ -117,11 +123,18 @@ wired-dialog#error-dialog {
     right: 10px;
 }
 
-.user-dropdown img {
+.user-dropdown-icon {
+    display: inline-block;
+    position: relative;
     width: 60px;
     height: 60px;
-    border-radius: 50%;
     float: right;
+}
+
+.user-dropdown-icon img {
+    width: 100%;
+    height: 100%;
+    border-radius: 10px;
 }
 
 .user-dropdown .pane {
@@ -134,6 +147,20 @@ wired-dialog#error-dialog {
     width: 100%;
     cursor: pointer;
     text-align: center;
+}
+
+.or-divider {
+    @extend .block;
+    width: 100%;
+    text-align: center;
+}
+
+.google-sheet-list-block {
+    @extend .block;
+    width: 100%;
+    min-height:70px;
+    background-color: #888888;
+    box-shadow: 2px 2px #292929;
 }
 
 p {

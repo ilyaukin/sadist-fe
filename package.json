@@ -39,12 +39,15 @@
     "webpack-dev-server": "^3.10.3"
   },
   "dependencies": {
+    "@types/gapi": "^0.0.42",
+    "@types/gapi.auth2": "^0.0.56",
+    "@types/gapi.drive": "^0.0.3",
     "deep-equal": "^2.0.2",
+    "gapi-script": "^1.2.0",
     "moment": "^2.24.0",
     "prop-types": "^15.7.2",
     "react": "^16.12.0",
     "react-dom": "^16.12.0",
-    "react-google-login": "^5.2.2",
     "react-jvectormap": "0.0.16"
   }
 }

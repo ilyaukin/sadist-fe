@@ -5,7 +5,7 @@ import ErrorDialog from '../common/ErrorDialog';
 import types from '../../helper/types';
 import Loader from '../common/Loader';
 import { GeoMap } from './GeoMap';
-import { actionType } from '../../reducer/dsInfo-reducer';
+import { dsInfoActionType } from '../../reducer/dsInfo-reducer';
 
 class Visualization extends Component {
   queryNo = 0;
@@ -61,7 +61,7 @@ class Visualization extends Component {
               this.handleUpdateStatusError(`Server did not return record for id=${dsId}`);
             } else {
               if (this.props.dsId === meta.id) {
-                dispatchDsInfo({ type: actionType.UPDATE_STATUS_SUCCESS, meta });
+                dispatchDsInfo({ type: dsInfoActionType.UPDATE_STATUS_SUCCESS, meta });
                 this.scheduleUpdateStatus();
               }
             }
@@ -72,7 +72,7 @@ class Visualization extends Component {
   }
 
   handleUpdateStatusError(err) {
-    this.props.dispatchDsInfo({ type: actionType.UPDATE_STATUS_ERROR, err });
+    this.props.dispatchDsInfo({ type: dsInfoActionType.UPDATE_STATUS_ERROR, err });
   }
 
   refresh() {
@@ -142,13 +142,13 @@ class Visualization extends Component {
         return <GeoMap
           result={result}
           onUpdateFilteringValues={(values) => dispatchDsInfo({
-            type: actionType.FILTER,
+            type: dsInfoActionType.FILTER,
             col: pipeline[0].col,
             key: `${pipeline[0].key}.id`,
             values
           })}
           onDropFiltering={() => dispatchDsInfo({
-            type: actionType.DROP_FILTER,
+            type: dsInfoActionType.DROP_FILTER,
             col: pipeline[0].col
           })}
         />;

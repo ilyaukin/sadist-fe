@@ -2,7 +2,7 @@ import React, { useRef } from 'react';
 import PropTypes from 'prop-types';
 import types from '../../helper/types';
 import Icon from '../../icon/Icon';
-import { actionType } from '../../reducer/dsInfo-reducer';
+import { dsInfoActionType } from '../../reducer/dsInfo-reducer';
 import Dropdown from '../common/Dropdown';
 import WiredListbox from '../common/WiredListbox';
 import WiredItem from '../common/WiredItem';
@@ -13,7 +13,7 @@ const ColFilter = ({ colSpec, dispatchDsInfo }) => {
 
   const onGroupingSelected = (event) => {
     dispatchDsInfo({
-      type: actionType.SELECT_GROUPING,
+      type: dsInfoActionType.SELECT_GROUPING,
       col: colSpec.name,
       key: event.detail.selected
     });
@@ -58,7 +58,7 @@ const ColFilter = ({ colSpec, dispatchDsInfo }) => {
       !filterings,
       () => {
         dispatchDsInfo({
-          type: actionType.DROP_FILTER,
+          type: dsInfoActionType.DROP_FILTER,
           col: colSpec.name
         });
         dropdownRef.current.collapse();
@@ -75,7 +75,7 @@ const ColFilter = ({ colSpec, dispatchDsInfo }) => {
         filtering.key === selectedGrouping.key),
       () => {
         dispatchDsInfo({
-          type: actionType.FILTER,
+          type: dsInfoActionType.FILTER,
           col: colSpec.name,
           key: selectedGrouping.key,
           values: [null]

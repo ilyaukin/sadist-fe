@@ -1,6 +1,8 @@
 import React, { Component } from "react";
 import '/packages/wired-input';
+import { Or } from '../common/Or';
 import ValidationError from "./ValidationError";
+import GoogleSheetList from './GoogleSheetList';
 
 class GoogleSheetProviderDetails extends Component {
 
@@ -25,6 +27,8 @@ class GoogleSheetProviderDetails extends Component {
   render() {
     const { urlError } = this.state;
     return <div>
+      <GoogleSheetList/>
+      <Or/>
       URL:<br/>
       <wired-input style={{ width: '100%' }} ref={(url) => {
         // console.log(this)
