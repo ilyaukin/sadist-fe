@@ -29,7 +29,7 @@ export class WiredItem extends WiredBase {
         font-size: inherit;
         letter-spacing: 1.25px;
         padding: 1px 10px;
-        min-height: 36px;
+        min-height: var(--wired-item-min-height, 36px);
         text-transform: inherit;
         background: none;
         border: none;

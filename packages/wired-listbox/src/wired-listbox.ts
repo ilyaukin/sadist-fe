@@ -1,18 +1,9 @@
-import {
-  css,
-  CSSResultArray,
-  customElement,
-  html,
-  property,
-  TemplateResult
-} from 'lit-element';
-import { fire, Point, rectangle } from '@my-handicapped-pet/wired-lib';
-import {
-  BaseCSS,
-  WiredBaseLegacy
-} from "@my-handicapped-pet/wired-base-legacy";
+import { css, CSSResultArray, customElement, html, property, PropertyValues, TemplateResult } from 'lit-element';
+import { fire } from '@my-handicapped-pet/wired-lib';
+import { BaseCSS } from "@my-handicapped-pet/wired-base-legacy";
+import { WiredBase } from "@my-handicapped-pet/wired-base";
 
-interface WiredComboItem extends HTMLElement {
+interface WiredListboxItem extends HTMLElement {
   value: string;
   selected: boolean;
 }
@@ -23,52 +14,65 @@ interface ListboxValue {
 }
 
 @customElement('wired-listbox')
-export class WiredListbox extends WiredBaseLegacy {
+export class WiredListbox extends WiredBase {
   @property({ type: Object }) value?: ListboxValue;
   @property({ type: String }) selected?: string;
   @property({ type: Boolean }) horizontal = false;
 
-  private itemNodes: WiredComboItem[] = [];
-  private lastSelectedItem?: WiredComboItem;
+  private itemNodes: WiredListboxItem[] = [];
+  private selectedItem?: WiredListboxItem;
   private itemClickHandler = this.onItemClick.bind(this);
 
   static get styles(): CSSResultArray {
     return [
       BaseCSS,
       css`
-      :host {
-        display: inline-block;
-        font-family: inherit;
-        position: relative;
-        padding: 5px;
-        outline: none;
-      }
-      :host(:focus) path {
-        stroke-width: 1.5;
-      }
-      ::slotted(wired-item) {
-        display: block;
-      }
-      :host(.wired-horizontal) ::slotted(wired-item) {
-        display: inline-block;
-      }
+        :host {
+          display: inline-block;
+          font-family: inherit;
+          position: relative;
+          padding: 5px;
+          outline: none;
+        }
+
+        :host(:focus) path {
+          stroke-width: 1.5;
+        }
+
+        ::slotted(wired-item) {
+          display: block;
+        }
+
+        :host(.wired-horizontal) ::slotted(wired-item) {
+          display: inline-block;
+        }
+
+        #item-container {
+          height: inherit;
+          max-height: inherit;
+          overflow-y: auto;
+        }
       `
     ];
   }
 
   render(): TemplateResult {
     return html`
-    <slot id="slot" @slotchange="${() => this.requestUpdate()}"></slot>
-    <div id="overlay">
-      <svg id="svg"></svg>
-    </div>
+      <div id="item-container">
+        <slot id="slot" @slotchange="${(this.onSlotChanged)}"></slot>
+      </div>
+      <div id="overlay">
+        <svg id="svg"></svg>
+      </div>
     `;
   }
 
-  firstUpdated() {
+  firstUpdated(_changedProperties: PropertyValues) {
+    super.firstUpdated(_changedProperties)
+    this.setAttribute(WiredListbox.SHAPE_ATTR, 'rectangle');
     this.setAttribute('role', 'listbox');
     this.tabIndex = +((this.getAttribute('tabindex') || 0));
-    this.refreshSelection();
+    this.select(this.getSelectedItemBySelected());
     this.addEventListener('click', this.itemClickHandler);
     this.addEventListener('keydown', (event) => {
       switch (event.keyCode) {
@@ -93,119 +97,71 @@ export class WiredListbox extends WiredBaseLegacy {
     } else {
       this.classList.remove('wired-horizontal');
     }
-    if (!this.itemNodes.length) {
-      this.itemNodes = [];
-      const nodes = (this.shadowRoot!.getElementById('slot') as HTMLSlotElement).assignedNodes();
-      if (nodes && nodes.length) {
-        for (let i = 0; i < nodes.length; i++) {
-          const element = nodes[i] as WiredComboItem;
-          if (element.tagName === 'WIRED-ITEM') {
-            element.setAttribute('role', 'option');
-            this.itemNodes.push(element);
-          }
-        }
-      }
+  }
+
+  private getSelectedItemBySelected() {
+    //first time look up item by "selected" attribute
+    if (this.selected) {
+      return this.itemNodes.filter(node => node.value === this.selected)[0];
     }
+    return undefined;
+  }
+
+  private select(item?: WiredListboxItem) {
+    if (this.selectedItem) {
+      this.selectedItem.selected = false;
+      this.selectedItem.removeAttribute('aria-selected');
+    }
+    if (item) {
+      item.selected = true;
+      item.setAttribute('aria-selected', 'true');
+      this.value = {
+        value: item.value || '',
+        text: item.textContent || ''
+      };
+    } else {
+      this.value = undefined;
+    }
+    this.selectedItem = item;
+  }
+
+  private fireSelected() {
+    this.selected = this.selectedItem?.value;
+    fire(this, 'selected', { selected: this.selected });
   }
 
   private onItemClick(event: Event) {
     event.stopPropagation();
-    this.selected = (event.target as WiredComboItem).value;
-    this.refreshSelection();
+    this.select(event.target as WiredListboxItem);
     this.fireSelected();
   }
 
-  private refreshSelection() {
-    if (this.lastSelectedItem) {
-      this.lastSelectedItem.selected = false;
-      this.lastSelectedItem.removeAttribute('aria-selected');
-    }
-    const slot = this.shadowRoot!.getElementById('slot') as HTMLSlotElement;
-    const nodes = slot.assignedNodes();
-    if (nodes) {
-      let selectedItem = null;
-      for (let i = 0; i < nodes.length; i++) {
-        const element = nodes[i] as WiredComboItem;
-        if (element.tagName === 'WIRED-ITEM') {
-          const value = element.value || '';
-          if (this.selected && (value === this.selected)) {
-            selectedItem = element;
-            break;
-          }
-        }
-      }
-      this.lastSelectedItem = selectedItem || undefined;
-      if (this.lastSelectedItem) {
-        this.lastSelectedItem.selected = true;
-        this.lastSelectedItem.setAttribute('aria-selected', 'true');
-      }
-      if (selectedItem) {
-        this.value = {
-          value: selectedItem.value || '',
-          text: selectedItem.textContent || ''
-        };
-      } else {
-        this.value = undefined;
-      }
-    }
-  }
-
-  private fireSelected() {
-    fire(this, 'selected', { selected: this.selected });
-  }
-
   private selectPrevious() {
-    const list = this.itemNodes;
-    if (list.length) {
-      let index = -1;
-      for (let i = 0; i < list.length; i++) {
-        if (list[i] === this.lastSelectedItem) {
-          index = i;
-          break;
-        }
-      }
-      if (index < 0) {
-        index = 0;
-      } else if (index === 0) {
-        index = list.length - 1;
-      } else {
-        index--;
-      }
-      this.selected = list[index].value || '';
-      this.refreshSelection();
-      this.fireSelected();
-    }
+    const item = this.selectedItem?.previousElementSibling ?
+      this.selectedItem.previousElementSibling : this.itemNodes[this.itemNodes.length - 1];
+    this.select(item as WiredListboxItem);
+    this.fireSelected();
   }
 
   private selectNext() {
-    const list = this.itemNodes;
-    if (list.length) {
-      let index = -1;
-      for (let i = 0; i < list.length; i++) {
-        if (list[i] === this.lastSelectedItem) {
-          index = i;
-          break;
+    const item = this.selectedItem?.nextElementSibling ?
+      this.selectedItem.nextElementSibling : this.itemNodes[0];
+    this.select(item as WiredListboxItem);
+    this.fireSelected();
+  }
+
+  private onSlotChanged() {
+    this.itemNodes = [];
+    const nodes = (this.shadowRoot!.getElementById('slot') as HTMLSlotElement).assignedNodes();
+    if (nodes && nodes.length) {
+      for (let i = 0; i < nodes.length; i++) {
+        const element = nodes[i] as WiredListboxItem;
+        if (element.tagName === 'WIRED-ITEM') {
+          element.setAttribute('role', 'option');
+          this.itemNodes.push(element);
         }
       }
-      if (index < 0) {
-        index = 0;
-      } else if (index >= (list.length - 1)) {
-        index = 0;
-      } else {
-        index++;
-      }
-      this.selected = list[index].value || '';
-      this.refreshSelection();
-      this.fireSelected();
     }
-  }
-
-  protected canvasSize(): Point {
-    const s = this.getBoundingClientRect();
-    return [s.width, s.height];
-  }
-
-  protected draw(svg: SVGSVGElement, size: Point) {
-    rectangle(svg, 0, 0, size[0], size[1]);
+    this.requestUpdate();
   }
 }

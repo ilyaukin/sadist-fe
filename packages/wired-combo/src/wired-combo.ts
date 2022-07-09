@@ -106,7 +106,7 @@ export class WiredCombo extends WiredBase {
 
       #item-container {
         max-height: 200px;
-        overflow-y: scroll;
+        overflow-y: auto;
       }
 
       ::slotted(wired-item) {
