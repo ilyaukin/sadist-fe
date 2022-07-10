@@ -36,6 +36,7 @@ img.item {
 :root {
     --block-margin: 5px;
 }
+
 .block {
     display: inline-block;
     position: relative;
@@ -158,9 +159,19 @@ wired-dialog#error-dialog {
 .google-sheet-list-block {
     @extend .block;
     width: 100%;
-    min-height:70px;
+    min-height: 70px;
     background-color: #888888;
     box-shadow: 2px 2px #292929;
+}
+
+.google-sheet-list {
+    width: 100%;
+    max-height: 280px;
+}
+
+.google-sheet-list-item {
+    --wired-item-min-height: 20px;
+    font-size: 10px;
 }
 
 p {

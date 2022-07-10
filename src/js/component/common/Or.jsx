@@ -1,3 +1,5 @@
 import React from 'react';
 
-export const Or = () => <div className="or-divider">------------- OR ------------ <br/></div>;
+const Or = () => <div className="or-divider">------------- OR ------------ <br/></div>;
+
+export default Or;

@@ -1,17 +1,16 @@
 import React, { useEffect, useRef } from 'react';
-import '/packages/wired-listbox';
+import '/packages/wired-radio-group';
 
-const WiredListbox = ({ onSelected, ...params }) => {
+const WiredRadioGroup = ({ onSelected, ...params }) => {
   const ref = useRef();
-
   useEffect(() => {
     if (ref.current && onSelected) {
       ref.current.addEventListener('selected', onSelected);
       return () => ref.current.removeEventListener('selected', onSelected);
     }
-  }, [onSelected]);
+  });
 
-  return <wired-listbox ref={ref} {...params}/>
+  return <wired-radio-group ref={ref} {...params}/>;
 }
 
-export default WiredListbox;
+export default WiredRadioGroup;

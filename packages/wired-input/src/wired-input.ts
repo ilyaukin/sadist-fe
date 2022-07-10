@@ -109,6 +109,10 @@ export class WiredInput extends WiredBaseLegacy {
     delete this.pendingValue;
   }
 
+  focus(options?: FocusOptions) {
+    this.input?.focus(options);
+  }
+
   protected canvasSize(): Point {
     const s = this.getBoundingClientRect();
     return [s.width, s.height];

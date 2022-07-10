@@ -3,25 +3,30 @@ import equal from 'deep-equal'
 import CountDownClock from '../component/visualization/CountDownClock'
 import React from 'react'
 
-/**
- * A factory that returns fresh dsInfo object.
-
- * @param meta Meta info on ds, can be retrieved by /ls API
- * @param colSpecs see types.colSpecs
- * TODO change data structure?
- * @param err Error on retrieving DS meta
- * @param shouldUpdateVisualization if should call refresh() on Visualization
- */
-export const buildDsInfo = function ({
-  meta,
-  colSpecs,
-  err,
-  shouldUpdateVisualization
-} = {
+export const defaultDsInfo = {
   meta: {},
   colSpecs: [],
   shouldUpdateVisualization: false
-}) {
+}
+
+/**
+ * A factory that returns fresh dsInfo object.
+
+ * @param meta {Object} Meta info on ds, can be retrieved by /ls API
+ * @param colSpecs see {@link colSpecs}
+ * TODO change data structure?
+ * @param err {string} Error on retrieving DS meta
+ * @param shouldUpdateVisualization {boolean} if should call refresh() on Visualization
+ */
+export let buildDsInfo;
+buildDsInfo = function (
+  {
+    meta,
+    colSpecs,
+    err,
+    shouldUpdateVisualization
+  }
+) {
 
   return {
     meta,
@@ -150,7 +155,7 @@ export const buildDsInfo = function ({
      * @returns [] (`query` argument) for /ds/{}/filter API.
      * if no filtering, return undefined.
      */
-    getFilteringQuery: function() {
+    getFilteringQuery: function () {
       let query = [];
       this.colSpecs.forEach(colSpec => {
         if (colSpec.filterings) {
@@ -242,6 +247,11 @@ export const buildDsInfo = function ({
     },
 
     isFinal: function () {
+      if (this.err) {
+        // no automatic update if got an error once
+        return true;
+      }
+
       let { classification, detailization } = this.meta
       classification = classification || {}
       detailization = detailization || {}
@@ -252,7 +262,7 @@ export const buildDsInfo = function ({
           .reduce((a, b) => a && b, true)
     },
   }
-}
+};
 
 /**
  * Types of actions that can be dispatched to reduce dsInfo

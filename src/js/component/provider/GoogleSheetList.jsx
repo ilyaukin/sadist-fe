@@ -5,8 +5,10 @@ import GoogleSheetListBlock from './GoogleSheetListBlock';
 import Loader from '../common/Loader';
 import UserLoginGoogleButton from '../user/UserLoginGoogleButton';
 import { isVal } from '../../helper/wired-helper';
+import WiredListbox from '../common/WiredListbox';
+import WiredItem from '../common/WiredItem';
 
-const GoogleSheetList = () => {
+const GoogleSheetList = ({ onSheetSelected }) => {
   // 3 states are possible here: undefined (query in progress),
   // false (not signed in), true (signed in)
   const [isSignIn, setSignIn] = useState();
@@ -19,21 +21,18 @@ const GoogleSheetList = () => {
   });
 
   useEffect(() => {
-    checkAuth({
-      onSuccess: setSignIn,
-      onFailure: (error) => ErrorDialog.raise(`Error checking authorization: ${error.toString()}`),
-    });
+    checkAuth({ onSuccess: setSignIn })
+      .catch((e) => ErrorDialog.raise(`Error checking authorization: ${e.toString()}`));
   }, []);
 
   useEffect(() => {
     if (isSignIn) {
       setSheetState(s => ({ ...s, sheetsLoading: true }));
-      listSheets({
-        onSuccess: sheets => setSheetState(s => ({ ...s, sheets, sheetsLoading: false })),
-        onFailure: (e) => {
+      listSheets()
+        .then(sheets => setSheetState(s => ({ ...s, sheets, sheetsLoading: false })))
+        .catch((e) => {
           setSheetState(s => ({ ...s, sheetsLoading: false, sheetsError: e }));
-        },
-      }).then(() => console.log('listSheets finished')).catch(() => console.log('listSheets fail'));
+        });
     }
   }, [isSignIn]);
 
@@ -46,12 +45,24 @@ const GoogleSheetList = () => {
     return <UserLoginGoogleButton/>
   }
 
+  const renderSheet = (sheet, i) => {
+    return <WiredItem key={i} class="google-sheet-list-item" value={i}>
+      {sheet.name}
+    </WiredItem>;
+  };
+
+  const onSelected = (event) => {
+    onSheetSelected(sheetState.sheets[parseInt(event.detail.selected)], event);
+  }
+
   return <GoogleSheetListBlock>
     <Loader loading={isVal(sheetState.sheetsLoading)}/>
     {
       sheetState.sheetsError ?
         <span className="external-error">{sheetState.sheetsError}</span> :
-        sheetState.sheets.map(sheet => <a href="#">{sheet.name}</a>)
+        <WiredListbox class="google-sheet-list" onSelected={onSelected}>
+          {sheetState.sheets.map(renderSheet)}
+        </WiredListbox>
     }
   </GoogleSheetListBlock>
 }

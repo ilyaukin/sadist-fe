@@ -42,6 +42,7 @@
   "dependencies": {
     "@types/gapi": "^0.0.42",
     "@types/gapi.auth2": "^0.0.56",
+    "@types/gapi.client.sheets": "^4.0.20201029",
     "@types/gapi.drive": "^0.0.3",
     "deep-equal": "^2.0.2",
     "gapi-script": "^1.2.0",
