@@ -5,8 +5,9 @@ import WiredRadio from '../common/WiredRadio';
 import WiredInput from '../common/WiredInput';
 import WiredRadioGroup from '../common/WiredRadioGroup';
 import ValidationError from "./ValidationError";
+import PropTypes from 'prop-types';
 
-class GoogleSheetProviderDetails extends Component {
+class GoogleSheetProviderScreen extends Component {
 
   constructor(props) {
     super(props);
@@ -16,6 +17,18 @@ class GoogleSheetProviderDetails extends Component {
       listError: undefined,
       url: undefined,
       urlError: undefined,
+    }
+  }
+
+  componentDidMount() {
+    if (this.props.onUpdateScreens) {
+      this.props.onUpdateScreens();
+    }
+  }
+
+  componentDidUpdate(prevProps, prevState, snapshot) {
+    if (this.props.onUpdateScreens && prevState?.selectedRadio !== this.state.selectedRadio) {
+      this.props.onUpdateScreens();
     }
   }
 
@@ -110,4 +123,8 @@ class GoogleSheetProviderDetails extends Component {
   }
 }
 
-export default GoogleSheetProviderDetails;
+GoogleSheetProviderScreen.propTypes = {
+  onUpdateScreens: PropTypes.func,
+}
+
+export default GoogleSheetProviderScreen;

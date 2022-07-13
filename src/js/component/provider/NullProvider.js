@@ -1,7 +1,7 @@
-import IProvider from "./IProvider";
+import AbstractProvider from "./AbstractProvider";
 import React from 'react';
 
-class NullProvider extends IProvider {
+class NullProvider extends AbstractProvider {
 
   hints = {
     0 /*Sunday*/: [
@@ -64,7 +64,7 @@ class NullProvider extends IProvider {
         <strong>Example:</strong> Pair programming.
       </>
     ],
-    1: [ <><p><a href="https://en.wikipedia.org/wiki/Efficient-market_hypothesis">Efficient market hypothesis</a> – the
+    1: [<><p><a href="https://en.wikipedia.org/wiki/Efficient-market_hypothesis">Efficient market hypothesis</a> – the
       state of any given issue in the world is <em>roughly</em> as close to optimal as is currently possible.<br/>
       <strong>Corollary:</strong> It’s unlikely that the status quo can be easily improved without significant
       resources.<br/> <strong>Example:</strong> Cucumber juice probably doesn’t cure cancer.<br/>
@@ -97,8 +97,8 @@ class NullProvider extends IProvider {
       <strong>Example:</strong> If someone is wearing funny clothes, purports to know the one true way, and keeps
       talking about the glorious leader, you can usually dismiss their arguments without deeper examination.<br/>
       <strong>Warning:</strong> This method usually works because most kooky people aren’t innovators, but will misfire
-      in important situations because many innovators initially seem kooky.</p></> ],
-    2: [ <><p><strong>Inversion</strong> – the observation that many hard problems are best solved when they’re
+      in important situations because many innovators initially seem kooky.</p></>],
+    2: [<><p><strong>Inversion</strong> – the observation that many hard problems are best solved when they’re
       addressed backward. In other words figure out what you don’t want, avoid it, and you’ll get what you do want.<br/>
       <strong>Corollary:</strong> Find out how people commonly fail doing what you do, and avoid failing like them.<br/>
       <strong>Example:</strong> If you want to help India, ask “what is doing the worst damage in India and how can we
@@ -131,8 +131,8 @@ class NullProvider extends IProvider {
       giving). Tactical decisions are encapsulated into outcomes that have relatively quick binary resolutions (success
       or failure).<br/> <strong>Example:</strong> Picking a programming language is a strategic decision.<br/>
       <strong>Example:</strong> Picking a line of reasoning when trying to close a sale is a tactical decision.<br/>
-      <strong>Corollary:</strong> Most people misuse these terms (e.g. “we need a strategy for this meeting”).</p></> ],
-    3: [ <><p><a href="https://en.wikipedia.org/wiki/Intelligence_quotient">IQ</a>, <a
+      <strong>Corollary:</strong> Most people misuse these terms (e.g. “we need a strategy for this meeting”).</p></>],
+    3: [<><p><a href="https://en.wikipedia.org/wiki/Intelligence_quotient">IQ</a>, <a
       href="https://doc.research-and-analytics.csfb.com/docView?language…&amp;serialid=mofPYk1Y4WanTeErbeMtPx6ur0SCIcSlaZ7sKGPdQQU%3D">RQ</a>,
       and <a href="https://en.wikipedia.org/wiki/Emotional_intelligence">EQ</a> – respectively, intelligence quotient
       (assessment of the mind’s raw horse power), rationality quotient (assessment of how well the mind’s models map to
@@ -158,14 +158,14 @@ class NullProvider extends IProvider {
       towards others who confidently display vulnerability.<br/> <strong>Corollary:</strong> Humans feel a strong desire
       to <a href="https://en.wikipedia.org/wiki/Reciprocity_(social_psychology)">reciprocate</a> vulnerability.
       Vulnerability expression by others gives them a sense of safety to express themselves, followed by a feeling of
-      relief and a strong bond with the counterpary.</p></> ],
-    4: [ <><a href="https://en.wikipedia.org/wiki/Mere-exposure_effect">Mere-exposure effect</a> – an observation that
+      relief and a strong bond with the counterpary.</p></>],
+    4: [<><a href="https://en.wikipedia.org/wiki/Mere-exposure_effect">Mere-exposure effect</a> – an observation that
       humans tend to develop a preference for things, people, and processes merely because they are familiar with them.
       This effect is much stronger than it initially seems.<br/> <strong>Corollary:</strong> Merely putting people in a
       room together repeatedly, giving them a shared direction, symbology, and competition will create a group with very
       strong bonds.<br/> <strong>See also:</strong> <a href="https://en.wikipedia.org/wiki/In-group_favoritism">In-group
-        favoritism</a>.</> ],
-    5: [ <><p><a href="http://www.defmacro.org/2015/02/25/startup-ideas.html">Story arc</a> – human beings are wired
+        favoritism</a>.</>],
+    5: [<><p><a href="http://www.defmacro.org/2015/02/25/startup-ideas.html">Story arc</a> – human beings are wired
       to respond to storytelling. A story arc is a way to structure ideas to tap into this response, typically by
       describing a change in the world.<br/> <strong>Example:</strong> Once upon a time there was ___. Every day, ___.
       One day ___. Because of that, ___. Because of that, ___. Until finally ___.</p></>, <><p><a
@@ -182,8 +182,8 @@ class NullProvider extends IProvider {
       contains four components: (1) expressing facts, (2) expressing feelings, (3) expressing needs, and (4) making a
       request.<br/> <strong>Example:</strong> You didn’t turn in the project yesterday. When that happened I felt
       betrayed. I need to be able to rely on you to have a productive relationship. In the future, could you notify me
-      in advance if something like that happens?</p></> ],
-    6: [ <><p><a href="https://en.wikipedia.org/wiki/Utilitarianism">Global utility maximization</a> – our innate
+      in advance if something like that happens?</p></>],
+    6: [<><p><a href="https://en.wikipedia.org/wiki/Utilitarianism">Global utility maximization</a> – our innate
       sense of fairness is often unsatisfiable, and attemping to satisfy it can occasionally cause much grief in
       exchange for little gain. It’s much better to optimize for the needs of the many, not for an idealistic notion
       of fairness.<br/> <strong>Corollary:</strong> There are times when it makes sense to be unfair to the individual
@@ -210,21 +210,23 @@ class NullProvider extends IProvider {
       sensitive to the overton window when presenting the group with cultural changes.<br/></p></>, <><p><a
       href="https://en.wikipedia.org/wiki/Political_capital">Political capital</a> – the trust and influence a leader
       wields with other people. Political capital increases when you make other people successful and decreases when
-      you make unpopular decisions.<br/> <strong>Corollary:</strong> Spend political capital carefully.</p></> ]
+      you make unpopular decisions.<br/> <strong>Corollary:</strong> Spend political capital carefully.</p></>]
   };
 
   renderDescription() {
     return null;
   }
 
-  renderDetails() {
+  renderScreens() {
     const dow = new Date().getDay();
     const n = Math.floor(Date.now() / 60000) % this.hints[dow].length;  //new each 1 minute
-    return <>
-      <span className="hint-title">Hint of the day:</span><br/>
-      {this.hints[dow][n]}<br/>
-      <span className="hint-title">&nbsp;©&nbsp;<a href="https://www.defmacro.org/2016/12/22/models.html">Slava Akhmechet</a></span>
-    </>;
+    return [
+      <>
+        <span className="hint-title">Hint of the day:</span><br/>
+        {this.hints[dow][n]}<br/>
+        <span className="hint-title">&nbsp;©&nbsp;<a href="https://www.defmacro.org/2016/12/22/models.html">Slava Akhmechet</a></span>
+      </>
+    ];
   }
 }
 

@@ -1,10 +1,11 @@
-import IProvider from "./IProvider";
+import AbstractProvider from "./AbstractProvider";
 import Icon from "../../icon/Icon";
-import GoogleSheetProviderDetails from "./GoogleSheetProviderDetails";
+import GoogleSheetProviderScreen from "./GoogleSheetProviderScreen";
 import React from "react";
 import { getSheetAsCsv } from '../../helper/gapi-helper';
+import AccessScreen from './AccessScreen';
 
-class GoogleSheetProvider extends IProvider {
+class GoogleSheetProvider extends AbstractProvider {
   type = 'GoogleSheet';
 
   text = 'Google Sheets';
@@ -15,9 +16,21 @@ class GoogleSheetProvider extends IProvider {
     return <p>Pick one of your Google Sheets to import; or use the direct link to a public sheet</p>;
   }
 
-  renderDetails() {
-    return <GoogleSheetProviderDetails
-      ref={(details) => this.details = details}/>;
+  renderScreens() {
+    const screen1 = <GoogleSheetProviderScreen
+      ref={(screen) => this.details = screen} onUpdateScreens={this.props.onUpdateScreens}/>;
+    const screen2 = <AccessScreen
+      ref={(screen) => this.access = screen}/>
+    return this.details?.isList() ? [screen1, screen2] : [screen1];
+  }
+
+  validate(i) {
+    switch (i) {
+      case 0:
+        return this.details.isList() ? this.details.getSheet() : this.details.getDirectUrl();
+      default:
+        return new Promise(resolve => resolve());
+    }
   }
 
   loadCSV() {
@@ -32,14 +45,17 @@ class GoogleSheetProvider extends IProvider {
                 csv: new Blob([csv], { type: "text/csv" }),
                 filename: sheet.name,
                 type: this.type,
-                extra: { source: url }
+                extra: { source: url, access: { type: this.access.getType() } },
               });
             })
             .catch(e => reject(e));
         }) :
         this.details.getUrl().then((url) => {
 
-          let result = { type: this.type, extra: { source: url } };
+          let result = {
+            type: this.type,
+            extra: { source: url, access: { type: 'public' } },
+          };
 
           url = url.replace('htmlview', 'export');
           url += (url.indexOf('?') === -1 ? '?' : '&') + 'format=csv';

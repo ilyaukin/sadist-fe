@@ -64,6 +64,11 @@ img.item {
     width: calc(50% - 2 * var(--block-margin));
 }
 
+.new-dialog .full-pane {
+    @extend .block;
+    width: calc(100% - 2 * var(--block-margin));
+}
+
 .new-dialog .button-pane {
     @extend .block;
     width: calc(100% - 2 * var(--block-margin));
@@ -234,6 +239,10 @@ img.col-icon {
 }
 
 .map-container {
+}
+
+.comment {
+    font-size: small;
 }
 
 .hint-title {
