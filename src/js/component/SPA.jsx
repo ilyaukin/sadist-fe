@@ -6,17 +6,13 @@ import DsList from './ds/DsList';
 import DsTable from './ds/DsTable';
 import Visualization from './visualization/Visualization';
 import Splitter from './common/Splitter';
-import UserContext from '../context/UserContext';
-import { renderPage } from '../helper/react-helper';
+import withUserContext from './user/withUserContext';
 import { buildDsInfo, defaultDsInfo, dsInfoActionType, reduceDsInfo } from '../reducer/dsInfo-reducer';
-import { defaultUserContextValue, reduceUserContextValue } from '../reducer/userContextValue-reducer';
-import { useUserContextValueEx } from '../hook/user-hooks';
+import { renderPage } from '../helper/react-helper';
 
-const SPA = () => {
+let SPA = () => {
 
   const [err, setErr] = React.useState();
-  const [userContextValue, dispatchUserContextValue] = React
-    .useReducer(reduceUserContextValue, defaultUserContextValue);
   const [ds, setDs] = React.useState([]);
   const [dsInfo, dispatchDsInfo] = React.useReducer(reduceDsInfo, defaultDsInfo, buildDsInfo);
   const [tableContentHeight, setTableContentHeight] = React.useState(
@@ -24,8 +20,6 @@ const SPA = () => {
 
   ErrorDialog.raise = setErr;
   ErrorDialog.close = () => setErr(undefined);
-
-  const userContextValueEx = useUserContextValueEx(userContextValue, dispatchUserContextValue);
 
   const getTitle = function () {
     const titles = [
@@ -54,35 +48,35 @@ const SPA = () => {
   };
 
   return <div className="content">
-    <UserContext.Provider value={userContextValueEx}>
-      <ErrorDialog err={err}/>
+    <ErrorDialog err={err}/>
 
-      <UserDropdown/>
-      <h1>
-        {getTitle()}
-      </h1>
-      <wired-divider/>
+    <UserDropdown/>
+    <h1>
+      {getTitle()}
+    </h1>
+    <wired-divider/>
 
-      <h2>1. Get the data</h2>
-      {/*list existing data source using /ls api*/}
-      <DsList onDsSelected={(meta) => dispatchDsInfo({
-        type: dsInfoActionType.SELECT_DS,
-        meta
-      })}/>
-      {/*show top from selected ds*/}
-      <DsTable
-        tableContentHeight={tableContentHeight}
-        dsId={dsInfo.meta.id}
-        dsInfo={dsInfo}
-        dispatchDsInfo={dispatchDsInfo}
-        onLoadDs={setDs}
-        ds={ds}
-      />
+    <h2>1. Get the data</h2>
+    {/*list existing data source using /ls api*/}
+    <DsList onDsSelected={(meta) => dispatchDsInfo({
+      type: dsInfoActionType.SELECT_DS,
+      meta
+    })}/>
+    {/*show top from selected ds*/}
+    <DsTable
+      tableContentHeight={tableContentHeight}
+      dsId={dsInfo.meta.id}
+      dsInfo={dsInfo}
+      dispatchDsInfo={dispatchDsInfo}
+      onLoadDs={setDs}
+      ds={ds}
+    />
 
-      {renderVisualization()}
-    </UserContext.Provider>
+    {renderVisualization()}
   </div>;
 };
+
+SPA = withUserContext(SPA);
 
 export default SPA;
 
