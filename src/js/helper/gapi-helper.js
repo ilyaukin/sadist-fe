@@ -33,11 +33,12 @@ export const signIn = () => {
       const g2i = googleUser => {
         // console.log(googleUser);
         return {
+          type: 'google',
           name: googleUser.getBasicProfile().getName(),
           avatar: googleUser.getBasicProfile().getImageUrl(),
           extra: {
-            // here will be tokens to check a user, ID to match to
-            // the existing users etc.
+            id: googleUser.getId(),
+            auth: googleUser.getAuthResponse()
           }
         }
       }
