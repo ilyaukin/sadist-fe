@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { isVal } from "../../helper/wired-helper";
-import { GoogleSheetProviderDetails } from "../provider/GoogleSheetProviderDetails";
+import AbstractProvider from "../provider/AbstractProvider";
+import ValidationError from "../provider/ValidationError";
 import NullProvider from "../provider/NullProvider";
 import GoogleSheetProvider from "../provider/GoogleSheetProvider";
 import ErrorDialog from "../common/ErrorDialog";
@@ -15,10 +16,14 @@ class DsNew extends Component {
     super(props);
     this.state = {
       loading: false,
-      provider: this._nullProvider
+      provider: this._nullProvider,
+      screenNo: 0,
     };
+    const providerProps = {
+      onUpdateScreens: this.onUpdateScreens,
+    }
     this.providers = [
-      new GoogleSheetProvider()
+      new GoogleSheetProvider(providerProps),
     ];
   }
 
@@ -33,6 +38,26 @@ class DsNew extends Component {
       provider:
         this.providers.find((p) => p.type === value) || this._nullProvider
     });
+  }
+
+  onNextScreen = () => {
+    const { screenNo } = this.state;
+    this.state.provider.validate(screenNo)
+      .then(() => this.setState({ screenNo: screenNo + 1 }))
+      .catch(() => {/* ignore. provider will display errors itself */});
+  }
+
+  onPrevScreen = () => {
+    const { screenNo } = this.state;
+    this.setState({ screenNo: screenNo - 1 });
+  }
+
+  onUpdateScreens = () => {
+    // since provider can change its screens
+    // count and disposition depending on previously filled values,
+    // we should re-render the component if it happens,
+    // state will be the same, just provider will return different screens
+    this.forceUpdate();
   }
 
   onCreate = () => {
@@ -57,15 +82,19 @@ class DsNew extends Component {
               }
               this.setState({ loading: false });
             }).catch((e) => {
-              ErrorDialog.raise('Error parsing json: ' + e.toString());
-              this.setState({ loading: false });
+            ErrorDialog.raise('Error parsing json: ' + e.toString());
+            this.setState({ loading: false });
           })
         }).catch((e) => {
           ErrorDialog.raise('Error putting data source: ' + e.toString());
           this.setState({ loading: false });
         })
       }).catch((e) => {
-        ErrorDialog.raise('Error fetching data source: ' + e.toString());
+        if (e instanceof ValidationError) {
+          //let user fix an error....
+        } else {
+          ErrorDialog.raise('Error fetching data source: ' + e.toString());
+        }
         this.setState({ loading: false });
       });
     })
@@ -75,6 +104,7 @@ class DsNew extends Component {
     return <DelayedRender>
       Source Type:<br/>
       <wired-combo
+        style={{ width: '100%' }}
         ref={(combo) => {
           this.combo = combo
         }}
@@ -90,28 +120,50 @@ class DsNew extends Component {
     </DelayedRender>
   }
 
-  renderProviderDetails() {
-    return this.state.provider.renderDetails();
-  }
-
   render() {
+    const screens = this.state.provider.renderScreens();
+    const { screenNo } = this.state;
+    const v = b => b ? {} : { style: { display: 'none' } };
+
+    const renderProviderSelector = () => {
+      return <div key="selector" className="left-pane" {...v(screenNo === 0)}>
+        {this.renderTypeCombo()}
+        <br/>
+        {this.state.provider.renderDescription()}
+      </div>;
+    };
+
+    const renderProviderScreen = (screen, i) => {
+      return <div key={`screen${i}`} className={i === 0 ? 'right-pane' : 'full-pane'} {...v(i === screenNo)}>
+        {screen}
+      </div>;
+    };
+
+    const renderButtons = () => {
+      const createButton = <wired-button
+        disabled={isVal(!this.state.provider.type || this.state.loading)}
+        onClick={this.onCreate}>Create
+      </wired-button>;
+      const nextButton = <wired-button
+        onClick={this.onNextScreen}>Next
+      </wired-button>;
+      const prevButton = <wired-button
+        onClick={this.onPrevScreen}>Back
+      </wired-button>;
+      return <div className="button-pane">
+        {screenNo === screens.length - 1 ? createButton : nextButton}
+        {screenNo > 0 ? prevButton : null}
+      </div>;
+    };
+
     return <div className="new-dialog">
       <Loader loading={this.state.loading}/>
       <form>
         <div>
-          <div className="left-pane">
-            {this.renderTypeCombo()}
-          </div>
-          <div className="right-pane">
-            {this.renderProviderDetails()}
-          </div>
+          {renderProviderSelector()}
+          {screens.map(renderProviderScreen)}
         </div>
-        <div className="button-pane">
-          <wired-button
-            disabled={isVal(!this.state.provider.type || this.state.loading)}
-            onClick={this.onCreate}>Create
-          </wired-button>
-        </div>
+        {renderButtons()}
       </form>
     </div>
   }

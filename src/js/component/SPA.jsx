@@ -1,19 +1,20 @@
-import '@webcomponents/custom-elements';
 import React from 'react';
-import DsList from './ds/DsList';
-import './index.css';
+import '../../css/index.scss';
 import ErrorDialog from './common/ErrorDialog';
+import UserDropdown from './user/UserDropdown';
+import DsList from './ds/DsList';
 import DsTable from './ds/DsTable';
 import Visualization from './visualization/Visualization';
-import { renderPage } from '../helper/react-helper';
 import Splitter from './common/Splitter';
-import { buildDsInfo, actionType, reduceDsInfo } from '../reducer/dsInfo-reducer';
+import withUserContext from './user/withUserContext';
+import { buildDsInfo, defaultDsInfo, dsInfoActionType, reduceDsInfo } from '../reducer/dsInfo-reducer';
+import { renderPage } from '../helper/react-helper';
 
-const SPA = () => {
+let SPA = () => {
 
   const [err, setErr] = React.useState();
   const [ds, setDs] = React.useState([]);
-  const [dsInfo, dispatchDsInfo] = React.useReducer(reduceDsInfo, buildDsInfo());
+  const [dsInfo, dispatchDsInfo] = React.useReducer(reduceDsInfo, defaultDsInfo, buildDsInfo);
   const [tableContentHeight, setTableContentHeight] = React.useState(
     Math.min(300, Math.max(100, Math.floor(window.innerHeight / 3))));
 
@@ -48,6 +49,8 @@ const SPA = () => {
 
   return <div className="content">
     <ErrorDialog err={err}/>
+
+    <UserDropdown/>
     <h1>
       {getTitle()}
     </h1>
@@ -56,7 +59,7 @@ const SPA = () => {
     <h2>1. Get the data</h2>
     {/*list existing data source using /ls api*/}
     <DsList onDsSelected={(meta) => dispatchDsInfo({
-      type: actionType.SELECT_DS,
+      type: dsInfoActionType.SELECT_DS,
       meta
     })}/>
     {/*show top from selected ds*/}
@@ -72,6 +75,8 @@ const SPA = () => {
     {renderVisualization()}
   </div>;
 };
+
+SPA = withUserContext(SPA);
 
 export default SPA;
 

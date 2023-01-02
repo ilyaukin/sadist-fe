@@ -1,11 +1,11 @@
 import React from "react";
 import PropType from "prop-types";
-import 'wired-radio-group';
-import 'wired-radio';
-import 'wired-button';
-import 'wired-checkbox';
-import './index.css';
-import './labelling.css';
+import '/packages/wired-radio-group';
+import '/packages/wired-radio';
+import '/packages/wired-button';
+import '/packages/wired-checkbox';
+import '../../css/index.scss';
+import '../../css/labelling.css';
 import { renderPage } from "../helper/react-helper";
 import LabellingInterface from "./labelling/LabellingInterface";
 import ClassLabellingInterface from "./labelling/ClassLabellingInterface";

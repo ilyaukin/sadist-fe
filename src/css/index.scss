@@ -7,6 +7,7 @@ h1, h2, h3 {
 }
 
 .content {
+    position: relative;
     max-width: 900px;
     margin: 0 auto;
     height: 100%;
@@ -32,34 +33,45 @@ img.item {
     margin-right: 7px;
 }
 
+:root {
+    --block-margin: 5px;
+}
+
+.block {
+    display: inline-block;
+    position: relative;
+    margin: var(--block-margin);
+}
+
 .new-dialog {
     min-height: 100px;
-    min-width: 600px;
+    width: 600px;
 }
 
 .new-dialog .main-pane {
+    min-height: 100px;
 }
 
 .new-dialog .left-pane {
-    display: inline-block;
-    position: relative;
+    @extend .block;
     float: left;
-    width: 50%;
-    min-height: 100px;
+    width: calc(50% - 2 * var(--block-margin));
 }
 
 .new-dialog .right-pane {
-    display: inline-block;
-    position: relative;
+    @extend .block;
     float: right;
-    width: 50%;
-    min-height: 100px;
+    width: calc(50% - 2 * var(--block-margin));
+}
+
+.new-dialog .full-pane {
+    @extend .block;
+    width: calc(100% - 2 * var(--block-margin));
 }
 
 .new-dialog .button-pane {
-    display: inline-block;
-    position: relative;
-    width: 100%;
+    @extend .block;
+    width: calc(100% - 2 * var(--block-margin));
 }
 
 .new-dialog wired-button {
@@ -93,6 +105,80 @@ wired-dialog#error-dialog {
     --wired-dialog-z-index: 2;
 }
 
+.field-error {
+    color: maroon;
+    font-weight: bolder;
+    font-size: small;
+}
+
+.external-error {
+    color: maroon;
+    font-weight: bold;
+    font-size: small;
+}
+
+.dropdown {
+    position: absolute;
+    right: 1px;
+    top: 1px;
+}
+
+.user-dropdown {
+    @extend .dropdown;
+    top: 10px;
+    right: 10px;
+}
+
+.user-dropdown-icon {
+    display: inline-block;
+    position: relative;
+    width: 60px;
+    height: 60px;
+    float: right;
+}
+
+.user-dropdown-icon img {
+    width: 100%;
+    height: 100%;
+    border-radius: 10px;
+}
+
+.user-dropdown .pane {
+    position: relative;
+    margin-top: 60px;
+}
+
+.google-login-button {
+    @extend .block;
+    width: 100%;
+    cursor: pointer;
+    text-align: center;
+}
+
+.or-divider {
+    @extend .block;
+    width: 100%;
+    text-align: center;
+}
+
+.google-sheet-list-block {
+    @extend .block;
+    width: 100%;
+    min-height: 70px;
+    background-color: #888888;
+    box-shadow: 2px 2px #292929;
+}
+
+.google-sheet-list {
+    width: 100%;
+    max-height: 280px;
+}
+
+.google-sheet-list-item {
+    --wired-item-min-height: 20px;
+    font-size: 10px;
+}
+
 p {
     padding: 5px;
 }
@@ -103,9 +189,7 @@ p {
 }
 
 .col-filter {
-    position: absolute;
-    right: 1px;
-    top: 1px;
+    @extend .dropdown;
 }
 
 img.col-icon {
@@ -114,7 +198,7 @@ img.col-icon {
     float: right;
 }
 
-.col-filter-pane {
+.col-filter .pane {
     position: relative;
     left: 0;
     top: 18px;
@@ -155,4 +239,12 @@ img.col-icon {
 }
 
 .map-container {
+}
+
+.comment {
+    font-size: small;
+}
+
+.hint-title {
+    font-size: 10px;
 }

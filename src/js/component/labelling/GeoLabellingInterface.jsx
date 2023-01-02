@@ -1,5 +1,5 @@
 import React from "react";
-import '@my-handicapped-pet/wired-combo-lazy';
+import '/packages/wired-combo-lazy';
 import LabellingInterface from "./LabellingInterface";
 
 class GeoLabellingInterface extends LabellingInterface {

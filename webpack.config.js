@@ -26,8 +26,8 @@ module.exports = {
         }
       },
       {
-        test: /\.css$/,
-        use: ["style-loader", "css-loader"]
+        test: /\.(css|scss)$/,
+        use: ["style-loader", "css-loader", "sass-loader"]
       },
       {
         test: /\.(png|svg|jpg|gif)$/,
@@ -53,10 +53,6 @@ module.exports = {
     })
   ],
   resolve: {
-    modules: [
-      path.resolve("./src"),
-      path.resolve("./node_modules")
-    ],
     extensions: [".js", ".jsx"]
   },
   // API mock
@@ -65,6 +61,34 @@ module.exports = {
       app.use('/static/', express.static(path.join(__dirname, 'dist')))
     },
     after(app) {
+      app.get('/user/whoami', function (req, res) {
+        res.send({
+          user: {
+            'type': 'google',
+            'name': 'Ilya L.',
+            'avatar': 'https://lh3.googleusercontent.com/a/AATXAJwje0PGgbSrqZp0L1U3HtI7AZwwabLNw7-xhz8f=s96-c'
+          },
+          success: true
+        })
+      });
+      app.post('/user/login', function (req, res) {
+        res.send({
+          user: {
+            'type': 'google',
+            'name': 'Ilya L.',
+            'avatar': 'https://lh3.googleusercontent.com/a/AATXAJwje0PGgbSrqZp0L1U3HtI7AZwwabLNw7-xhz8f=s96-c'
+          },
+          success: true
+        })
+      });
+      app.post('/user/logout', function (req, res) {
+        res.send({
+          user: {
+            'type': 'anon'
+          },
+          success: true
+        })
+      });
       app.get('/ls', function (req, res) {
         res.send({
           list: [
@@ -130,8 +154,8 @@ module.exports = {
             },
             {
               id: '3211123',
-              'Location': 'MOscow',
-              'Comment': 'The 3rd Reich'
+              'Location': 'Moscow',
+              'Comment': 'The 4th Reich'
             },
             {
               id: '1532535',
@@ -172,8 +196,8 @@ module.exports = {
             },
             {
               id: '3211123',
-              'Location': 'MOscow',
-              'Comment': 'The 3rd Reich'
+              'Location': 'Moscow',
+              'Comment': 'The 4th Reich'
             }
           ],
           success: true

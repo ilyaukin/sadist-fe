@@ -1,0 +1,46 @@
+{
+  "name": "@my-handicapped-pet/wired-button",
+  "version": "2.0.0",
+  "description": "Hand-drawn sketchy button - web component",
+  "main": "lib/wired-button.js",
+  "module": "lib/wired-button.js",
+  "types": "lib/wired-button.d.ts",
+  "scripts": {
+    "build": "rm -rf ./lib && tsc",
+    "test": "echo \"Error: run tests from root\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wiredjs/wired-elements.git"
+  },
+  "keywords": [
+    "button",
+    "webcomponent",
+    "web component",
+    "rough",
+    "sketchy",
+    "hand-drawn",
+    "hand drawn"
+  ],
+  "author": "Preet Shihn <preetshihn@gmail.com> (https://twitter.com/preetster)",
+  "license": "MIT",
+  "dependencies": {
+    "@my-handicapped-pet/wired-base-legacy": "^2.0.5",
+    "@my-handicapped-pet/wired-lib": "^2.0.0",
+    "roughjs": "^3.1.0"
+  },
+  "bugs": {
+    "url": "https://github.com/wiredjs/wired-elements/issues"
+  },
+  "homepage": "https://github.com/wiredjs/wired-elements#readme",
+  "directories": {
+    "lib": "lib",
+    "test": "__tests__"
+  },
+  "files": [
+    "lib"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}

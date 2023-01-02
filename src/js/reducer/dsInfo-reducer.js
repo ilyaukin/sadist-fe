@@ -3,25 +3,30 @@ import equal from 'deep-equal'
 import CountDownClock from '../component/visualization/CountDownClock'
 import React from 'react'
 
-/**
- * A factory that returns fresh dsInfo object.
-
- * @param meta Meta info on ds, can be retrieved by /ls API
- * @param colSpecs see types.colSpecs
- * TODO change data structure?
- * @param err Error on retrieving DS meta
- * @param shouldUpdateVisualization if should call refresh() on Visualization
- */
-const buildDsInfo = function ({
-  meta,
-  colSpecs,
-  err,
-  shouldUpdateVisualization
-} = {
+export const defaultDsInfo = {
   meta: {},
   colSpecs: [],
   shouldUpdateVisualization: false
-}) {
+}
+
+/**
+ * A factory that returns fresh dsInfo object.
+
+ * @param meta {Object} Meta info on ds, can be retrieved by /ls API
+ * @param colSpecs see {@link colSpecs}
+ * TODO change data structure?
+ * @param err {string} Error on retrieving DS meta
+ * @param shouldUpdateVisualization {boolean} if should call refresh() on Visualization
+ */
+export let buildDsInfo;
+buildDsInfo = function (
+  {
+    meta,
+    colSpecs,
+    err,
+    shouldUpdateVisualization
+  }
+) {
 
   return {
     meta,
@@ -150,7 +155,7 @@ const buildDsInfo = function ({
      * @returns [] (`query` argument) for /ds/{}/filter API.
      * if no filtering, return undefined.
      */
-    getFilteringQuery: function() {
+    getFilteringQuery: function () {
       let query = [];
       this.colSpecs.forEach(colSpec => {
         if (colSpec.filterings) {
@@ -242,6 +247,11 @@ const buildDsInfo = function ({
     },
 
     isFinal: function () {
+      if (this.err) {
+        // no automatic update if got an error once
+        return true;
+      }
+
       let { classification, detailization } = this.meta
       classification = classification || {}
       detailization = detailization || {}
@@ -252,12 +262,12 @@ const buildDsInfo = function ({
           .reduce((a, b) => a && b, true)
     },
   }
-}
+};
 
 /**
  * Types of actions that can be dispatched to reduce dsInfo
  */
-const actionType = {
+export const dsInfoActionType = {
 
   /**
    * DS was selected in the DS list
@@ -290,16 +300,16 @@ const actionType = {
   UPDATE_STATUS_ERROR: 'UPDATE_STATUS_ERROR',
 }
 
-const reduceDsInfo = function (dsInfo, action) {
+export const reduceDsInfo = function (dsInfo, action) {
   switch (action.type) {
-    case actionType.SELECT_DS:
+    case dsInfoActionType.SELECT_DS:
       return buildDsInfo({
         meta: action.meta,
         colSpecs: dsInfo.buildColSpecs({ meta: action.meta }),
         shouldUpdateVisualization: true
       })
 
-    case actionType.SELECT_GROUPING:
+    case dsInfoActionType.SELECT_GROUPING:
       if (dsInfo.getGrouping(action.col, action.key)?.selected) {
         // already selected
         return dsInfo
@@ -310,21 +320,21 @@ const reduceDsInfo = function (dsInfo, action) {
         shouldUpdateVisualization: true
       }
 
-    case actionType.FILTER:
+    case dsInfoActionType.FILTER:
       return {
         ...dsInfo,
         colSpecs: dsInfo.applyFiltering(action.col, action.key, action.values),
         shouldUpdateVisualization: false
       }
 
-    case actionType.DROP_FILTER:
+    case dsInfoActionType.DROP_FILTER:
       return {
         ...dsInfo,
         colSpecs: dsInfo.dropFiltering(action.col),
         shouldUpdateVisualization: false
       }
 
-    case actionType.UPDATE_STATUS_SUCCESS:
+    case dsInfoActionType.UPDATE_STATUS_SUCCESS:
       // dsId has changed so the meta is irrelevant
       if (dsInfo.meta.id !== action.meta.id) {
         return dsInfo
@@ -341,7 +351,7 @@ const reduceDsInfo = function (dsInfo, action) {
         shouldUpdateVisualization: false
       })
 
-    case actionType.UPDATE_STATUS_ERROR:
+    case dsInfoActionType.UPDATE_STATUS_ERROR:
       return {
         ...dsInfo,
         err: action.err,
@@ -352,5 +362,3 @@ const reduceDsInfo = function (dsInfo, action) {
   console.error(`The action ${action.type} is cannot be dispatched, stay with the current state`)
   return dsInfo
 }
-
-export { buildDsInfo, actionType, reduceDsInfo }

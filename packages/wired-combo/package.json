@@ -1,0 +1,35 @@
+{
+  "name": "@my-handicapped-pet/wired-combo",
+  "version": "2.0.5",
+  "description": "fork of wiredjs.wired-elements/wired-combo, allows item search by typing",
+  "main": "lib/wired-combo.js",
+  "scripts": {
+    "build": "rm -rf ./lib && tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/ilyaukin/wired-elements-customization.git"
+  },
+  "keywords": [
+    "sketchy",
+    "wired",
+    "webelements",
+    "web-elements",
+    "combo",
+    "combobox"
+  ],
+  "author": "Ilya Lyaukin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ilyaukin/wired-elements-customization/issues"
+  },
+  "homepage": "https://github.com/ilyaukin/wired-elements-customization#readme",
+  "dependencies": {
+    "@my-handicapped-pet/wired-base": "^2.0.5",
+    "@my-handicapped-pet/wired-card": "^2.0.0",
+    "@my-handicapped-pet/wired-item": "^2.0.0",
+    "@my-handicapped-pet/wired-lib": "^2.0.0",
+    "roughjs": "^3.1.0"
+  }
+}

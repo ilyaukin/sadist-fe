@@ -1,11 +1,10 @@
 import React, { Component } from 'react';
 import PropTypes from "prop-types";
-import "@my-handicapped-pet/wired-combo";
-// import 'wired-combo';
-import 'wired-item';
-import "wired-dialog";
+import "/packages/wired-combo";
+import "/packages/wired-item";
+import "/packages/wired-dialog";
 import ErrorDialog from "../common/ErrorDialog";
-import Icon from "../Icon";
+import Icon from "../../icon/Icon";
 import DsNew from "./DsNew";
 import { isVal } from "../../helper/wired-helper";
 import CancelableDialog from "../common/CancelableDialog";
