@@ -1,10 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import ErrorDialog from "../common/ErrorDialog";
 import Icon from "../../icon/Icon";
 import DsNew from "./DsNew";
 import CancelableDialog from "../common/CancelableDialog";
 import { isVal } from "../../helper/wired-helper";
 import { DsMeta } from '../../model/ds';
+import UserContext from '../../context/UserContext';
 
 interface DsListProps {
   onDsSelected: (dsMeta: DsMeta) => any;
@@ -28,6 +29,8 @@ const DsList = (props: DsListProps) => {
   const combo = useRef<HTMLElement & { value: any } | null>(null);
 
   const dsValue = useRef<any | undefined>();
+
+  const userContextValue = useContext(UserContext);
 
   useEffect(() => {
     fetch('/ls').then((response) => {
@@ -53,7 +56,7 @@ const DsList = (props: DsListProps) => {
     }).catch((err) => {
       ErrorDialog.raise('Error fetching data: ' + err.toString())
     })
-  }, []);
+  }, [userContextValue.user]);
 
   useEffect(() => {
     if (state.newItem) {
