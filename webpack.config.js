@@ -13,7 +13,7 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.(js|jsx)$/,
+        test: /\.(js|jsx|ts|tsx)$/,
         exclude: /node_modules/,
         use: {
           loader: "babel-loader"
@@ -53,7 +53,7 @@ module.exports = {
     })
   ],
   resolve: {
-    extensions: [".js", ".jsx"]
+    extensions: [".js", ".jsx", ".ts", ".tsx"]
   },
   // API mock
   devServer: {
@@ -64,9 +64,9 @@ module.exports = {
       app.get('/user/whoami', function (req, res) {
         res.send({
           user: {
-            'type': 'google',
-            'name': 'Ilya L.',
-            'avatar': 'https://lh3.googleusercontent.com/a/AATXAJwje0PGgbSrqZp0L1U3HtI7AZwwabLNw7-xhz8f=s96-c'
+            type: 'google',
+            name: 'Ilya L.',
+            avatar: 'https://lh3.googleusercontent.com/a/AATXAJwje0PGgbSrqZp0L1U3HtI7AZwwabLNw7-xhz8f=s96-c'
           },
           success: true
         })
@@ -74,9 +74,9 @@ module.exports = {
       app.post('/user/login', function (req, res) {
         res.send({
           user: {
-            'type': 'google',
-            'name': 'Ilya L.',
-            'avatar': 'https://lh3.googleusercontent.com/a/AATXAJwje0PGgbSrqZp0L1U3HtI7AZwwabLNw7-xhz8f=s96-c'
+            type: 'google',
+            name: 'Ilya L.',
+            avatar: 'https://lh3.googleusercontent.com/a/AATXAJwje0PGgbSrqZp0L1U3HtI7AZwwabLNw7-xhz8f=s96-c'
           },
           success: true
         })
@@ -84,7 +84,7 @@ module.exports = {
       app.post('/user/logout', function (req, res) {
         res.send({
           user: {
-            'type': 'anon'
+            type: 'anon'
           },
           success: true
         })
@@ -124,13 +124,13 @@ module.exports = {
         res.send({
           list: [
             {
-              'id': '4uitbfq3',
+              id: '4uitbfq3',
               'Fruit': 'Banana',
               'On Counter': 100,
               'Sold Out': false
             },
             {
-              'id': 'ndisohfw',
+              id: 'ndisohfw',
               'Fruit': 'Mango',
               'On Counter': 300,
               'Sold Out': true
@@ -167,20 +167,39 @@ module.exports = {
         })
 
       });
+      app.get('/ds/3333', function (req, res) {
+        res.send({
+          list: [
+            {
+              id: '4uitbfq3',
+              'Fruit': 'Banana',
+              'On Counter': 100,
+              'Sold Out': false
+            },
+            {
+              id: 'ndisohfw',
+              'Fruit': 'Mango',
+              'On Counter': 300,
+              'Sold Out': true
+            }
+          ],
+          success: true
+        })
+      });
       app.get('/ds/2222/visualize', function (req, res) {
         res.send({
           list: [
             {
-              'id': {'name': 'Moscow', "coordinates": [ 37.61556, 55.75222 ]},
-              'count': 2
+              id: { id: 1, name: 'Moscow', coordinates: [ 37.61556, 55.75222 ]},
+              count: 2
             },
             {
-              'id': {'name': 'Paris', "coordinates": [ 2.3488, 48.85341 ]},
-              'count': 1
+              id: { id: 2, name: 'Paris', coordinates: [ 2.3488, 48.85341 ]},
+              count: 1
             },
             {
-              'id': {'name': 'New York', "coordinates": [ -74.00597, 40.71427 ]},
-              'count': 1
+              id: { id: 3, name: 'New York', coordinates: [ -74.00597, 40.71427 ]},
+              count: 1
             }
           ],
           success: true
@@ -206,9 +225,13 @@ module.exports = {
       app.put('/ds', function (req, res) {
         res.send({
           item: {
-            'id': '3333',
-            'name': 'Sheet 3333',
-            'type': 'GoogleSheet'
+            id: '3333',
+            name: 'Sheet 3333',
+            type: 'GoogleSheet',
+            cols: ['Fruit', 'On Counter', 'Sold Out'],
+            classification: {
+              status: 'in progress'
+            }
           },
           success: true
         })

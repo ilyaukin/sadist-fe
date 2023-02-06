@@ -1,1 +1,1 @@
-import SPA from './js/component/SPA.jsx';
+import SPA from './js/component/SPA.tsx';
