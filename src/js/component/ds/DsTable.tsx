@@ -1,5 +1,4 @@
 import React, { CSSProperties, Dispatch, HTMLProps, useEffect, useRef, useState } from 'react';
-import { unstable_batchedUpdates } from 'react-dom';
 import equal from 'deep-equal';
 import ErrorDialog from "../common/ErrorDialog";
 import ColFilter from "./ColFilter";
@@ -47,13 +46,13 @@ const DsTable = (props: DsTableProps) => {
   let tableContent: HTMLDivElement | null;
 
   useEffect(() => {
-    // console.log(this.colRefs?.map(colRef => colRef?.offsetWidth))
+    // console.log(colRefs.current?.map(colRef => colRef?.offsetWidth))
     if (colRefs.current) {
       const { tableContentHeight, dsInfo, ds } = props;
       const { colInfo } = dsInfo;
       appendElement(renderTable(colInfo!, ds, tableContentHeight), placeholder);
     }
-  }, [props.tableContentHeight, props.dsInfo, props.ds]);
+  }, [props.tableContentHeight, props.ds]);
 
   useEffect(() => {
     let query: any;
@@ -85,10 +84,8 @@ const DsTable = (props: DsTableProps) => {
           // for the current DS colRefs will be assigned after rendering with received data
           colRefs.current = new Array(dsInfo.colInfo?.length);
           if (data.success) {
-            unstable_batchedUpdates(() => {
-              onLoadDs(data.list);
-              setState({ ...state, loading: false });
-            });
+            onLoadDs(data.list);
+            setState({ ...state, loading: false });
           } else {
             handleError('Error: ' + ( data.error || 'Unknown error' ));
           }
@@ -98,7 +95,7 @@ const DsTable = (props: DsTableProps) => {
       }).catch((err) => {
       handleError(`Error fetching ${dsId}: ` + err.toString());
     });
-  }, [props.dsId, props.dsInfo, props.onLoadDs]);
+  }, [props.dsId, props.dsInfo]);
 
   function handleError(err: string) {
     const { onLoadDs } = props;

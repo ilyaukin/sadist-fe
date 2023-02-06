@@ -20,7 +20,7 @@ let SPA = () => {
   const [tableContentHeight, setTableContentHeight] = React.useState(
     Math.min(300, Math.max(100, Math.floor(window.innerHeight / 3))));
 
-  ErrorDialog.raise = (err: string) => setErr(err);
+  ErrorDialog.raise = setErr;
   ErrorDialog.close = () => setErr(undefined);
 
   const getTitle = function () {
@@ -70,7 +70,7 @@ let SPA = () => {
       dsId={dsInfo.meta?.id}
       dsInfo={dsInfo}
       dispatchDsInfo={dispatchDsInfo}
-      onLoadDs={(ds) => setDs(ds)}
+      onLoadDs={setDs}
       ds={ds}
     />
 
