@@ -1,60 +1,47 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 
 interface SplitterProps {
   onSplit: (delta: number) => any;
-}
-
-interface SplitterState {
-  y?: number;
-  isSplitting: boolean;
-  delta: number;
 }
 
 /**
  * Divider which allows splitting areas by drag&drop
  */
 const Splitter = ({ onSplit }: SplitterProps) => {
-  const [state, setState] = useState<SplitterState>({
-    isSplitting: false,
-    delta: 0
-  });
+  const [delta, setDelta] = useState(0);
 
-  const container = useRef<HTMLDivElement | null>(null);
+  const mouseMoveHandler = useRef<(e: MouseEvent) => void>();
+  const mouseUpHandler = useRef<(e: MouseEvent) => void>();
+  const y = useRef<number>();
 
-  useEffect(() => {
-    container.current!.addEventListener('mousedown', onMouseDown);
-    window.addEventListener('mousemove', onMouseMove);
-    window.addEventListener('mouseup', onMouseUp);
-  });
-
-  const onMouseDown = (e: MouseEvent) => {
-    setState({ ...state, y: e.clientY, isSplitting: true });
+  const onMouseDown = (e: MouseEvent | React.MouseEvent<HTMLDivElement>) => {
+    y.current = e.clientY;
+    window.addEventListener('mousemove', mouseMoveHandler.current = onMouseMove);
+    window.addEventListener('mouseup', mouseUpHandler.current = onMouseUp);
   }
 
   const onMouseMove = (e: MouseEvent) => {
-    if (state.isSplitting) {
-      setState({ ...state, delta: e.clientY - state.y! });
-    }
+    setDelta(e.clientY - y.current!);
   }
 
   const onMouseUp = (e: MouseEvent) => {
-    if (state.isSplitting) {
-      let delta = e.clientY - state.y!;
-      setState({ delta: 0, isSplitting: false });
-      onSplit(delta);
-    }
+    onSplit(e.clientY - y.current!);
+    setDelta(0);
+    window.removeEventListener('mousemove', mouseMoveHandler.current!);
+    window.removeEventListener('mouseup', mouseUpHandler.current!);
   }
 
   return <div
-    ref={container}
-    style={{ position: 'relative' }}
+    style={{ position: 'relative', width: '100%' }}
+    onMouseDown={onMouseDown}
   >
     <div
       style={{
         cursor: 'ns-resize',
         position: 'absolute',
         left: 0,
-        top: state.delta || 0
+        top: delta,
+        width: '100%',
       }}
     >
       <wired-divider/>
