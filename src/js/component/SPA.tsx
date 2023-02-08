@@ -37,7 +37,7 @@ let SPA = () => {
       return null;
     }
 
-    return <div>
+    return <>
       <Splitter onSplit={(delta: number) => setTableContentHeight(tableContentHeight + delta)}/>
 
       <h2>2. Visualize</h2>
@@ -46,7 +46,7 @@ let SPA = () => {
         dsInfo={dsInfo}
         dispatchDsInfo={dispatchDsInfo}
       />
-    </div>;
+    </>;
   };
 
   return <div className="content">
