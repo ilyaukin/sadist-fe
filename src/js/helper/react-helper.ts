@@ -1,14 +1,10 @@
-import { createRoot } from 'react-dom/client';
+import ReactDom from "react-dom";
 
 export function renderPage(element: JSX.Element) {
-  const container = document.getElementById('container');
-  return appendElement(element, container);
+  const wrapper = document.getElementById('container');
+  return wrapper ? ReactDom.render(element, wrapper) : false
 }
 
-export function appendElement(element: JSX.Element, container: HTMLElement | null) {
-  if (container) {
-    const root = createRoot(container);
-    return root.render(element);
-  }
-  return false;
+export function appendElement(element: JSX.Element, container: ReactDom.Container | null) {
+  return ReactDom.render(element, container);
 }
