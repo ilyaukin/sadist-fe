@@ -1,31 +1,232 @@
-import { ReactNode } from "react";
-
-export type Grouping = {
-  key: string;
-  selected?: boolean;
-};
-
-export type FilteringValue = string | number | null;
-
-export type Filtering = {
-  key: string;
-  values?: FilteringValue[];
-};
+/**
+ * Type of visualization such as histogram, trend, timeline etc.,
+ * that will be extended while implementing
+ */
+export type VizType =
+  'blank' |
+  'marker' |
+  'bar' |
+  'histogram' |
+  'globe';
 
 /**
- info on table column:
- - column name
- - possible and applied grouping and filtering
- (todo: move to DS info, cos grouping can sequentially use different columns...)
+ * Type of action of visualization data retrieving,
+ * such as group or calculate percentile
  */
-export interface ColInfo {
-  name: string;
-  groupings?: Grouping[];
-  filterings?: Filtering[];
+export type VizAction =
+  'accumulate' |
+  'group';
+
+/**
+ * Any value that can appear in the DS
+ */
+export type ValueType = string | number | boolean | null;
+
+/**
+ * {@link Predicate} that matches exact value
+ */
+export interface EqPredicate<T> {
+  op: 'eq';
+  value: T;
 }
 
 /**
- * meta information about DS, such as name, owner etc.
+ * {@link Predicate} that matches on of values in the list
+ */
+export interface InPredicate<T> {
+  op: 'in';
+  values: T[];
+}
+
+/**
+ * Predicate that matches string value by inclusion
+ */
+export interface InStrPredicate<T> {
+  op: 'instr';
+  value: T;
+}
+
+/**
+ * Part of meta information about group or filter.
+ * Will be extended while implementing
+ */
+export type Predicate<T = ValueType> =
+  EqPredicate<T> |
+  InPredicate<T> |
+  InStrPredicate<T>;
+
+/**
+ * Properties specific to a table column
+ */
+export interface ColSpecificProps {
+  /**
+   * column for grouping or filter
+   */
+  col: string;
+  /**
+   * the label key in the classification collection for the given
+   * column which is used instead of column value;
+   * if not specified, column value directly is used
+   */
+  label?: string;
+  /**
+   * the predicate which defines if the row get into result,
+   * e.g. we may want to group values inside 3 sigma interval only;
+   * if not specified, all rows are used.
+   */
+  predicate?: Predicate;
+}
+
+/**
+ * Properties of "accumulate" action
+ */
+export type AccumulateProps = (ColSpecificProps | {}) & {
+  action: 'accumulate';
+  /**
+   * function which reduces values to the single accumulated
+   * value, one of pre-defined or custom (TBD)
+   */
+  accumulater?: 'count' | 'mean' | 'min' | 'max' | 'average';
+}
+
+//not implemented yet
+export type Reducer = never;
+
+/**
+ * Properties of "group" action
+ */
+export type GroupProps = (ColSpecificProps | {}) & {
+  action: 'group';
+  /**
+   * function which reduces groups i.e. defines which value goes
+   * to which group; for example we may want to divide the interval to 10
+   * sub-intervals and group values within them;
+   * if not specified, each value makes its own group
+   */
+  reducer?: Reducer;
+}
+
+/**
+ * Properties of visualization data retrieving,
+ * such as interval and granularity for grouping ect.
+ */
+export type VizProps = AccumulateProps | GroupProps;
+
+/**
+ * Meta information about visualization which defines
+ * both visualization pipeline request to the server and
+ * (together with visualization data from the server) rendering.
+ * Visualization is a hierarchy of graphs, e.g. a histogram
+ * has a child graph of type bar or several of them, which
+ * positioning and style are defined by the parent graph
+ * but rendering is defined by the child graph and data is
+ * defined by the visualization data on a child level
+ */
+export interface VizMeta {
+  /**
+   * Key of the visualization graph, if many
+   * of them appears on the same level. Can be used
+   * in the hints, legend etc.
+   */
+  key: string;
+  /**
+   * visualization type, see {@link VizType}
+   */
+  type: VizType;
+  /**
+   * properties of visualization, depending on the type
+   */
+  props: VizProps;
+  /**
+   * child graphs
+   */
+  children?: { [k: string]: VizMeta };
+
+  /**
+   * String representation is used in UI
+   */
+  toString(): string;
+}
+
+/**
+ * Item of {@link VizPipeline}
+ */
+export interface VizPipelineItem {
+  action: string;
+  [prop: string]: any;
+}
+
+/**
+ * Visualization pipeline which is visualization request parameter
+ */
+export type VizPipeline = VizPipelineItem[];
+
+/**
+ * Item of visualization data returned by server,
+ * if grouping was requested
+ */
+export interface VizDataItem {
+  id: any;
+  [k: string]: VizData;
+}
+
+/**
+ * Visualization data returned by server
+ */
+export type VizData = VizDataItem[] | number;
+
+/**
+ * Meta information about a filter applied to DS
+ */
+export type Filter = ColSpecificProps;
+
+/**
+ * Filter builder/generator, which is a mutable object
+ * that can produce a filter. For example, a list of values which
+ * a user ticks filtered values from
+ */
+export interface AbstractFilterProposal {
+  propose(): Filter | undefined;
+}
+
+/**
+ * Filter by selecting one of multiple values
+ */
+export interface MultiselectFilterProposal<T = ValueType> extends AbstractFilterProposal {
+  type: 'multiselect';
+  col: string;
+  label: string;
+  values?: T[];
+  selected?: T[];
+}
+
+/**
+ * Filter by searching (normally text)
+ */
+export interface SearchFilterProposal<T = string> extends AbstractFilterProposal {
+  type: 'search';
+  term?: T;
+}
+
+/**
+ * Any of known {@link AbstractFilterProposal} types
+ */
+export type FilterProposal =
+  MultiselectFilterProposal |
+  SearchFilterProposal;
+
+/**
+ * Item of {@link FilterQuery}
+ */
+export type FilterQueryItem = Filter;
+
+/**
+ * Filter query which is filter request parameter to the server
+ */
+export type FilterQuery = FilterQueryItem[];
+
+/**
+ * Meta information about DS, such as name, owner, column types etc.
  */
 export interface DsMeta {
   /**
@@ -78,29 +279,45 @@ export interface DsMeta {
 }
 
 /**
- * information about DS and its columns,
- * such as recognized column types,
- * possible and applied gropings and filterings
+ * All information about DS, including DS meta information,
+ * visualization and filtering
  */
 export interface DsInfo {
   /**
    * Meta info on ds, can be retrieved by /ls API
    */
-  meta?: DsMeta;
+  meta: DsMeta;
 
   /**
-   * See {@link ColInfo}
+   * Proposed visualization
    */
-  colInfo?: ColInfo[];
+  vizMetaProposed?: VizMeta[];
 
   /**
-   * If the visualization data must be imperatively updated
-   * because of update of DS info. It was introduced cos
-   * not all DS info object updates actually change visualisation,
-   * e.g. changing filter, getting info on newly recognizing columns
-   * etc. shouldn't cause unnecessary visualization requests.
+   * Proposed visualization for each column
    */
-  shouldUpdateVisualization?: boolean;
+  vizMetaProposedByCol?: { [col: string]: VizMeta[]; };
+
+  /**
+   * Visualization selected by a user, can be combined as Lego
+   * by hints on column drop-downs or on visualization area
+   */
+  vizMeta?: VizMeta;
+
+  /**
+   * Proposed filters
+   */
+  filterProposals?: FilterProposal[];
+
+  /**
+   * Proposed filters by column
+   */
+  filterProposalsByCol?: { [col: string]: FilterProposal[]; }
+
+  /**
+   * Filters selected by a user
+   */
+  filters?: Filter[];
 
   /**
    * Error of retrieving {@link meta}
@@ -108,78 +325,49 @@ export interface DsInfo {
   err?: string;
 
   /**
-   * Initialize {@link colInfo} given new {@link meta},
-   * when a user selects the other DS or DS processing on the server updates
+   * Initialize the {@link DsInfo} object given new {@link meta},
+   * when a user selects the other DS or DS processing on the server updates.
+   *
+   * ***WARNING*** it can use some intellectual algorithm to map meta
+   * to the available visualization and filters, better to invent some
+   * meta-language to describe it in a declarative manner.
    * @param meta {@link meta} returned by the server
-   * @return {ColInfo[]} initial {@link ColInfo}s
+   * @return new copy of the object
    */
-  initColInfo({ meta }: { meta: DsMeta }): ColInfo[];
+  init(meta: DsMeta): DsInfo;
 
   /**
-   * Get grouping on given column by given key (a.k.a. label)
-   * @param col
-   * @param key
-   * @return {Grouping} if any
+   * Add proposed graph to visualization.
+   * Can append as a child, or replace, or do some custom logic,
+   * depending on graph's nature.
+   * @param vizMeta
    */
-  getGrouping(col: string, key: string): Grouping | undefined;
+  appendViz(vizMeta: VizMeta): VizMeta | undefined;
 
   /**
-   * Select grouping by given col and key and deselect all others
-   * @param col
-   * @param key
-   * @returns new {@link colInfo}
+   * Get visualization pipeline
    */
-  applyGrouping(col: string, key: string): ColInfo[];
+  getPipeline(): VizPipeline | undefined;
 
   /**
-   * get "visualization pipeline", not to be confused
-   * with mongo's aggregation pipeline
-   * @returns {[]} of visualization pipeline items, format TBD
+   * Apply a particular filter to the table
+   * @param filter
    */
-  getPipeline(): any;
+  applyFilter(filter: Filter): Filter[] | undefined;
 
   /**
-   * get list of filtering values for given column
-   * @param col column name
-   * @param key filtering key
-   * @return {string[]} filtering values
+   * Drop a particular filter
+   * @param filter
    */
-  getFilteringValues(col: string, key: string): FilteringValue[] | undefined;
+  dropFilter(filter: Filter): Filter[] | undefined;
 
   /**
-   * set list of filtering values for given column
-   * @param col column name
-   * @param key filtering key
-   * @param values filtering values
-   * @return new {@link colInfo}
+   * Get filter query to the server
    */
-  applyFiltering(col: string, key: string, values: FilteringValue[]): ColInfo[];
+  getFilterQuery(): FilterQuery | undefined;
 
   /**
-   * Drop filtering by given column
-   * @param col column name
-   * @return new {@link colInfo}
+   * If {@link meta} is final, i.e. all server-side processing of the DS is done
    */
-  dropFiltering(col: string): ColInfo[];
-
-  /**
-   * get filtering query
-   * @returns {[]} (`query` argument) for /ds/{}/filter API.
-   * if no filtering, return undefined.
-   */
-  getFilteringQuery(): any;
-
-  /**
-   * Get hint for visualisation of the given DS, which is displayed
-   * if none of the visualisation options yet selected.
-   * @return {ReactNode} peace of react tree
-   */
-  getHint(): ReactNode;
-
-  /**
-   * Return if {@link meta} is final i.e. all server-side analysis is done
-   * and no need to query DS status again
-   * @return {boolean} if it's final
-   */
-  isFinal(): boolean;
+  isMetaFinal(): boolean;
 }

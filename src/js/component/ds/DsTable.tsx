@@ -1,10 +1,10 @@
 import React, { CSSProperties, Dispatch, HTMLProps, useEffect, useRef, useState } from 'react';
 import equal from 'deep-equal';
 import ErrorDialog from "../common/ErrorDialog";
-import ColFilter from "./ColFilter";
+import ColDropdown from "./ColDropdown";
 import Loader from "../common/Loader";
 import { appendElement } from "../../helper/react-helper";
-import { ColInfo, DsInfo } from "../../model/ds";
+import { DsInfo } from "../../model/ds";
 import { DsInfoAction } from '../../reducer/dsInfo-reducer';
 
 interface DsTableProps {
@@ -49,8 +49,7 @@ const DsTable = (props: DsTableProps) => {
     // console.log(colRefs.current?.map(colRef => colRef?.offsetWidth))
     if (colRefs.current) {
       const { tableContentHeight, dsInfo, ds } = props;
-      const { colInfo } = dsInfo;
-      appendElement(renderTable(colInfo!, ds, tableContentHeight), placeholder);
+      appendElement(renderTable(dsInfo.meta.cols!, ds, tableContentHeight), placeholder);
     }
   }, [props.tableContentHeight, props.ds]);
 
@@ -61,7 +60,7 @@ const DsTable = (props: DsTableProps) => {
     if (!dsId) {
       return;
     } else if (dsId === requestedDsId.current) {
-      query = dsInfo.getFilteringQuery();
+      query = dsInfo.getFilterQuery();
 
       if (equal(query, requestedQuery.current)) {
         return;
@@ -82,7 +81,7 @@ const DsTable = (props: DsTableProps) => {
       .then((response) => {
         response.json().then((data) => {
           // for the current DS colRefs will be assigned after rendering with received data
-          colRefs.current = new Array(dsInfo.colInfo?.length);
+          colRefs.current = new Array(dsInfo.meta.cols?.length);
           if (data.success) {
             onLoadDs(data.list);
             setState({ ...state, loading: false });
@@ -114,11 +113,11 @@ const DsTable = (props: DsTableProps) => {
     }
   };
 
-  const renderColHeader = (colInfo: ColInfo, n: number, isReal: boolean) => {
-    const { dispatchDsInfo } = props;
+  const renderColHeader = (col: string, n: number, isReal: boolean) => {
+    const { dsInfo, dispatchDsInfo } = props;
 
     const thProps: HTMLProps<HTMLTableHeaderCellElement> = {
-      key: colInfo.name
+      key: col
     };
     if (isReal) {
       thProps.style = {
@@ -132,10 +131,14 @@ const DsTable = (props: DsTableProps) => {
 
     return <th {...thProps}>
       <div className="col-space">
-        {colInfo.name}
-        {colInfo.groupings && isReal ?
-          <ColFilter
-            colInfo={colInfo}
+        {col}
+        {(dsInfo.vizMetaProposedByCol?.[col] || dsInfo.filterProposalsByCol?.[col]) && isReal ?
+          <ColDropdown
+            col={col}
+            vizMetaProposed={dsInfo.vizMetaProposedByCol?.[col]}
+            vizMeta={dsInfo.vizMeta}
+            filterProposals={dsInfo.filterProposalsByCol?.[col]}
+            filters={dsInfo.filters}
             dispatchDsInfo={dispatchDsInfo}
           /> :
           ''}
@@ -143,9 +146,9 @@ const DsTable = (props: DsTableProps) => {
     </th>;
   };
 
-  const renderFakeColHeader = (colInfo: ColInfo, n: number) => renderColHeader(colInfo, n, false);
+  const renderFakeColHeader = (col: string, n: number) => renderColHeader(col, n, false);
 
-  const renderRealColHeader = (colInfo: ColInfo, n: number) => renderColHeader(colInfo, n, true);
+  const renderRealColHeader = (col: string, n: number) => renderColHeader(col, n, true);
 
   function renderRow(row: any, colnames: string[], isReal: boolean) {
     const cols = [];
@@ -172,14 +175,12 @@ const DsTable = (props: DsTableProps) => {
 
   const renderRealRow = (row: any, colnames: string[]) => renderRow(row, colnames, true);
 
-  function renderFakeTable(colInfos: ColInfo[], ds: any[]) {
-    const colnames = colInfos.map(colSpec => colSpec.name);
-
+  function renderFakeTable(colnames: string[], ds: any[]) {
     return <div key="fake" className="fake-table">
       <table cellPadding="2">
         <thead>
         <tr>
-          {colInfos.map(renderFakeColHeader)}
+          {colnames.map(renderFakeColHeader)}
         </tr>
         </thead>
         <tbody>
@@ -191,8 +192,7 @@ const DsTable = (props: DsTableProps) => {
     </div>
   }
 
-  function renderTable(colInfos: ColInfo[], ds: any[], height = 200) {
-    const colnames = colInfos.map(colSpec => colSpec.name);
+  function renderTable(colnames: string[], ds: any[], height = 200) {
     const headHeight = colRefs.current![0]!.offsetHeight;
     const outerDivStyle: CSSProperties = {
       position: 'relative',
@@ -232,7 +232,7 @@ const DsTable = (props: DsTableProps) => {
         <table style={tableStyle}>
           <thead>
           <tr style={theadTrStyle}>
-            {colInfos.map(renderRealColHeader)}
+            {colnames.map(renderRealColHeader)}
           </tr>
           </thead>
           <tbody>
@@ -246,9 +246,8 @@ const DsTable = (props: DsTableProps) => {
   }
 
   let { dsId, dsInfo, ds } = props;
-  let { colInfo } = dsInfo;
 
-  if (!dsId || !colInfo) {
+  if (!dsId || !dsInfo.meta.cols) {
     return <br/>;
   }
 
@@ -260,7 +259,7 @@ const DsTable = (props: DsTableProps) => {
       // with default table-row positioning, in order
       // to determine natural col widths with aid of
       // browser's rendering engine engine
-      renderFakeTable(colInfo, ds),
+      renderFakeTable(dsInfo.meta.cols, ds),
 
       // after that values are defined, render proper
       // table using ReactDom.render in componentDidUpdate

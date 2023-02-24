@@ -5,7 +5,7 @@ import ErrorDialog from './common/ErrorDialog';
 import UserDropdown from './user/UserDropdown';
 import DsList from './ds/DsList';
 import DsTable from './ds/DsTable';
-import Visualization from './visualization/Visualization';
+import Viz from './visualization/Viz';
 import Splitter from './common/Splitter';
 import withUserContext from './user/withUserContext';
 import { defaultDsInfo, DsInfoActionType, reduceDsInfo } from '../reducer/dsInfo-reducer';
@@ -32,8 +32,8 @@ let SPA = () => {
     return titles[choose];
   };
 
-  const renderVisualization = function () {
-    if (!dsInfo.meta?.id) {
+  const renderViz = function () {
+    if (!dsInfo.meta.id) {
       return null;
     }
 
@@ -41,7 +41,7 @@ let SPA = () => {
       <Splitter onSplit={(delta: number) => setTableContentHeight(tableContentHeight + delta)}/>
 
       <h2>2. Visualize</h2>
-      <Visualization
+      <Viz
         dsId={dsInfo.meta.id}
         dsInfo={dsInfo}
         dispatchDsInfo={dispatchDsInfo}
@@ -74,7 +74,7 @@ let SPA = () => {
       ds={ds}
     />
 
-    {renderVisualization()}
+    {renderViz()}
   </div>;
 };
 

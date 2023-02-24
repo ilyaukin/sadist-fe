@@ -196,7 +196,7 @@ p {
     height: 100%;
 }
 
-.col-filter {
+.col-dropdown {
     @extend .dropdown;
 }
 
@@ -206,7 +206,7 @@ img.col-icon {
     float: right;
 }
 
-.col-filter .pane {
+.col-dropdown .pane {
     position: relative;
     left: 0;
     top: 18px;
@@ -216,17 +216,17 @@ img.col-icon {
     text-align: right;
 }
 
-.col-filter-pane-item {
+.col-dropdown-pane-item {
     padding: 4px;
 }
 
-.col-filter-hint {
+.col-action-hint {
     font-size: 8pt;
     display: block;
     margin-right: 20px;
 }
 
-.col-filter-element {
+.uniselector {
     padding-right: 10px;
 }
 

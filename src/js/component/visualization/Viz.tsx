@@ -2,9 +2,9 @@ import React, { Dispatch, useEffect, useRef, useState } from 'react';
 import equal from 'deep-equal';
 import ErrorDialog from '../common/ErrorDialog';
 import Loader from '../common/Loader';
-import GeoMap from './GeoMap';
-import { DsInfo, DsMeta, FilteringValue } from '../../model/ds';
+import { DsInfo, DsMeta, VizData, VizMeta, VizPipeline } from '../../model/ds';
 import { DsInfoAction, DsInfoActionType } from '../../reducer/dsInfo-reducer';
+import VizHint from './VizHint';
 
 interface VisualizationProps {
   dsId: string;
@@ -14,17 +14,18 @@ interface VisualizationProps {
 
 interface VisualizationState {
   loading?: boolean;
-  result?: any;
+  vizData?: VizData;
+  vizMeta?: VizMeta;
 }
 
-const Visualization = (props: VisualizationProps) => {
+const Viz = (props: VisualizationProps) => {
   const [state, setState] = useState<VisualizationState>({});
 
   const timeoutHandle = useRef<NodeJS.Timeout | undefined>();
 
   const requestedQueryNo = useRef(0);
 
-  const requestedPipeline = useRef<any | undefined>();
+  const requestedPipeline = useRef<VizPipeline | undefined>();
 
   useEffect(() => {
     if (timeoutHandle.current) {
@@ -40,18 +41,12 @@ const Visualization = (props: VisualizationProps) => {
     const { dsId, dsInfo } = props;
     const pipeline = dsInfo.getPipeline();
 
-    if (!dsInfo.shouldUpdateVisualization) {
-      // the event which changed dsInfo is not related to visualization
-      // should not request new visualization data
-      return;
-    }
-
     if (equal(pipeline, requestedPipeline.current)) {
       return;
     }
 
-    if (!pipeline.length) {
-      setState({ ...state, result: undefined });
+    if (!pipeline || !pipeline.length) {
+      setState({ ...state, vizData: undefined });
       return;
     }
 
@@ -69,7 +64,8 @@ const Visualization = (props: VisualizationProps) => {
         }
 
         if (data.success) {
-          setState({ ...state, loading: undefined, result: data.list });
+          // put vizMeta to the state to make it consistent with vizData
+          setState({ ...state, loading: undefined, vizData: data.list, vizMeta: dsInfo.vizMeta });
         } else {
           handleError('Error: ' + ( data.error || 'Unknown error' ));
         }
@@ -79,12 +75,12 @@ const Visualization = (props: VisualizationProps) => {
     }).catch((e) => {
       handleError('Error fetching data: ' + e.toString());
     });
-  }, [props.dsId, props.dsInfo]);
+  }, [props.dsId, props.dsInfo.vizMeta]);
 
   function scheduleUpdateStatus(): NodeJS.Timeout | undefined {
     const { dsId, dsInfo, dispatchDsInfo } = props;
 
-    if (dsInfo.isFinal()) {
+    if (dsInfo.isMetaFinal()) {
       // everything finished, no need to update
       return;
     }
@@ -120,13 +116,12 @@ const Visualization = (props: VisualizationProps) => {
   }
 
   const { dsInfo, dispatchDsInfo } = props;
-  const { loading, result } = state;
-  const pipeline = requestedPipeline.current;
+  const { loading, vizData, vizMeta } = state;
 
   // here can be several situations.
-  // (1) a user didn't yet select any filter,
+  // (1) a user didn't yet select any visualisation,
   //     in this case we show some hint
-  // (2) a user selected filters, but data
+  // (2) a user selected visualisation, but data
   //     to display visualisation is not ready.
   //     show loader in this case.
   // (3) data is ready. display corresponding
@@ -136,32 +131,11 @@ const Visualization = (props: VisualizationProps) => {
     return <Loader loading={true}/>;
   }
 
-  if (pipeline && pipeline.length && result) {
-    // 1. if pipeline 1st item is city/country, display geo map
-    if (['city', 'country'].indexOf(pipeline[0].key) !== -1) {
-      return <GeoMap
-        result={result}
-        filteringValues={dsInfo.getFilteringValues(pipeline[0].col, `${pipeline[0].key}.id`)}
-        onUpdateFilteringValues={(values: FilteringValue[]) => dispatchDsInfo({
-          type: DsInfoActionType.FILTER,
-          col: pipeline[0].col,
-          key: `${pipeline[0].key}.id`,
-          values
-        })}
-        onDropFiltering={() => dispatchDsInfo({
-          type: DsInfoActionType.DROP_FILTER,
-          col: pipeline[0].col
-        })}
-      />;
-    }
-
-    // 2. other groupings, ...
-    // todo
+  if (vizMeta && vizData) {
+    //todo build super-duper graphs based on meta & data
   }
 
-  return <>
-    {dsInfo.getHint()}
-  </>;
+  return <VizHint dsInfo={dsInfo}/>;
 }
 
-export default Visualization;
+export default Viz;
