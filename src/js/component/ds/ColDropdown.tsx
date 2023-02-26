@@ -1,31 +1,28 @@
 import React, { Dispatch, useRef } from 'react';
 import Icon from '../../icon/Icon';
 import Dropdown, { DropdownElement } from '../common/Dropdown';
-import { DsInfoAction, DsInfoActionType } from '../../reducer/dsInfo-reducer';
-import { Filter, FilterProposal, VizMeta } from '../../model/ds';
-import equal from 'deep-equal';
 import ColSearch from './ColSearch';
 import ColMultiselectFilter from './ColMultiselectFilter';
+import { DsInfoAction, DsInfoActionType } from '../../reducer/dsInfo-reducer';
+import { DsInfo } from '../../model/ds';
 
 interface ColFilterProps {
   col: string;
-  vizMetaProposed?: VizMeta[];
-  vizMeta?: VizMeta;
-  filterProposals?: FilterProposal[];
-  filters?: Filter[];
+  dsInfo: DsInfo;
   dispatchDsInfo: Dispatch<DsInfoAction>;
 }
 
 const ColDropdown = (
   {
     col,
-    vizMetaProposed,
-    vizMeta,
-    filterProposals,
-    filters,
+    dsInfo,
     dispatchDsInfo
   }: ColFilterProps
 ) => {
+
+  const { filters } = dsInfo;
+  const vizMetaProposed = dsInfo.vizMetaProposedByCol?.[col];
+  const filterProposals = dsInfo.filterProposalsByCol?.[col];
 
   const dropdownRef = useRef<DropdownElement | null>(null);
 
@@ -34,24 +31,11 @@ const ColDropdown = (
       return null;
     }
 
-    const __getSelectedKey = (vizMeta: VizMeta): string | undefined => {
-      for (let proposedVizMeta of vizMetaProposed) {
-        if (equal(proposedVizMeta.props, vizMeta.props)) {
-          return proposedVizMeta.key;
-        }
-      }
-      return vizMeta.children ?
-        Object.values(vizMeta.children).map(__getSelectedKey).find(key => !!key) :
-        undefined;
-    }
-    const selectedKey = vizMeta ? __getSelectedKey(vizMeta) : undefined;
-
     return <div className="col-dropdown-pane-item" key="viz">
       <span className="col-action-hint">Visualize...</span>
       <wired-listbox
         //@ts-ignore
         style={{ width: '100%' }}
-        selected={selectedKey}
         onselected={(event) => {
           const key = event.detail.selected;
           const vizMeta = vizMetaProposed?.find(v => v.key === key);
@@ -63,7 +47,11 @@ const ColDropdown = (
         }}
       >
         {vizMetaProposed.map(vizMeta => (
-          <wired-item key={vizMeta.key} value={vizMeta.key}>
+          <wired-item
+            key={vizMeta.key}
+            value={vizMeta.key}
+            selected={dsInfo.isVizSelected(vizMeta)}
+          >
             {vizMeta.toString()}
           </wired-item>
         ))}

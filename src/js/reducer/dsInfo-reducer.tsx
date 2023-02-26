@@ -170,6 +170,11 @@ export const defaultDsInfo: DsInfo = {
     }
   },
 
+  isVizSelected(vizMeta: VizMeta): boolean {
+    // match vizMeta by props
+    return this.__rolloutVizMeta((_key: string, v: VizMeta) => equal(vizMeta.props, v.props));
+  },
+
   getPipeline(): VizPipeline | undefined {
     let pipeline: VizPipeline | undefined;
 
@@ -177,18 +182,7 @@ export const defaultDsInfo: DsInfo = {
       ( pipeline = pipeline || [] ).push({ key, ...vizMeta.props });
     }
 
-    // roll out tail recursion
-    if (this.vizMeta) {
-      let entries: [string, VizMeta][] = [[this.vizMeta.key, this.vizMeta]];
-      while (entries.length) {
-        entries.forEach(e => __appendItem(...e));
-        entries = entries
-          .map(([, v]) => v)
-          .filter(v => v.children)
-          .map(v => Object.entries(v.children!))
-          .reduce((ee0, ee1) => ee0.concat(ee1), []);
-      }
-    }
+    this.__rolloutVizMeta(__appendItem);
 
     return pipeline;
   },
@@ -220,6 +214,27 @@ export const defaultDsInfo: DsInfo = {
       Object.entries(detailization)
         .map(kv => kv[1].status === 'finished')
         .reduce((a, b) => a && b, true);
+  },
+
+  __rolloutVizMeta: function (callback: (key: string, vizMeta: VizMeta) => any): any {
+    // roll out tail recursion
+    if (this.vizMeta) {
+      let entries: [string, VizMeta][] = [[this.vizMeta.key, this.vizMeta]];
+      while (entries.length) {
+        for (const e of entries) {
+          // stop roll out at the first truthy value returned by callback
+          const result = callback(...e);
+          if (result) {
+            return result;
+          }
+        }
+        entries = entries
+          .map(([, v]) => v)
+          .filter(v => v.children)
+          .map(v => Object.entries(v.children!))
+          .reduce((ee0, ee1) => ee0.concat(ee1), []);
+      }
+    }
   },
 };
 

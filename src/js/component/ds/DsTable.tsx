@@ -51,7 +51,7 @@ const DsTable = (props: DsTableProps) => {
       const { tableContentHeight, dsInfo, ds } = props;
       appendElement(renderTable(dsInfo.meta.cols!, ds, tableContentHeight), placeholder);
     }
-  }, [props.tableContentHeight, props.ds]);
+  }, [props.tableContentHeight, props.dsInfo, props.ds]);
 
   useEffect(() => {
     let query: any;
@@ -135,10 +135,7 @@ const DsTable = (props: DsTableProps) => {
         {(dsInfo.vizMetaProposedByCol?.[col] || dsInfo.filterProposalsByCol?.[col]) && isReal ?
           <ColDropdown
             col={col}
-            vizMetaProposed={dsInfo.vizMetaProposedByCol?.[col]}
-            vizMeta={dsInfo.vizMeta}
-            filterProposals={dsInfo.filterProposalsByCol?.[col]}
-            filters={dsInfo.filters}
+            dsInfo={dsInfo}
             dispatchDsInfo={dispatchDsInfo}
           /> :
           ''}

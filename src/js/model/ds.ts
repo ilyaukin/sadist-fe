@@ -345,6 +345,13 @@ export interface DsInfo {
   appendViz(vizMeta: VizMeta): VizMeta | undefined;
 
   /**
+   * Check if a certain graph is included to the current
+   * visualization
+   * @param vizMeta
+   */
+  isVizSelected(vizMeta: VizMeta): boolean;
+
+  /**
    * Get visualization pipeline
    */
   getPipeline(): VizPipeline | undefined;
@@ -370,4 +377,9 @@ export interface DsInfo {
    * If {@link meta} is final, i.e. all server-side processing of the DS is done
    */
   isMetaFinal(): boolean;
+
+  /**
+   * to be able to define auxilary fields or methods with names starting with __
+   */
+  [x: `__${string}`]: any;
 }
