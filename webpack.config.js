@@ -6,6 +6,7 @@ module.exports = {
   entry: {
     root: ['./src/index.js'],
     labelling: ['./src/labelling.js'],
+    'component-demo': ['./src/component-demo.js'],
   },
   output: {
     filename: '[name].js'
@@ -50,6 +51,11 @@ module.exports = {
       template: "./src/labelling.html",
       filename: "./labelling.html",
       chunks: ["labelling"]
+    }),
+    new HtmlWebPackPlugin({
+      template: "./src/component-demo.html",
+      filename: "./component-demo.html",
+      chunks: ["component-demo"]
     })
   ],
   resolve: {
