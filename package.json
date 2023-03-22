@@ -32,6 +32,7 @@
     "@web/test-runner-puppeteer": "^0.10.5",
     "babel-loader": "^8.0.6",
     "babel-plugin-root-import": "^6.4.1",
+    "copy-webpack-plugin": "^11.0.0",
     "css-loader": "^3.4.2",
     "file-loader": "^5.0.2",
     "html-loader": "^0.5.5",

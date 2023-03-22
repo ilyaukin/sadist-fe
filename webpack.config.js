@@ -1,5 +1,6 @@
 const path = require('path');
 const HtmlWebPackPlugin = require("html-webpack-plugin");
+const CopyWebpackPlugin = require("copy-webpack-plugin");
 const express = require('express');
 
 module.exports = {
@@ -56,6 +57,12 @@ module.exports = {
       template: "./src/component-demo.html",
       filename: "./component-demo.html",
       chunks: ["component-demo"]
+    }),
+    new CopyWebpackPlugin({
+      patterns: [{
+        from: './src/*.geojson',
+        to: '[name][ext]'
+      }]
     })
   ],
   resolve: {

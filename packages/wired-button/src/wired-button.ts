@@ -1,14 +1,6 @@
-import {
-  css,
-  CSSResultArray,
-  customElement,
-  html,
-  property,
-  query,
-  TemplateResult
-} from 'lit-element';
-import { line, Point, rectangle } from '@my-handicapped-pet/wired-lib';
-import { WiredBaseLegacy, BaseCSS, ResizeObserver } from "@my-handicapped-pet/wired-base-legacy";
+import { css, CSSResultArray, customElement, html, property, query, TemplateResult } from 'lit-element';
+import { Point, rectangle, renderElevation } from '@my-handicapped-pet/wired-lib';
+import { BaseCSS, ResizeObserver, WiredBaseLegacy } from "@my-handicapped-pet/wired-base-legacy";
 
 @customElement('wired-button')
 export class WiredButton extends WiredBaseLegacy {
@@ -112,12 +104,7 @@ export class WiredButton extends WiredBaseLegacy {
       height: size[1] - ((elev - 1) * 2)
     };
     rectangle(svg, 0, 0, s.width, s.height);
-    for (let i = 1; i < elev; i++) {
-      (line(svg, (i * 2), s.height + (i * 2), s.width + (i * 2), s.height + (i * 2))).style.opacity = `${(75 - (i * 10)) / 100}`;
-      (line(svg, s.width + (i * 2), s.height + (i * 2), s.width + (i * 2), i * 2)).style.opacity = `${(75 - (i * 10)) / 100}`;
-      (line(svg, (i * 2), s.height + (i * 2), s.width + (i * 2), s.height + (i * 2))).style.opacity = `${(75 - (i * 10)) / 100}`;
-      (line(svg, s.width + (i * 2), s.height + (i * 2), s.width + (i * 2), i * 2)).style.opacity = `${(75 - (i * 10)) / 100}`;
-    }
+    renderElevation(svg, 0, 0, s.width, s.height, elev);
   }
 
   updated() {

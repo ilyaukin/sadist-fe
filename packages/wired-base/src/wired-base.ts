@@ -1,14 +1,7 @@
 import { LitElement, PropertyValues, query } from "lit-element";
-import {
-  debugLog,
-  hachureFill,
-  line,
-  Point,
-  polygon,
-  rectangle
-} from "@my-handicapped-pet/wired-lib";
+import { debugLog, hachureFill, Point, polygon, rectangle, renderElevation } from "@my-handicapped-pet/wired-lib";
 
-export class WiredBase extends LitElement {
+export abstract class WiredBase extends LitElement {
   @query('svg') protected svg?: SVGSVGElement;
   protected lastSize: Point = [0, 0];
 
@@ -108,12 +101,25 @@ export class WiredBase extends LitElement {
         }
         let svg: SVGElement | undefined;  // drawn shape
         debugLog(`${shape}(${x0}, ${y0}, ${x1}, ${y1})`);
+        let fillStyle, fillColor;
+        if (properties.fill) {
+          for (let p of properties.fill.split(' ')) {
+            if (p === 'hachure') {
+              fillStyle = p;
+            } else {
+              fillColor = p;
+            }
+          }
+        }
         switch (shape) {
           case "rectangle":
             // inner area
-            switch (properties.fill) {
+            switch (fillStyle) {
               case "hachure":
                 svg = hachureFill([[x0, y0], [x1, y0], [x1, y1], [x0, y1]]);
+                if (fillColor) {
+                  svg.style.stroke = fillColor;
+                }
                 this.svg?.appendChild(svg);
                 break;
             }
@@ -126,17 +132,15 @@ export class WiredBase extends LitElement {
                 break;
               default:
                 svg = rectangle(this.svg!, x0, y0, x1 - x0, y1 - y0);
+                if (properties.border) {
+                  svg.style.stroke = properties.border;
+                }
                 break;
             }
             // elevation
             let elev = properties.elevation ? Math.min(parseInt(properties.elevation), 5) : 0;
             if (elev > 1) {
-              for (let i = 0, j = 0; i < elev - 1; j ? (i++, j = 0) : j++) {
-                line(this.svg!, x0 + i * 2, y1 + i * 2, x1 + i * 2, y1 + i * 2)
-                  .style.opacity = `${(75 - 10 * i) / 100}`;
-                line(this.svg!, x1 + i * 2, y1 + i * 2, x1 + i * 2, y0 + i * 2)
-                  .style.opacity = `${(75 - 10 * i) / 100}`;
-              }
+              renderElevation(this.svg!, x0, y0, x1, y1, elev);
             }
             break;
           case "arrow-down":
@@ -146,8 +150,8 @@ export class WiredBase extends LitElement {
             svg = polygon(this.svg!, [[x0, y1], [x1, y1], [(x0 + x1 / 2), y0]]);
             break;
         }
-        if (svg && properties.fill && properties.fill !== "hachure") {
-          svg.style.fill = properties.fill;
+        if (svg && fillColor && fillStyle !== "hachure") {
+          svg.style.fill = fillColor;
         }
       }
       for (let singleShape of attribute.split(';')) {
