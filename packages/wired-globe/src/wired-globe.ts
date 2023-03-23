@@ -1,5 +1,10 @@
 import { customElement, property, PropertyValues, css } from 'lit-element';
-import { Feature, FeatureCollection, GeoJsonProperties, Geometry } from 'geojson';
+import {
+  Feature,
+  FeatureCollection,
+  GeoJsonProperties,
+  Geometry
+} from 'geojson';
 import { debugLog, line, svgNode } from '@my-handicapped-pet/wired-lib';
 import { WiredBaseGraph } from '@my-handicapped-pet/wired-base-graph';
 import { DataPoint } from '@my-handicapped-pet/wired-data-point';
@@ -47,7 +52,7 @@ export class WiredGlobe extends WiredBaseGraph {
       :host {
         cursor: grab;
       }
-      
+
       .net {
         stroke: #808080;
       }
@@ -57,7 +62,7 @@ export class WiredGlobe extends WiredBaseGraph {
         stroke-width: 3;
         fill: #80d080;
       }
-      
+
       .coastline.hole {
         fill: #fff;
       }
@@ -184,7 +189,7 @@ export class WiredGlobe extends WiredBaseGraph {
 
   private _linestring(coordinates: number[][], className?: SvgClassName): SVGElement[] {
     const result = [];
-    for (let i = 1; i < coordinates.length; i++){
+    for (let i = 1; i < coordinates.length; i++) {
       let p0 = coordinates[i - 1];
       let p1 = coordinates[i];
       let svg = this.line(p0[0], p0[1], p1[0], p1[1], className);
@@ -277,10 +282,20 @@ export class WiredGlobe extends WiredBaseGraph {
       multiShapes.push([shapes[0]]);
     } else if (shapes.length > 1) {
       let skyline = [];
-      for (let i = 0; i < shapes.length; i++){
+      for (let i = 0; i < shapes.length; i++) {
         const shape1 = shapes[i];
-        skyline.push({ i, ii: [], angle: this.toPolar(shape1[0][0], shape1[0][1]), onward: true });
-        skyline.push({ i, ii: [], angle: this.toPolar(shape1[shape1.length - 1][0], shape1[shape1.length - 1][1]), onward: false });
+        skyline.push({
+          i,
+          ii: [],
+          angle: this.toPolar(shape1[0][0], shape1[0][1]),
+          onward: true
+        });
+        skyline.push({
+          i,
+          ii: [],
+          angle: this.toPolar(shape1[shape1.length - 1][0], shape1[shape1.length - 1][1]),
+          onward: false
+        });
       }
       skyline.sort((a, b) => a.angle - b.angle);
       const getAngleBetween = (a1: number, a2: number): number => {
@@ -288,7 +303,8 @@ export class WiredGlobe extends WiredBaseGraph {
         const a = a2 - a1;
         return a < Math.PI ? a : 2 * Math.PI - a;
       }
-      let start = 0, gap = getAngleBetween(skyline[0].angle, skyline[skyline.length - 1].angle);
+      let start = 0,
+          gap = getAngleBetween(skyline[0].angle, skyline[skyline.length - 1].angle);
       for (let i = 1; i < skyline.length; i++) {
         let gap1 = getAngleBetween(skyline[i - 1].angle, skyline[i].angle);
         if (gap1 > gap) {
@@ -334,7 +350,7 @@ export class WiredGlobe extends WiredBaseGraph {
           }
         }
         const x1 = x!, y1 = y!;
-        const [x2, y2] = multiShape[(j + 1) % multiShape.length][0];
+        const [x2, y2] = multiShape[( j + 1 ) % multiShape.length][0];
         if (!( x1 == x2 && y1 == y2 )) {
           const phi1 = this.toPolar(x1, y1), phi2 = this.toPolar(x2, y2);
           const isclokwise = ( phi2 - phi1 + 2 * Math.PI ) % ( 2 * Math.PI ) < Math.PI ? 0 : 1;
@@ -370,12 +386,14 @@ export class WiredGlobe extends WiredBaseGraph {
   }
 
   protected poseData(): void {
+    const rect = this.getBoundingClientRect();
+
     this.groups.forEach(({ id, nodes }) => {
       const [x, y, z] = this.xyz([id.coordinates[0], id.coordinates[1]]);
       const w = Math.floor(2 * this['data-point-r'] / this.legend.length);
       this.legend.forEach(({}, j) => {
         nodes[j].style.position = 'absolute';
-        nodes[j].style.display = z >= 0 ? 'block' : 'none';
+        nodes[j].style.display = ( z >= 0 && 0 <= x && x <= rect.width && 0 <= y && y <= rect.height ) ? 'block' : 'none';
         nodes[j].style.left = `${x - this['data-point-r'] + j * w}px`;
         nodes[j].style.top = `${y - this['data-point-r']}px`;
         nodes[j].style.width = `${w}px`;
@@ -407,7 +425,7 @@ export class WiredGlobe extends WiredBaseGraph {
       const dy = y - this.grabpoint[1];
       const rect = this.getBoundingClientRect();
       const c = 180 / Math.PI;
-      const tilt = this.eye[1] / c + Math.atan2(this.yc - (y - rect.y), this.r);
+      const tilt = this.eye[1] / c + Math.atan2(this.yc - ( y - rect.y ), this.r);
       const dphi = 2 * Math.atan2(dx / 2, this.r * Math.cos(tilt)) * c;
       const dtheta = 2 * Math.atan2(dy / 2, this.r) * c;
 
@@ -427,7 +445,7 @@ export class WiredGlobe extends WiredBaseGraph {
 
     if (event.deltaY) {
       const rect = this.getBoundingClientRect();
-      let c = (rect.height - event.deltaY) / rect.height;
+      let c = ( rect.height - event.deltaY ) / rect.height;
       if (c > 2) c = 2;
       if (c < .5) c = .5;
       let r = this.r * c;
