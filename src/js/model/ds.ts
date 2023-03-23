@@ -3,7 +3,6 @@
  * that will be extended while implementing
  */
 export type VizType =
-  'blank' |
   'marker' |
   'bar' |
   'histogram' |
@@ -146,6 +145,13 @@ export interface VizMeta {
    * String representation is used in UI
    */
   toString(): string;
+
+  /**
+   * Label of the visualization item in the graph.
+   * If not defind, id will be used
+   * @param i visualization data item
+   */
+  getLabel?(i: VizDataItem): string;
 }
 
 /**

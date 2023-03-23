@@ -1,5 +1,5 @@
 import equal from 'deep-equal'
-import { DsInfo, DsMeta, Filter, FilterProposal, FilterQuery, VizMeta, VizPipeline } from '../model/ds';
+import { DsInfo, DsMeta, Filter, FilterProposal, FilterQuery, VizDataItem, VizMeta, VizPipeline } from '../model/ds';
 
 /**
  * Default object containing all functions of {@link DsInfo}
@@ -41,6 +41,9 @@ export const defaultDsInfo: DsInfo = {
                   },
                   toString() {
                     return 'Show cities';
+                  },
+                  getLabel(i: VizDataItem): string {
+                    return i.id.name;
                   }
                 });
                 break;
@@ -55,6 +58,9 @@ export const defaultDsInfo: DsInfo = {
                   },
                   toString(): string {
                     return 'Show counties';
+                  },
+                  getLabel(i: VizDataItem): string {
+                    return i.id.name;
                   }
                 });
                 break;
@@ -153,7 +159,7 @@ export const defaultDsInfo: DsInfo = {
         return {
           ...( this.vizMeta || {
             key: 'root',
-            type: 'blank',
+            type: 'histogram',
             props: {
               action: 'group',
             }

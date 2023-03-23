@@ -2,9 +2,10 @@ import React, { Dispatch, useEffect, useRef, useState } from 'react';
 import equal from 'deep-equal';
 import ErrorDialog from '../common/ErrorDialog';
 import Loader from '../common/Loader';
+import VizHint from './VizHint';
+import VizGraph from './VizGraph';
 import { DsInfo, DsMeta, VizData, VizMeta, VizPipeline } from '../../model/ds';
 import { DsInfoAction, DsInfoActionType } from '../../reducer/dsInfo-reducer';
-import VizHint from './VizHint';
 
 interface VisualizationProps {
   dsId: string;
@@ -132,7 +133,13 @@ const Viz = (props: VisualizationProps) => {
   }
 
   if (vizMeta && vizData) {
-    //todo build super-duper graphs based on meta & data
+    return <>
+      <VizGraph
+          meta={vizMeta}
+          data={vizData}
+          id="root"
+      />
+    </>;
   }
 
   return <VizHint dsInfo={dsInfo}/>;
