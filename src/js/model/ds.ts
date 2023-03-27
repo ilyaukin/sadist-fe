@@ -192,7 +192,7 @@ export type Filter = ColSpecificProps;
  * a user ticks filtered values from
  */
 export interface AbstractFilterProposal {
-  propose(): Filter | undefined;
+  propose(): Filter;
 }
 
 /**

@@ -114,12 +114,12 @@ export const defaultDsInfo: DsInfo = {
       meta.cols?.forEach((col) => {
         __proposeFilter(col, {
           type: 'search',
-          propose(): Filter | undefined {
-            return !this.term ? undefined : {
+          propose(): Filter {
+            return {
               col: col,
               predicate: {
                 op: 'instr',
-                value: this.term,
+                value: this.term || '',
               }
             };
           }

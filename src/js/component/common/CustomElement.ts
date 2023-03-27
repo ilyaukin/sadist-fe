@@ -25,6 +25,8 @@ import '/packages/wired-radio-group';
 import { WiredRadioGroup } from '/packages/wired-radio-group';
 import '/packages/wired-input';
 import { WiredInput } from '/packages/wired-input';
+import '/packages/wired-search-input';
+import { WiredSearchInput } from '/packages/wired-search-input';
 import '/packages/wired-checkbox';
 import { WiredCheckbox } from '/packages/wired-checkbox';
 import '/packages/wired-combo-lazy';
@@ -55,6 +57,7 @@ declare global {
       ['wired-radio']: CustomElement<WiredRadio>;
       ['wired-radio-group']: CustomElementWithEvent<WiredRadioGroup, 'selected'>;
       ['wired-input']: CustomElement<WiredInput>;
+      ['wired-search-input']: CustomElementWithEvent<WiredSearchInput, 'close'>;
       ['wired-checkbox']: CustomElementWithEvent<WiredCheckbox, 'change'>;
       ['wired-combo-lazy']: CustomElementWithEvent<WiredComboLazy, 'selected'>;
       ['wired-bar']: CustomElement<WiredBar>;

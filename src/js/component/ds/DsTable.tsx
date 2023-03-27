@@ -1,9 +1,15 @@
-import React, { CSSProperties, Dispatch, HTMLProps, useEffect, useRef, useState } from 'react';
+import React, {
+  CSSProperties,
+  Dispatch,
+  HTMLProps,
+  useEffect,
+  useRef,
+  useState
+} from 'react';
 import equal from 'deep-equal';
 import ErrorDialog from "../common/ErrorDialog";
 import ColDropdown from "./ColDropdown";
 import Loader from "../common/Loader";
-import { appendElement } from "../../helper/react-helper";
 import { DsInfo } from "../../model/ds";
 import { DsInfoAction } from '../../reducer/dsInfo-reducer';
 
@@ -21,6 +27,7 @@ interface DsTableProps {
 
 interface DsTableState {
   loading: boolean;
+  table?: JSX.Element;
 }
 
 const DsTable = (props: DsTableProps) => {
@@ -39,8 +46,6 @@ const DsTable = (props: DsTableProps) => {
     colRefs.current = undefined;
   }
 
-  let placeholder: HTMLDivElement | null;
-
   let table: HTMLDivElement | null;
 
   let tableContent: HTMLDivElement | null;
@@ -49,7 +54,8 @@ const DsTable = (props: DsTableProps) => {
     // console.log(colRefs.current?.map(colRef => colRef?.offsetWidth))
     if (colRefs.current) {
       const { tableContentHeight, dsInfo, ds } = props;
-      appendElement(renderTable(dsInfo.meta.cols!, ds, tableContentHeight), placeholder);
+      const table = renderTable(dsInfo.meta.cols!, ds, tableContentHeight);
+      setState({ ...state, table });
     }
   }, [props.tableContentHeight, props.dsInfo, props.ds]);
 
@@ -218,6 +224,7 @@ const DsTable = (props: DsTableProps) => {
     };
 
     return <div
+      key="real"
       style={outerDivStyle}
       ref={e => table = e}
       onScroll={onScrollHorizontally}
@@ -260,7 +267,7 @@ const DsTable = (props: DsTableProps) => {
 
       // after that values are defined, render proper
       // table using ReactDom.render in componentDidUpdate
-      <div key="real" ref={(e) => placeholder = e}/>
+      state.table ? state.table : null
     ]}
   </>
 }

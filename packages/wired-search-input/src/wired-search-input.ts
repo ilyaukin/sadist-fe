@@ -1,9 +1,12 @@
-import { rectangle, Point, fire, ellipse, svgNode, line } from 'wired-lib';
-import { WiredBase, BaseCSS } from 'wired-lib/lib/wired-base';
 import { customElement, property, query, css, TemplateResult, html, CSSResultArray } from 'lit-element';
+import { rectangle, Point, fire, ellipse, svgNode, line } from '@my-handicapped-pet/wired-lib';
+import {
+  BaseCSS,
+  WiredBaseLegacy
+} from '@my-handicapped-pet/wired-base-legacy';
 
 @customElement('wired-search-input')
-export class WiredSearchInput extends WiredBase {
+export class WiredSearchInput extends WiredBaseLegacy {
   @property({ type: Boolean, reflect: true }) disabled = false;
   @property({ type: String }) placeholder = '';
   @property({ type: String }) autocomplete = '';
@@ -13,6 +16,7 @@ export class WiredSearchInput extends WiredBase {
   @query('input') private textInput?: HTMLInputElement;
 
   private pendingValue?: string;
+  private pendingFocus?: boolean;
   private searchIcon?: SVGElement;
   private closeIcon?: SVGElement;
 
@@ -23,7 +27,7 @@ export class WiredSearchInput extends WiredBase {
         :host {
           display: inline-block;
           position: relative;
-          padding: 10px 40px 10px 5px;
+          padding: 5px;
           font-family: sans-serif;
           width: 180px;
           outline: none;
@@ -88,7 +92,7 @@ export class WiredSearchInput extends WiredBase {
     <div id="overlay">
       <svg></svg>
     </div>
-    <button @click="${() => this.value = ''}"></button>
+    <button @click="${() => this.onClose()}"></button>
     `;
   }
 
@@ -102,14 +106,21 @@ export class WiredSearchInput extends WiredBase {
   }
 
   set value(v: string) {
-    if (this.shadowRoot) {
-      const input = this.input;
-      if (input) {
-        input.value = v;
-      }
+    const input = this.input;
+    if (input) {
+      input.value = v;
       this.refreshIconState();
     } else {
       this.pendingValue = v;
+    }
+  }
+
+  focus(options?: FocusOptions) {
+    const input = this.input;
+    if (input) {
+      input.focus(options);
+    } else {
+      this.pendingFocus = true;
     }
   }
 
@@ -121,6 +132,10 @@ export class WiredSearchInput extends WiredBase {
   firstUpdated() {
     this.value = this.pendingValue || this.value || this.getAttribute('value') || '';
     delete this.pendingValue;
+    if (this.pendingFocus) {
+      this.focus();
+      delete this.pendingFocus;
+    }
   }
 
   protected canvasSize(): Point {
@@ -155,5 +170,10 @@ export class WiredSearchInput extends WiredBase {
     this.refreshIconState();
     event.stopPropagation();
     fire(this, event.type, { sourceEvent: event });
+  }
+
+  private onClose() {
+    this.value = '';
+    fire(this, 'close', {});
   }
 }

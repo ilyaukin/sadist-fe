@@ -70,7 +70,10 @@ const ColDropdown = (
           case 'search':
             return <>
               <span className="col-action-hint">Look up...</span>
-              <ColSearch filterProposal={filterProposal}/>
+              <ColSearch
+                  filterProposal={filterProposal}
+                  dispatchDsInfo={dispatchDsInfo}
+              />
             </>
           case 'multiselect':
             return <>
