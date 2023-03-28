@@ -138,6 +138,8 @@ const Viz = (props: VisualizationProps) => {
           meta={vizMeta}
           data={vizData}
           id="root"
+          filterProposals={dsInfo.filterProposals}
+          dispatchDsInfo={dispatchDsInfo}
       />
     </>;
   }

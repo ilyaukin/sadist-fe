@@ -4,7 +4,7 @@ import Dropdown, { DropdownElement } from '../common/Dropdown';
 import ColSearch from './ColSearch';
 import ColMultiselectFilter from './ColMultiselectFilter';
 import { DsInfoAction, DsInfoActionType } from '../../reducer/dsInfo-reducer';
-import { DsInfo } from '../../model/ds';
+import { ComplexValueType, DsInfo, ValueType } from '../../model/ds';
 
 interface ColFilterProps {
   col: string;
@@ -77,8 +77,12 @@ const ColDropdown = (
             </>
           case 'multiselect':
             return <>
-              <span className="col-action-hint">Filter by ${filterProposal.label}</span>
-              <ColMultiselectFilter filterProposal={filterProposal}/>
+              <span className="col-action-hint">Filter by {filterProposal.label}</span>
+              <ColMultiselectFilter<ValueType | ComplexValueType>
+                  dsId={dsInfo.meta.id!}
+                  filterProposal={filterProposal}
+                  dispatchDsInfo={dispatchDsInfo}
+              />
             </>
         }
       })}

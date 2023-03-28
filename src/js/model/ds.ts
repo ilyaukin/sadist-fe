@@ -196,14 +196,15 @@ export interface AbstractFilterProposal {
 }
 
 /**
- * Filter by selecting one of multiple values
+ * Filter by selecting one or more of multiple values
  */
 export interface MultiselectFilterProposal<T = ValueType> extends AbstractFilterProposal {
   type: 'multiselect';
   col: string;
   label: string;
-  values?: T[];
-  selected?: T[];
+  values: T[];
+  selected: T[];
+  getLabel?(item: T): string;
 }
 
 /**
@@ -215,10 +216,16 @@ export interface SearchFilterProposal<T = string> extends AbstractFilterProposal
 }
 
 /**
+ * Type of the classified values
+ */
+export type ComplexValueType = { id: ValueType; [p: string]: any; } | null;
+
+/**
  * Any of known {@link AbstractFilterProposal} types
  */
 export type FilterProposal =
-  MultiselectFilterProposal |
+  MultiselectFilterProposal<ValueType> |
+  MultiselectFilterProposal<ComplexValueType> |
   SearchFilterProposal;
 
 /**

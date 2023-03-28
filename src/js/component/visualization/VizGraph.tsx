@@ -1,5 +1,19 @@
-import React, { ReactNode } from 'react';
-import { VizData, VizMeta } from '../../model/ds';
+import React, {
+  Dispatch,
+  MouseEvent,
+  MouseEventHandler,
+  ReactNode
+} from 'react';
+import equal from 'deep-equal';
+import {
+  ColSpecificProps,
+  FilterProposal,
+  MultiselectFilterProposal,
+  VizData,
+  VizDataItem,
+  VizMeta
+} from '../../model/ds';
+import { DsInfoAction, DsInfoActionType } from '../../reducer/dsInfo-reducer';
 
 interface VizGraphProps {
   meta: VizMeta;
@@ -7,11 +21,18 @@ interface VizGraphProps {
   id: any;
   name?: string;
   label?: string;
+  selected?: boolean;
+  onSelected?: MouseEventHandler;
+  filterProposals?: FilterProposal[];
+  dispatchDsInfo?: Dispatch<DsInfoAction>;
 }
 
 const VizGraph = (props: VizGraphProps) => {
 
-  let { meta, data, id, name, label } = props;
+  let {
+    meta, data, id, name, label, selected, onSelected,
+    filterProposals, dispatchDsInfo
+  } = props;
   name ||= meta.key;
 
   function error(message: string) {
@@ -30,6 +51,32 @@ const VizGraph = (props: VizGraphProps) => {
       return null;
     }
 
+    let filterProposal: FilterProposal | undefined,
+        isSelected: (arg0: VizDataItem) => boolean | undefined,
+        onSelected: ( (e: MouseEvent) => void ) | undefined;
+    filterProposal = filterProposals?.find(f =>
+        f.type === 'multiselect'
+        && f.col === ( meta.props as ColSpecificProps ).col
+        && f.label === ( meta.props as ColSpecificProps ).label);
+    if (filterProposal) {
+      isSelected = (v: VizDataItem): boolean =>
+          !!( filterProposal as MultiselectFilterProposal ).selected.find(i => equal(i, v.id));
+      onSelected = (e: MouseEvent): void => {
+        const id = ( e.target as any )?.['data-id'];
+        if (id) {
+          if (e.shiftKey) {
+            ( filterProposal as MultiselectFilterProposal ).selected.push(id);
+          } else {
+            ( filterProposal as MultiselectFilterProposal ).selected = [id];
+          }
+          dispatchDsInfo?.({
+            type: DsInfoActionType.ADD_FILTER,
+            filter: filterProposal?.propose()
+          });
+        }
+      }
+    }
+
     return data.map((item, i) => {
       return Object.entries(meta.children!).map(([k, v]) => {
         return <>
@@ -40,6 +87,8 @@ const VizGraph = (props: VizGraphProps) => {
               id={item.id}
               name={k}
               label={meta.getLabel?.(item)}
+              selected={isSelected?.(item)}
+              onSelected={onSelected}
           />
         </>
       });
@@ -58,6 +107,8 @@ const VizGraph = (props: VizGraphProps) => {
             data-name={name}
             data-value={data}
             data-label={label}
+            selected={selected}
+            onClick={onSelected}
         />
       </>;
 
@@ -72,6 +123,8 @@ const VizGraph = (props: VizGraphProps) => {
             data-name={name}
             data-value={data}
             data-label={label}
+            selected={selected}
+            onClick={onSelected}
         />
       </>;
 

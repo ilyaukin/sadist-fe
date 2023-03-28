@@ -1,5 +1,16 @@
 import equal from 'deep-equal'
-import { DsInfo, DsMeta, Filter, FilterProposal, FilterQuery, VizDataItem, VizMeta, VizPipeline } from '../model/ds';
+import {
+  ComplexValueType,
+  DsInfo,
+  DsMeta,
+  Filter,
+  FilterProposal,
+  FilterQuery,
+  MultiselectFilterProposal,
+  VizDataItem,
+  VizMeta,
+  VizPipeline
+} from '../model/ds';
 
 /**
  * Default object containing all functions of {@link DsInfo}
@@ -43,7 +54,27 @@ export const defaultDsInfo: DsInfo = {
                     return 'Show cities';
                   },
                   getLabel(i: VizDataItem): string {
-                    return i.id.name;
+                    return `${i.id?.name}`;
+                  }
+                });
+                __proposeFilter(col, {
+                  type: 'multiselect',
+                  col,
+                  label,
+                  values: [],
+                  selected: [],
+                  propose(): Filter {
+                    return {
+                      col,
+                      label: `${label}.id`,
+                      predicate: {
+                        op: 'in',
+                        values: (this as MultiselectFilterProposal<ComplexValueType>).selected.map(v => v?.id || null),
+                      }
+                    }
+                  },
+                  getLabel(item: ComplexValueType): string {
+                    return `${item?.name}`;
                   }
                 });
                 break;
@@ -60,7 +91,27 @@ export const defaultDsInfo: DsInfo = {
                     return 'Show counties';
                   },
                   getLabel(i: VizDataItem): string {
-                    return i.id.name;
+                    return `${i.id?.name}`;
+                  }
+                });
+                __proposeFilter(col, {
+                  type: 'multiselect',
+                  col,
+                  label,
+                  values: [],
+                  selected: [],
+                  propose(): Filter {
+                    return {
+                      col,
+                      label: `${label}.id`,
+                      predicate: {
+                        op: 'in',
+                        values: (this as MultiselectFilterProposal<ComplexValueType>).selected.map(v => v?.id || null),
+                      }
+                    }
+                  },
+                  getLabel(item: ComplexValueType): string {
+                    return `${item?.name}`;
                   }
                 });
                 break;
@@ -109,22 +160,22 @@ export const defaultDsInfo: DsInfo = {
           });
         }
       });
-      // let it be text filters by all cols across so far,
-      // at least to test filtering engine
-      meta.cols?.forEach((col) => {
-        __proposeFilter(col, {
-          type: 'search',
-          propose(): Filter {
-            return {
-              col: col,
-              predicate: {
-                op: 'instr',
-                value: this.term || '',
-              }
-            };
-          }
-        });
-      });
+      // // let it be text filters by all cols across so far,
+      // // at least to test filtering engine
+      // meta.cols?.forEach((col) => {
+      //   __proposeFilter(col, {
+      //     type: 'search',
+      //     propose(): Filter {
+      //       return {
+      //         col: col,
+      //         predicate: {
+      //           op: 'instr',
+      //           value: this.term || '',
+      //         }
+      //       };
+      //     }
+      //   });
+      // });
     }
 
     return dsInfo;

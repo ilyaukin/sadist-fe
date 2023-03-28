@@ -235,6 +235,16 @@ module.exports = {
           success: true
         })
       });
+      app.get('/ds/2222/label-values', function (req, res) {
+        res.send({
+          list: [
+            { id: 1, name: 'Moscow', coordinates: [ 37.61556, 55.75222 ]},
+            { id: 2, name: 'Paris', coordinates: [ 2.3488, 48.85341 ]},
+            { id: 3, name: 'New York', coordinates: [ -74.00597, 40.71427 ]},
+          ],
+          success: true
+        })
+      });
       app.put('/ds', function (req, res) {
         res.send({
           item: {

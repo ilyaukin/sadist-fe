@@ -182,9 +182,8 @@ const ComponentDemo = () => {
         (key) => <Uniselector
             key={key}
             selected={demoKey == key}
-            text={key}
             onClick={() => setDemoKey(key as keyof JSX.IntrinsicElements)}
-        />
+        >{key}</Uniselector>
     )}
     <br/>
     <br/>

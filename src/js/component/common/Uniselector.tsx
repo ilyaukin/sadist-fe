@@ -2,15 +2,15 @@ import React from 'react';
 
 interface UniselectorProps {
   selected: boolean;
-  text: string;
+  children: string;
   onClick: () => any;
 }
 
 const Uniselector = (props: UniselectorProps) => {
   return <span className="uniselector">
         {props.selected ?
-          <b>{props.text}</b> :
-          <a href="#" onClick={props.onClick}>{props.text}</a>
+          <b>{props.children}</b> :
+          <a href="#" onClick={props.onClick}>{props.children}</a>
         }
       </span>;
 }
