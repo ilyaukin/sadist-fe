@@ -55,7 +55,7 @@ const DsTable = (props: DsTableProps) => {
     if (colRefs.current) {
       const { tableContentHeight, dsInfo, ds } = props;
       const table = renderTable(dsInfo.meta.cols!, ds, tableContentHeight);
-      setState({ ...state, table });
+      setState({ ...state, table, loading: false });
     }
   }, [props.tableContentHeight, props.dsInfo, props.ds]);
 
@@ -90,7 +90,6 @@ const DsTable = (props: DsTableProps) => {
           colRefs.current = new Array(dsInfo.meta.cols?.length);
           if (data.success) {
             onLoadDs(data.list);
-            setState({ ...state, loading: false });
           } else {
             handleError('Error: ' + ( data.error || 'Unknown error' ));
           }
@@ -105,7 +104,6 @@ const DsTable = (props: DsTableProps) => {
   function handleError(err: string) {
     const { onLoadDs } = props;
     onLoadDs([]);
-    setState({ ...state, loading: false });
     ErrorDialog.raise(err);
   }
 
