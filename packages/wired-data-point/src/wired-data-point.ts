@@ -1,4 +1,4 @@
-import { html, property, css, CSSResult, PropertyValues } from 'lit-element';
+import { css, CSSResult, html, property, PropertyValues } from 'lit-element';
 import { WiredBase } from '@my-handicapped-pet/wired-base';
 
 export class DataPoint {
@@ -32,7 +32,7 @@ export class DataPoint {
     this.wrapped['data-scale'] = scale;
   }
 
-  get element(): HTMLElement {
+  get element(): WiredDataPoint {
     return this.wrapped;
   }
 }
@@ -63,7 +63,7 @@ export class WiredDataPoint extends WiredBase {
         cursor: pointer;
       }
       
-      :host(:hover) svg, :host(.data-point-selected) svg {
+      :host(.wired-data-point-hovered) svg, :host(.wired-data-point-selected) svg {
         stroke-width: 3;
       }
 
@@ -79,7 +79,7 @@ export class WiredDataPoint extends WiredBase {
         color: #fff;
       }
 
-      :host(:hover) .label {
+      :host(.wired-data-point-hovered) .label {
         display: block;
       }
 
@@ -89,7 +89,7 @@ export class WiredDataPoint extends WiredBase {
         fill: none;
       }
 
-      :host(.data-point-selected) #border {
+      :host(.wired-data-point-selected) #border {
         stroke: black;
         stroke-width: 4;
       }
@@ -109,10 +109,27 @@ export class WiredDataPoint extends WiredBase {
     super.updated(changed);
     if (changed?.has('selected')) {
       if (this.selected) {
-        this.classList.add('data-point-selected');
+        this.classList.add('wired-data-point-selected');
       } else {
-        this.classList.remove('data-point-selected');
+        this.classList.remove('wired-data-point-selected');
       }
     }
+  }
+
+  hover(hover: boolean) {
+    const wasHover = this.classList.contains('wired-data-point-hovered');
+    if (wasHover != hover) {
+      if (hover) {
+        this.classList.add('wired-data-point-hovered');
+      } else {
+        this.classList.remove('wired-data-point-hovered');
+      }
+      // this.requestUpdate();
+    }
+  }
+
+  containsPoint(x: number, y: number): boolean {
+    const rect = this.getBoundingClientRect();
+    return rect.left <= x && x <= rect.right && rect.top <= y && y <= rect.bottom;
   }
 }

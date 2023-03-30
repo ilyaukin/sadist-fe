@@ -7,7 +7,10 @@ import {
 } from 'geojson';
 import { debugLog, line, svgNode } from '@my-handicapped-pet/wired-lib';
 import { WiredBaseGraph } from '@my-handicapped-pet/wired-base-graph';
-import { DataPoint } from '@my-handicapped-pet/wired-data-point';
+import {
+  DataPoint,
+  WiredDataPoint
+} from '@my-handicapped-pet/wired-data-point';
 
 type SvgClassName =
     'net' |
@@ -35,7 +38,7 @@ export class WiredGlobe extends WiredBaseGraph {
   /**
    * Radius of the data points (maximum)
    */
-  @property({ type: Number }) ['data-point-r']: number = 50;
+  @property({ type: Number }) ['data-point-r']: number = 100;
 
   protected coastline?: Array<Feature<Geometry, GeoJsonProperties>>;
   protected svgByClass: { [c in SvgClassName]: SVGElement[]; } = {
@@ -78,10 +81,10 @@ export class WiredGlobe extends WiredBaseGraph {
           this.requestUpdate();
         });
 
-    this.addEventListener('mousedown', (event) => this.onMouseDown(event));
-    this.addEventListener('mouseup', (event) => this.onMouseUp(event));
-    this.addEventListener('mousemove', (event) => this.onMouseMove(event));
-    this.addEventListener('wheel', (event) => this.onWheel(event));
+    this.addEventListener('mousedown', this.onMouseDown);
+    this.addEventListener('mouseup', this.onMouseUp);
+    this.addEventListener('mousemove', this.onMouseMove2); //another listener to avoid conflict with parent
+    this.addEventListener('wheel', this.onWheel);
   }
 
   updated(changedProperties: PropertyValues) {
@@ -130,7 +133,7 @@ export class WiredGlobe extends WiredBaseGraph {
 
       // before we refactored scales, consider scale linear/quadratic
       // depending on the data points' tag
-      this.forEachDataPoint((dp) => {
+      this.datapoints?.forEach((dp) => {
         tag = dp.element.tagName.toUpperCase();
       });
       if (tag === 'WIRED-MARKER') {
@@ -376,13 +379,8 @@ export class WiredGlobe extends WiredBaseGraph {
         && typeof dp.id.coordinates[1] == 'number';
   }
 
-  protected forEachDataPoint(callback: (dp: DataPoint) => any) {
-    const callback1 = (dp: DataPoint) => {
-      if (this.isGeoDataPoint(dp)) {
-        callback(dp);
-      }
-    }
-    super.forEachDataPoint(callback1);
+  get datapoints(): DataPoint[] | undefined {
+    return super.datapoints?.filter(dp => this.isGeoDataPoint(dp));
   }
 
   protected poseData(): void {
@@ -392,31 +390,35 @@ export class WiredGlobe extends WiredBaseGraph {
       const [x, y, z] = this.xyz([id.coordinates[0], id.coordinates[1]]);
       const w = Math.floor(2 * this['data-point-r'] / this.legend.length);
       this.legend.forEach(({}, j) => {
+        const display = nodes[j].style.display;
         nodes[j].style.position = 'absolute';
         nodes[j].style.display = ( z >= 0 && 0 <= x && x <= rect.width && 0 <= y && y <= rect.height ) ? 'block' : 'none';
         nodes[j].style.left = `${x - this['data-point-r'] + j * w}px`;
         nodes[j].style.top = `${y - this['data-point-r']}px`;
         nodes[j].style.width = `${w}px`;
         nodes[j].style.height = `${2 * this['data-point-r']}px`;
+        if (( display === 'none' ) && ( nodes[j].style.display !== 'none' )) {
+          ( nodes[j] as WiredDataPoint ).requestUpdate();
+        }
       })
     });
   }
 
-  private onMouseDown(event: MouseEvent) {
+  protected onMouseDown(event: MouseEvent) {
     if (event.button === 0) {
       this.style.cursor = 'grabbing';
       this.grabpoint = [event.clientX, event.clientY];
     }
   }
 
-  private onMouseUp(event: MouseEvent) {
+  protected onMouseUp(event: MouseEvent) {
     if (event.button === 0) {
       this.style.cursor = 'grab';
       this.grabpoint = undefined;
     }
   }
 
-  private onMouseMove(event: MouseEvent) {
+  protected onMouseMove2(event: MouseEvent) {
     if (this.grabpoint) {
       const oldValue = [...this.eye];
       const x = event.clientX;
@@ -439,7 +441,7 @@ export class WiredGlobe extends WiredBaseGraph {
     }
   }
 
-  private onWheel(event: WheelEvent) {
+  protected onWheel(event: WheelEvent) {
     const R_MIN = 10;
     const R_MAX = 10000;
 

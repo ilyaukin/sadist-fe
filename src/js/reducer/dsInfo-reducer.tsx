@@ -250,7 +250,8 @@ export const defaultDsInfo: DsInfo = {
   },
 
   dropFilter(filter: Filter): Filter[] | undefined {
-    return this.filters?.filter(f => !( f.col == filter.col && f.label == filter.label ));
+    let ff = this.filters?.filter(f => !( f.col == filter.col && f.label == filter.label ));
+    return ff?.length ? ff : undefined;
   },
 
   getFilterQuery(): FilterQuery | undefined {
@@ -298,29 +299,29 @@ export const defaultDsInfo: DsInfo = {
 export function reduceDsInfo(dsInfo: DsInfo, action: DsInfoAction): DsInfo {
   switch (action.type) {
     case DsInfoActionType.SELECT_DS:
-      return action.meta ? dsInfo.init(action.meta) : dsInfo;
+      return dsInfo.init(action.meta);
 
     case DsInfoActionType.ADD_VIZ:
-      return action.vizMeta ? {
+      return {
         ...dsInfo,
         vizMeta: dsInfo.appendViz(action.vizMeta),
-      } : dsInfo;
+      };
 
     case DsInfoActionType.ADD_FILTER:
-      return action.filter ? {
+      return {
         ...dsInfo,
         filters: dsInfo.applyFilter(action.filter),
-      } : dsInfo;
+      };
 
     case DsInfoActionType.DROP_FILTER:
-      return action.filter ? {
+      return {
         ...dsInfo,
         filters: dsInfo.dropFilter(action.filter),
-      } : dsInfo;
+      };
 
     case DsInfoActionType.UPDATE_STATUS_SUCCESS:
       // dsId has changed so the meta is irrelevant
-      if (dsInfo.meta.id !== action.meta?.id) {
+      if (dsInfo.meta.id !== action.meta.id) {
         return dsInfo;
       }
 
@@ -329,7 +330,7 @@ export function reduceDsInfo(dsInfo: DsInfo, action: DsInfoAction): DsInfo {
         return dsInfo;
       }
 
-      return action.meta ? dsInfo.init(action.meta) : dsInfo;
+      return dsInfo.init(action.meta);
 
     case DsInfoActionType.UPDATE_STATUS_ERROR:
       return {
@@ -337,9 +338,6 @@ export function reduceDsInfo(dsInfo: DsInfo, action: DsInfoAction): DsInfo {
         err: action.err,
       };
   }
-
-  console.error(`The action ${action.type} is cannot be dispatched, stay with the current state`);
-  return dsInfo;
 }
 
 /**
@@ -378,10 +376,16 @@ export enum DsInfoActionType {
   UPDATE_STATUS_ERROR,
 }
 
-export interface DsInfoAction {
-  type: DsInfoActionType;
-  meta?: DsMeta;
-  vizMeta?: VizMeta;
-  filter?: Filter;
+export type DsInfoAction = {
+  type: DsInfoActionType.SELECT_DS | DsInfoActionType.UPDATE_STATUS_SUCCESS;
+  meta: DsMeta;
+} | {
+  type: DsInfoActionType.ADD_VIZ;
+  vizMeta: VizMeta;
+} | {
+  type: DsInfoActionType.ADD_FILTER | DsInfoActionType.DROP_FILTER;
+  filter: Filter;
+} | {
+  type: DsInfoActionType.UPDATE_STATUS_ERROR;
   err?: string;
 }

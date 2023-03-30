@@ -34,7 +34,7 @@ const ComponentDemo = () => {
     }(),
     'wired-combo':
         <>
-          <wired-combo>
+          <wired-combo selected="banana">
             <wired-item value="banana">Banana</wired-item>
             <wired-item value="apple">Apple</wired-item>
             <wired-item value=''>Some fruit with a long name a</wired-item>

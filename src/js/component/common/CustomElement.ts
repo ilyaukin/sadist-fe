@@ -62,8 +62,8 @@ declare global {
       ['wired-combo-lazy']: CustomElementWithEvent<WiredComboLazy, 'selected'>;
       ['wired-bar']: CustomElement<WiredBar>;
       ['wired-marker']: CustomElement<WiredMarker>;
-      ['wired-histogram']: CustomElement<WiredHistogram>;
-      ['wired-globe']: CustomElement<WiredGlobe>;
+      ['wired-histogram']: CustomElementWithEvent<WiredHistogram, 'selected'>;
+      ['wired-globe']: CustomElementWithEvent<WiredGlobe, 'selected'>;
     }
   }
 }

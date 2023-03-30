@@ -1,7 +1,18 @@
-import { css, CSSResult, html, property, PropertyValues, query, TemplateResult } from 'lit-element';
-import { ncolor } from '@my-handicapped-pet/wired-lib';
+import {
+  css,
+  CSSResult,
+  html,
+  property,
+  PropertyValues,
+  query,
+  TemplateResult
+} from 'lit-element';
+import { fire, ncolor } from '@my-handicapped-pet/wired-lib';
 import { WiredBase } from '@my-handicapped-pet/wired-base';
-import { DataPoint, WiredDataPoint } from '@my-handicapped-pet/wired-data-point';
+import {
+  DataPoint,
+  WiredDataPoint
+} from '@my-handicapped-pet/wired-data-point';
 import { WiredLegend } from '@my-handicapped-pet/wired-legend';
 
 export abstract class WiredBaseGraph extends WiredBase {
@@ -28,6 +39,8 @@ export abstract class WiredBaseGraph extends WiredBase {
 
   protected groups: { id: any; nodes: { [i: number]: HTMLElement }; }[] = [];
   protected legend: { name: string; style?: { [p: string]: string }; }[] = [];
+
+  protected pointed?: DataPoint;
 
   static get styles(): CSSResult {
     return css`
@@ -57,14 +70,18 @@ export abstract class WiredBaseGraph extends WiredBase {
 
       #legend {
         display: block;
+        position: inherit;
         float: right;
+        z-index: 2;
+        opacity: .75;
       }
     `;
   }
 
   render(): TemplateResult {
     return html`
-      <wired-legend id="legend" legend=${JSON.stringify(this.legend)}></wired-legend>
+      <wired-legend id="legend"
+                    legend=${JSON.stringify(this.legend)}></wired-legend>
       <div id="overlay">
         <svg/>
       </div>
@@ -83,6 +100,10 @@ export abstract class WiredBaseGraph extends WiredBase {
       this.style.height = `${h}px`;
       // this.requestUpdate();
     }
+
+    this.addEventListener('mousemove', this.onMouseMove);
+    this.addEventListener('mouseout', this.onMouseOut)
+    this.addEventListener('click', this.onClick);
   }
 
   protected getScale(name: string): number | undefined {
@@ -100,7 +121,7 @@ export abstract class WiredBaseGraph extends WiredBase {
     const series: { [x: string]: number[]; } = {};
     const scales: { [x: string]: number; } = {};
     const name2key: { [x: string]: string; } = {};
-    this.forEachDataPoint(dp => {
+    this.datapoints?.forEach(dp => {
       let key: string;
       if (typeof this.scale == 'number' || ( typeof this.scale == 'object' && typeof this.scale[dp.name] == 'number' )) {
         return;  // already have numeric scale
@@ -128,7 +149,7 @@ export abstract class WiredBaseGraph extends WiredBase {
       }
     }
     if (updateChildren) {
-      this.forEachDataPoint(dp => {
+      this.datapoints?.forEach(dp => {
         dp.scale = this.getScale(dp.name);
       });
     }
@@ -141,7 +162,7 @@ export abstract class WiredBaseGraph extends WiredBase {
     this.groups = [];
     this.legend = [];
     const n2i: { [n: string]: number; } = {};
-    this.forEachDataPoint(dp => {
+    this.datapoints?.forEach(dp => {
       let group: { id: any; nodes: { [p: number]: HTMLElement } };
       if (this.groups.length && this.groups[this.groups.length - 1].id === dp.id) {
         group = this.groups[this.groups.length - 1];
@@ -163,15 +184,51 @@ export abstract class WiredBaseGraph extends WiredBase {
     });
   }
 
-  protected forEachDataPoint(callback: (dp: DataPoint) => any) {
+  get datapoints(): DataPoint[] | undefined {
     if (this.slotElement) {
-      for (const n of this.slotElement.assignedNodes()) {
-        const element = n as HTMLElement;
-        if (n.nodeType === Node.ELEMENT_NODE && DataPoint.valid(element))
-          callback(new DataPoint(element as WiredDataPoint));
-      }
+      return this.slotElement.assignedNodes()
+          .filter(node => {
+            const element = node as HTMLElement;
+            return node.nodeType === Node.ELEMENT_NODE && DataPoint.valid(element);
+          })
+          .map(node => new DataPoint(node as WiredDataPoint));
     }
+
+    return undefined;
   }
 
   protected abstract poseData(): void;
+
+  protected onMouseMove(event: MouseEvent) {
+    if (this.pointed && !this.pointed.element.containsPoint(event.clientX, event.clientY)) {
+      this.pointed.element.hover(false);
+      this.pointed = undefined;
+    }
+    if (!this.pointed) {
+      this.pointed = this.datapoints?.find((dp) => {
+        return dp.element.containsPoint(event.clientX, event.clientY);
+      });
+      this.pointed?.element.hover(true);
+    }
+  }
+
+  protected onMouseOut(_event: MouseEvent) {
+    if (this.pointed) {
+      this.pointed.element.hover(false);
+      this.pointed = undefined;
+    }
+  }
+
+  protected onClick(event: MouseEvent) {
+    // move again to actual point just in case
+    this.onMouseMove(event);
+    if (this.pointed) {
+      fire(this, 'selected', {
+        id: this.pointed.id,
+        element: this.pointed.element,
+        sourceEvent: event
+      });
+    }
+  }
+
 }

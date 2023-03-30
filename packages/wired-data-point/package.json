@@ -37,6 +37,7 @@
     "url": "https://github.com/ilyaukin/sadist-fe/issues"
   },
   "dependencies": {
-    "@my-handicapped-pet/wired-base": "^2.0.5"
+    "@my-handicapped-pet/wired-base": "^2.0.5",
+    "@my-handicapped-pet/wired-lib": "^2.0.0"
   }
 }

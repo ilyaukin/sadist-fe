@@ -1,9 +1,4 @@
-import React, {
-  Dispatch,
-  MouseEvent,
-  MouseEventHandler,
-  ReactNode
-} from 'react';
+import React, { Dispatch, ReactNode } from 'react';
 import equal from 'deep-equal';
 import {
   ColSpecificProps,
@@ -22,7 +17,6 @@ interface VizGraphProps {
   name?: string;
   label?: string;
   selected?: boolean;
-  onSelected?: MouseEventHandler;
   filterProposals?: FilterProposal[];
   dispatchDsInfo?: Dispatch<DsInfoAction>;
 }
@@ -30,7 +24,7 @@ interface VizGraphProps {
 const VizGraph = (props: VizGraphProps) => {
 
   let {
-    meta, data, id, name, label, selected, onSelected,
+    meta, data, id, name, label, selected,
     filterProposals, dispatchDsInfo
   } = props;
   name ||= meta.key;
@@ -42,18 +36,10 @@ const VizGraph = (props: VizGraphProps) => {
     </div>
   }
 
-  function renderChildren(): ReactNode {
-    if (!( data instanceof Array )) {
-      return error(`Data for "${meta.type}" is expected to be an array`);
-    }
-
-    if (!meta.children) {
-      return null;
-    }
-
-    let filterProposal: FilterProposal | undefined,
-        isSelected: (arg0: VizDataItem) => boolean | undefined,
-        onSelected: ( (e: MouseEvent) => void ) | undefined;
+  let children: ReactNode = null, filterProposal: FilterProposal | undefined,
+      isSelected: (arg0: VizDataItem) => boolean | undefined,
+      onSelected: ( (e: CustomEvent) => void ) | undefined;
+  if (data instanceof Array && meta.children) {
     filterProposal = filterProposals?.find(f =>
         f.type === 'multiselect'
         && f.col === ( meta.props as ColSpecificProps ).col
@@ -61,23 +47,24 @@ const VizGraph = (props: VizGraphProps) => {
     if (filterProposal) {
       isSelected = (v: VizDataItem): boolean =>
           !!( filterProposal as MultiselectFilterProposal ).selected.find(i => equal(i, v.id));
-      onSelected = (e: MouseEvent): void => {
-        const id = ( e.target as any )?.['data-id'];
+      onSelected = (e: CustomEvent): void => {
+        e.stopPropagation();
+        const id = e.detail.id;
         if (id) {
-          if (e.shiftKey) {
+          if (e.detail.sourceEvent.shiftKey) {
             ( filterProposal as MultiselectFilterProposal ).selected.push(id);
           } else {
             ( filterProposal as MultiselectFilterProposal ).selected = [id];
           }
           dispatchDsInfo?.({
             type: DsInfoActionType.ADD_FILTER,
-            filter: filterProposal?.propose()
+            filter: filterProposal!.propose()
           });
         }
       }
     }
 
-    return data.map((item, i) => {
+    children = data.map((item, i) => {
       return Object.entries(meta.children!).map(([k, v]) => {
         return <>
           <VizGraph
@@ -88,7 +75,6 @@ const VizGraph = (props: VizGraphProps) => {
               name={k}
               label={meta.getLabel?.(item)}
               selected={isSelected?.(item)}
-              onSelected={onSelected}
           />
         </>
       });
@@ -108,7 +94,6 @@ const VizGraph = (props: VizGraphProps) => {
             data-value={data}
             data-label={label}
             selected={selected}
-            onClick={onSelected}
         />
       </>;
 
@@ -124,21 +109,20 @@ const VizGraph = (props: VizGraphProps) => {
             data-value={data}
             data-label={label}
             selected={selected}
-            onClick={onSelected}
         />
       </>;
 
     case 'histogram':
       return <>
-        <wired-histogram>
-          {renderChildren()}
+        <wired-histogram onselected={onSelected}>
+          {children}
         </wired-histogram>
       </>;
 
     case 'globe':
       return <>
-        <wired-globe>
-          {renderChildren()}
+        <wired-globe onselected={onSelected}>
+          {children}
         </wired-globe>
       </>;
 
