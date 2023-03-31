@@ -32,14 +32,15 @@ const ComponentDemo = () => {
         </wired-combo-lazy>
       </>
     }(),
-    'wired-combo':
-        <>
-          <wired-combo selected="banana">
-            <wired-item value="banana">Banana</wired-item>
-            <wired-item value="apple">Apple</wired-item>
-            <wired-item value=''>Some fruit with a long name a</wired-item>
-          </wired-combo>
-        </>,
+    'wired-combo': function () {
+      return <>
+        <wired-combo selected="banana">
+          <wired-item value="banana">Banana</wired-item>
+          <wired-item value="apple">Apple</wired-item>
+          <wired-item value=''>Some fruit with a long name a</wired-item>
+        </wired-combo>
+      </>
+    }(),
     'wired-histogram': function () {
 
       const [selected, setSelected] = React.useState<string | null>(null);

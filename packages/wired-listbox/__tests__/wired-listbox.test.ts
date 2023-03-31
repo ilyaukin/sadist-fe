@@ -64,4 +64,16 @@ describe('wired-listbox', () => {
     // cleanup
     __removeEventListener(element);
   });
-})
+
+  it('should display selected item by default', async function () {
+    const element = await __fixture(html`
+      <wired-listbox selected="1">
+        <wired-item value="1">Item #1</wired-item>
+        <wired-item value="2">Item #2</wired-item>
+        <wired-item value="3">Item #3</wired-item>
+      </wired-listbox>
+    `);
+
+    expect(element.items[0].getAttribute('aria-selected')).to.be.equal('true');
+  });
+});

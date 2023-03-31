@@ -2,10 +2,11 @@ import { expect, fixture, html } from '@open-wc/testing';
 import { sendKeys } from '@web/test-runner-commands';
 import { TemplateResult } from "lit-element";
 import '..';
+import '../../wired-item';
 
 interface WiredComboElement extends HTMLElement {
   container: HTMLElement;
-  searchInput: HTMLElement;
+  searchInput: HTMLInputElement;
   card: HTMLElement;
   slotElement: HTMLSlotElement;
   items: Array<HTMLElement>;
@@ -174,4 +175,18 @@ describe('wired-combo', () => {
     expect(r1.width).to.be.equal(r2.width);
     expect(r1.width).to.be.equal(r3.width + 34 /*dropdown width*/);
   });
-})
+
+  it('should display selected item by default', async function () {
+    await __fixture(html`
+      <wired-combo selected="banana">
+        <wired-item value="apple">Apple</wired-item>
+        <wired-item value="banana">Banana</wired-item>
+        <wired-item value="cherry">Cherry</wired-item>
+      </wired-combo>
+    `);
+
+    expect(elementus.items[1].getAttribute('aria-selected')).to.be.equal('true');
+    expect(elementus.shadowRoot!.querySelector('#text')!.textContent!.trim()).to.be.equal('Banana');
+  });
+});
+

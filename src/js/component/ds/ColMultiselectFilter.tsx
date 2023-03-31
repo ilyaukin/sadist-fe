@@ -109,6 +109,11 @@ const ColMultiselectFilter = <T extends ValueType | ComplexValueType>({
         style={{ width: '100%' }}
         disabled={isVal(loading)}
         values={values}
+        selected={
+          !filterProposal.selected.length ?
+              ALL :
+              getCanonicalValue(filterProposal.selected[filterProposal.selected.length - 1]).value
+        }
         onselected={onValueSelected}
     />
     {filterProposal.selected.map((value) => {
