@@ -149,7 +149,9 @@ export class WiredGlobe extends WiredBaseGraph {
   protected removeWiredShapesByClass(className: SvgClassName): void {
     let svg;
     while (svg = this.svgByClass[className].pop()) {
-      this.svg?.removeChild(svg);
+      if (svg.parentNode == this.svg) {
+        this.svg?.removeChild(svg);
+      }
     }
   }
 

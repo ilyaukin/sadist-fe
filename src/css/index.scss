@@ -223,6 +223,14 @@ img.col-icon {
     text-align: right;
 }
 
+.col-dropdown-content {
+    position: fixed;
+    z-index: 99;
+    background: #ccc;
+    min-width: 160px;
+    max-width: 200px;
+}
+
 .col-dropdown-pane-item {
     padding: 4px;
 }
@@ -234,7 +242,6 @@ img.col-icon {
 }
 
 .uniselector {
-    padding-right: 10px;
 }
 
 .clock {

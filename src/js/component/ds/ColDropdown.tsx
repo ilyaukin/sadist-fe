@@ -1,4 +1,4 @@
-import React, { Dispatch, useRef } from 'react';
+import React, { Dispatch, useEffect, useRef } from 'react';
 import Icon from '../../icon/Icon';
 import Dropdown, { DropdownElement } from '../common/Dropdown';
 import ColSearch from './ColSearch';
@@ -25,6 +25,17 @@ const ColDropdown = (
   const filterProposals = dsInfo.filterProposalsByCol?.[col];
 
   const dropdownRef = useRef<DropdownElement | null>(null);
+  const contentRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const scrollHandler = () => {
+      if (contentRef.current) {
+        contentRef.current.style.transform = `translateY(-${window.scrollY}px)`;
+      }
+    }
+    window.addEventListener('scroll', scrollHandler);
+    return () => window.removeEventListener('scroll', scrollHandler);
+  }, []);
 
   const renderVizProposal = () => {
     if (!vizMetaProposed) {
@@ -38,7 +49,7 @@ const ColDropdown = (
         style={{ width: '100%' }}
         onselected={(event) => {
           const key = event.detail.selected;
-          const vizMeta = vizMetaProposed?.find(v => v.key === key);
+          const vizMeta = vizMetaProposed?.find(v => v.key === key)!;
           dispatchDsInfo({
             type: DsInfoActionType.ADD_VIZ,
             vizMeta,
@@ -96,10 +107,10 @@ const ColDropdown = (
     ref={dropdownRef}
     className="col-dropdown"
     toggle={<img className="col-icon" src={icon} alt={''}/>}
-    content={<>
+    content={<div ref={contentRef} className="col-dropdown-content">
       {renderVizProposal()}
       {renderFilterProposal()}
-    </>}
+    </div>}
   />;
 }
 

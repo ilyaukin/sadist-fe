@@ -7,15 +7,24 @@ export abstract class WiredBase extends LitElement {
 
   static SHAPE_ATTR = 'data-wired-shape';
 
-  updated(_changed?: PropertyValues) {
-    this.onUpdated();
+  static resizeobserver = new ResizeObserver((entries, _observer) => {
+    for (let entry of entries) {
+      if (entry.target instanceof WiredBase) {
+        entry.target.updated();
+      }
+    }
+  });
+
+  protected firstUpdated(_changedProperties: PropertyValues) {
+    super.firstUpdated(_changedProperties);
+    WiredBase.resizeobserver.observe(this);
   }
 
-  protected onUpdated(force = false) {
+  updated(_changed?: PropertyValues) {
     if (this.svg) {
-      // condition to render: size is changed or force is true
+      // condition to render: size is changed
       const rect = this.getBoundingClientRect();
-      if ((!force) && (rect.width === this.lastSize[0]) && (rect.height === this.lastSize[1])) {
+      if (rect.width === this.lastSize[0] && rect.height === this.lastSize[1]) {
         return;
       }
       // set size of svg to size of this
@@ -33,6 +42,11 @@ export abstract class WiredBase extends LitElement {
       this.lastSize = [rect.width, rect.height];
       this.classList.add('wired-rendered');
     }
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    WiredBase.resizeobserver.unobserve(this);
   }
 
   protected removeWiredShapes() {

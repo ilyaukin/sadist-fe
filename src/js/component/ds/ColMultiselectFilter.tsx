@@ -116,16 +116,20 @@ const ColMultiselectFilter = <T extends ValueType | ComplexValueType>({
         }
         onselected={onValueSelected}
     />
-    {filterProposal.selected.map((value) => {
-      let text = getCanonicalValue(value).text;
-      return <Uniselector
-          selected={false}
-          onClick={() => {
-            removeValue(value);
-            dispatchFilter();
-          }}
-      >{`${text}❌`}</Uniselector>
-    })}
+    <div>
+      {filterProposal.selected.map((value) => {
+        let text = getCanonicalValue(value).text;
+        return <>
+          <Uniselector
+              selected={false}
+              onClick={() => {
+                removeValue(value);
+                dispatchFilter();
+              }}
+          >{text}❌</Uniselector>
+        </>
+      })}
+    </div>
   </>
 };
 
