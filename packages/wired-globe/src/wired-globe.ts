@@ -87,7 +87,7 @@ export class WiredGlobe extends WiredBaseGraph {
     this.addEventListener('wheel', this.onWheel);
   }
 
-  updated(changedProperties: PropertyValues) {
+  updated(changedProperties?: PropertyValues) {
     const lastSize = [...this.lastSize];
 
     super.updated(changedProperties);
@@ -128,7 +128,7 @@ export class WiredGlobe extends WiredBaseGraph {
     }
     debugLog(`coastline: ${Date.now() - t}`);
 
-    if (changedProperties.has('data-point-r')) {
+    if (changedProperties?.has('data-point-r')) {
       let tag = '', base = this['data-point-r'];
 
       // before we refactored scales, consider scale linear/quadratic

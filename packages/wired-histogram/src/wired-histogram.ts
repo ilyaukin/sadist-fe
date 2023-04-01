@@ -4,7 +4,7 @@ import { WiredBaseGraph } from '@my-handicapped-pet/wired-base-graph';
 @customElement('wired-histogram')
 export class WiredHistogram extends WiredBaseGraph {
 
-  updated(_changedProperties: PropertyValues) {
+  updated(_changedProperties?: PropertyValues) {
     const rect = this.getBoundingClientRect();
     const lastSize = [...this.lastSize];
 
