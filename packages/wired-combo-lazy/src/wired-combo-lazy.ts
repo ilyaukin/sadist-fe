@@ -115,6 +115,12 @@ export class WiredComboLazy extends WiredBase {
     return this.selectedValue;
   }
 
+  set value(value: ComboValue | undefined) {
+    this.select(this.getItem(value?.value));
+    this.selectedValue = value;
+    this.selected = this.selectedValue?.value;
+  }
+
   static get styles(): CSSResult {
     return css`
     :host {
@@ -274,7 +280,7 @@ export class WiredComboLazy extends WiredBase {
         case 27:
           event.preventDefault();
           if (this.cardShowing) {
-            this.select(this.getSelectedItemBySelected());
+            this.select(this.getItem());
             this.setCardShowing(false);
           }
           break;
@@ -325,13 +331,13 @@ export class WiredComboLazy extends WiredBase {
     this.tabIndex = this.disabled ? -1 : +(this.getAttribute('tabindex') || 0);
   }
 
-  private getSelectedItemBySelected() {
-    if (!this.itemNodes || !this.selected) {
+  private getItem(value: string | undefined = this.selected) {
+    if (!this.itemNodes || !value) {
       return undefined;
     }
 
     return this.itemNodes.find(node => {
-      return node.tagName === "WIRED-ITEM" && this.selected === node.value;
+      return node.tagName === "WIRED-ITEM" && value === node.value;
     });
   }
 

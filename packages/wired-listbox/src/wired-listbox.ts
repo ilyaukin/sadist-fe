@@ -33,6 +33,11 @@ export class WiredListbox extends WiredBase {
     }
   }
 
+  set value(value: ListboxValue | undefined) {
+    this.select(this.getItem(value?.value));
+    this.selected = this.selectedItem?.value;
+  }
+
   static get styles(): CSSResultArray {
     return [
       BaseCSS,
@@ -106,6 +111,14 @@ export class WiredListbox extends WiredBase {
     } else {
       this.classList.remove('wired-horizontal');
     }
+  }
+
+  private getItem(value: string | undefined = this.selected) {
+    //first time look up item by "selected" attribute
+    if (value) {
+      return this.itemNodes.filter(node => node.value === value)[0];
+    }
+    return undefined;
   }
 
   private select(item?: WiredListboxItem) {

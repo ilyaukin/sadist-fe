@@ -40,6 +40,11 @@ export class WiredCombo extends WiredBase {
     }
   }
 
+  set value(value: ComboValue | undefined) {
+    this.select(this.getItem(value?.value));
+    this.selected = this.selectedItem?.value;
+  }
+
   static get styles(): CSSResult {
     return css`
       :host {
@@ -201,7 +206,7 @@ export class WiredCombo extends WiredBase {
         case 27:
           event.preventDefault();
           if (this.cardShowing) {
-            this.select(this.getSelectedItemBySelected());
+            this.select(this.getItem());
             this.setCardShowing(false);
           }
           break;
@@ -245,16 +250,16 @@ export class WiredCombo extends WiredBase {
     this.tabIndex = this.disabled ? -1 : +( this.getAttribute('tabindex') || 0 );
   }
 
-  private getSelectedItemBySelected() {
+  private getItem(value: string | undefined = this.selected) {
     const slot = this.shadowRoot!.getElementById('slot') as HTMLSlotElement;
     const nodes = slot.assignedNodes() as WiredItem[];
 
-    if (!nodes || !this.selected) {
+    if (!nodes || !value) {
       return undefined;
     }
 
     return nodes.find(node => {
-      return node.tagName === "WIRED-ITEM" && this.selected === node.value;
+      return node.tagName === "WIRED-ITEM" && value === node.value;
     });
   }
 
