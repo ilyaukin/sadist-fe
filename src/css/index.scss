@@ -111,11 +111,11 @@ wired-spinner#loader {
 }
 
 wired-dialog {
-    --wired-dialog-z-index: 1;
+    --wired-dialog-z-index: 200;
 }
 
 wired-dialog#error-dialog {
-    --wired-dialog-z-index: 2;
+    --wired-dialog-z-index: 300;
 }
 
 .error {

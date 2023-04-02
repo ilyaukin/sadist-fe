@@ -115,7 +115,7 @@ export class WiredCombo extends WiredBase {
         width: calc(100% - 20px);
         position: absolute;
         background: var(--wired-combo-popup-bg, white);
-        z-index: 1;
+        z-index: 100;
         box-shadow: 1px 5px 15px -6px rgba(0, 0, 0, 0.8);
       }
 
