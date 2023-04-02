@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import '../../css/index.scss';
 import './common/CustomElement';
 import ErrorDialog from './common/ErrorDialog';
 import UserDropdown from './user/UserDropdown';
 import DsList from './ds/DsList';
 import DsTable from './ds/DsTable';
-import Viz from './visualization/Viz';
+import Viz, { VizElement } from './visualization/Viz';
 import Splitter from './common/Splitter';
 import withUserContext from './user/withUserContext';
 import { defaultDsInfo, DsInfoActionType, reduceDsInfo } from '../reducer/dsInfo-reducer';
@@ -19,9 +19,12 @@ let SPA = () => {
   const [dsInfo, dispatchDsInfo] = React.useReducer(reduceDsInfo, defaultDsInfo);
   const [tableContentHeight, setTableContentHeight] = React.useState(
     Math.min(300, Math.max(100, Math.floor(window.innerHeight / 3))));
+  const [vizHeight, setVizHeight] = React.useState<number | undefined>();
 
   ErrorDialog.raise = setErr;
   ErrorDialog.close = () => setErr(undefined);
+
+  const vizRef = useRef<VizElement | null>(null);
 
   const getTitle = function () {
     const titles = [
@@ -42,10 +45,16 @@ let SPA = () => {
 
       <h2>2. Visualize</h2>
       <Viz
+        ref={vizRef}
+        vizHeight={vizHeight}
         dsId={dsInfo.meta.id}
         dsInfo={dsInfo}
         dispatchDsInfo={dispatchDsInfo}
       />
+      <Splitter onSplit={(delta: number) => {
+        const h = vizHeight || vizRef.current?.element?.getBoundingClientRect().height || 0;
+        setVizHeight(h + delta);
+      }}/>
     </>;
   };
 
@@ -67,7 +76,7 @@ let SPA = () => {
     {/*show top from selected ds*/}
     <DsTable
       tableContentHeight={tableContentHeight}
-      dsId={dsInfo.meta?.id}
+      dsId={dsInfo.meta.id}
       dsInfo={dsInfo}
       dispatchDsInfo={dispatchDsInfo}
       onLoadDs={setDs}

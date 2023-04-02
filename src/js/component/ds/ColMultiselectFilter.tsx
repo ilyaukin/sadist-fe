@@ -105,7 +105,6 @@ const ColMultiselectFilter = <T extends ValueType | ComplexValueType>({
 
   return <>
     <wired-combo-lazy
-        // @ts-ignore
         style={{ width: '100%' }}
         disabled={isVal(loading)}
         values={values}

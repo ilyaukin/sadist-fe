@@ -45,7 +45,6 @@ const ColDropdown = (
     return <div className="col-dropdown-pane-item" key="viz">
       <span className="col-action-hint">Visualize...</span>
       <wired-listbox
-        //@ts-ignore
         style={{ width: '100%' }}
         onselected={(event) => {
           const key = event.detail.selected;

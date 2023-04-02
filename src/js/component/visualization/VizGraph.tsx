@@ -1,4 +1,4 @@
-import React, { Dispatch, ReactNode } from 'react';
+import React, { CSSProperties, Dispatch, ReactNode } from 'react';
 import equal from 'deep-equal';
 import {
   ColSpecificProps,
@@ -11,6 +11,7 @@ import {
 import { DsInfoAction, DsInfoActionType } from '../../reducer/dsInfo-reducer';
 
 interface VizGraphProps {
+  style?: CSSProperties;
   meta: VizMeta;
   data: VizData;
   id: any;
@@ -24,7 +25,7 @@ interface VizGraphProps {
 const VizGraph = (props: VizGraphProps) => {
 
   let {
-    meta, data, id, name, label, selected,
+    style, meta, data, id, name, label, selected,
     filterProposals, dispatchDsInfo
   } = props;
   name ||= meta.key;
@@ -89,6 +90,7 @@ const VizGraph = (props: VizGraphProps) => {
 
       return <>
         <wired-marker
+            style={style}
             data-id={id}
             data-name={name}
             data-value={data}
@@ -104,6 +106,7 @@ const VizGraph = (props: VizGraphProps) => {
 
       return <>
         <wired-bar
+            style={style}
             data-id={id}
             data-name={name}
             data-value={data}
@@ -114,14 +117,14 @@ const VizGraph = (props: VizGraphProps) => {
 
     case 'histogram':
       return <>
-        <wired-histogram onselected={onSelected}>
+        <wired-histogram style={style} onselected={onSelected}>
           {children}
         </wired-histogram>
       </>;
 
     case 'globe':
       return <>
-        <wired-globe onselected={onSelected}>
+        <wired-globe style={style} onselected={onSelected}>
           {children}
         </wired-globe>
       </>;

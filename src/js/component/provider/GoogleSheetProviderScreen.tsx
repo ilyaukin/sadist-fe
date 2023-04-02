@@ -1,4 +1,5 @@
 import React, { Component } from "react";
+import { WiredInput } from '/packages/wired-input';
 import Or from '../common/Or';
 import GoogleSheetList from './GoogleSheetList';
 import ValidationError from "./ValidationError";
@@ -15,7 +16,7 @@ interface GoogleSheetProviderScreenState {
 }
 
 class GoogleSheetProviderScreen extends Component<GoogleSheetProviderScreenProps, GoogleSheetProviderScreenState> {
-  private urlInput?: { value: string | undefined; focus(): any } | null;
+  private urlInput?: WiredInput | null;
 
   constructor(props: GoogleSheetProviderScreenProps) {
     super(props);
@@ -33,8 +34,7 @@ class GoogleSheetProviderScreen extends Component<GoogleSheetProviderScreenProps
     }
   }
 
-  // @ts-ignore
-  componentDidUpdate(prevProps, prevState, snapshot) {
+  componentDidUpdate(_prevProps: Readonly<GoogleSheetProviderScreenProps>, prevState: Readonly<GoogleSheetProviderScreenState>, _snapshot?: any) {
     if (this.props.onUpdateScreens && prevState?.selectedRadio !== this.state.selectedRadio) {
       this.props.onUpdateScreens();
     }
@@ -106,7 +106,6 @@ class GoogleSheetProviderScreen extends Component<GoogleSheetProviderScreenProps
     } = this.state;
     return <div>
       <wired-radio-group
-        // @ts-ignore
         style={{ width: '100%' }}
         selected={selectedRadio}
         onselected={this.onRadioSelected}
@@ -117,9 +116,8 @@ class GoogleSheetProviderScreen extends Component<GoogleSheetProviderScreenProps
         <Or/>
         <wired-radio name="url">Enter URL:</wired-radio><br/>
         <wired-input
-          // @ts-ignore
-          style={{ width: '100%' }}
           ref={input => this.urlInput = input}
+          style={{ width: '100%' }}
           id="url"
           onFocus={this.onFocusUrl}
         />

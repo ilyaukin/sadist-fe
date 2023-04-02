@@ -7,7 +7,7 @@ export interface ProviderProps {
   /**
    * method that forcebly updates provider's screens
    */
-  onUpdateScreens: () => void;
+  onUpdateScreens?: () => void;
 }
 
 /**
@@ -72,12 +72,11 @@ class AbstractProvider {
 
   /**
    * validate screen number {@code i}
-   * @param i {number} screen positional number
+   * @param _i {number} screen positional number
    * @returns {Promise<*>} promise that resolves if screen is OK
    * and rejects if it is not OK
    */
-  //@ts-ignore
-  validate(i: number): Promise<any> {
+  validate(_i: number): Promise<any> {
     throw new Error('Override me!');
   }
 

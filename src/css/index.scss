@@ -46,6 +46,11 @@ img.item {
 }
 
 .block {
+    display: block;
+    position: relative;
+}
+
+.inline-block {
     display: inline-block;
     position: relative;
     margin: var(--block-margin);
@@ -61,24 +66,24 @@ img.item {
 }
 
 .new-dialog .left-pane {
-    @extend .block;
+    @extend .inline-block;
     float: left;
     width: calc(50% - 2 * var(--block-margin));
 }
 
 .new-dialog .right-pane {
-    @extend .block;
+    @extend .inline-block;
     float: right;
     width: calc(50% - 2 * var(--block-margin));
 }
 
 .new-dialog .full-pane {
-    @extend .block;
+    @extend .inline-block;
     width: calc(100% - 2 * var(--block-margin));
 }
 
 .new-dialog .button-pane {
-    @extend .block;
+    @extend .inline-block;
     width: calc(100% - 2 * var(--block-margin));
 }
 
@@ -164,20 +169,20 @@ wired-dialog#error-dialog {
 }
 
 .google-login-button {
-    @extend .block;
+    @extend .inline-block;
     width: 100%;
     cursor: pointer;
     text-align: center;
 }
 
 .or-divider {
-    @extend .block;
+    @extend .inline-block;
     width: 100%;
     text-align: center;
 }
 
 .google-sheet-list-block {
-    @extend .block;
+    @extend .inline-block;
     width: 100%;
     min-height: 70px;
     background-color: #888888;

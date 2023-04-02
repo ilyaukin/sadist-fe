@@ -1,32 +1,41 @@
-import React, { Dispatch, useEffect, useRef, useState } from 'react';
-import equal from 'deep-equal';
+import React, {
+  Dispatch,
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState
+} from 'react';
 import ErrorDialog from '../common/ErrorDialog';
 import Loader from '../common/Loader';
 import VizHint from './VizHint';
 import VizGraph from './VizGraph';
-import { DsInfo, DsMeta, VizData, VizMeta, VizPipeline } from '../../model/ds';
+import { DsInfo, DsMeta, VizData, VizMeta } from '../../model/ds';
 import { DsInfoAction, DsInfoActionType } from '../../reducer/dsInfo-reducer';
+import { useQueuedRequest } from '../../hook/queued-hook';
 
-interface VisualizationProps {
+interface VizProps {
+  vizHeight?: number;
   dsId: string;
   dsInfo: DsInfo;
   dispatchDsInfo: Dispatch<DsInfoAction>;
 }
 
-interface VisualizationState {
-  loading?: boolean;
+interface VizState {
   vizData?: VizData;
   vizMeta?: VizMeta;
 }
 
-const Viz = (props: VisualizationProps) => {
-  const [state, setState] = useState<VisualizationState>({});
+export type VizElement = { element: HTMLDivElement | null; } & VizState;
+
+const Viz = (props: VizProps, ref: React.ForwardedRef<VizElement>) => {
+  const [state, setState] = useState<VizState>({});
+
+  const elementRef = useRef<HTMLDivElement | null>(null);
 
   const timeoutHandle = useRef<NodeJS.Timeout | undefined>();
 
-  const requestedQueryNo = useRef(0);
-
-  const requestedPipeline = useRef<VizPipeline | undefined>();
+  useImperativeHandle(ref, () => ({ element: elementRef.current, ...state }));
 
   useEffect(() => {
     if (timeoutHandle.current) {
@@ -38,35 +47,21 @@ const Viz = (props: VisualizationProps) => {
     return () => clearTimeout(timeoutHandle.current);
   }, [props.dsId, props.dsInfo, props.dispatchDsInfo]);
 
-  useEffect(() => {
-    const { dsId, dsInfo } = props;
-    const pipeline = dsInfo.getPipeline();
+  const { dsId, dsInfo } = props;
+  const pipeline = dsInfo.getPipeline();
 
-    if (equal(pipeline, requestedPipeline.current)) {
-      return;
-    }
-
+  const loading = useQueuedRequest({ dsId, pipeline }, ({ dsId, pipeline }) => {
     if (!pipeline || !pipeline.length) {
       setState({ ...state, vizData: undefined });
-      return;
+      return Promise.resolve();
     }
 
-    //todo consider useTransition instead of hack with queryNo
-    const queryNo = ++requestedQueryNo.current;
-    requestedPipeline.current = pipeline;
-    setState({ ...state, loading: true });
-    fetch(`/ds/${dsId}/visualize?queryNo=${queryNo}&` +
+    return fetch(`/ds/${dsId}/visualize?` +
       `pipeline=${encodeURIComponent(JSON.stringify(pipeline))}`).then((response) => {
       response.json().then((data) => {
-        if (queryNo !== requestedQueryNo.current) {
-          // state has been changed since start of this query,
-          // so drop result
-          return;
-        }
-
         if (data.success) {
           // put vizMeta to the state to make it consistent with vizData
-          setState({ ...state, loading: undefined, vizData: data.list, vizMeta: dsInfo.vizMeta });
+          setState({ ...state, vizData: data.list, vizMeta: dsInfo.vizMeta });
         } else {
           handleError('Error: ' + ( data.error || 'Unknown error' ));
         }
@@ -113,11 +108,10 @@ const Viz = (props: VisualizationProps) => {
 
   function handleError(err: string) {
     ErrorDialog.raise(err);
-    setState({ ...state, loading: undefined });
   }
 
-  const { dsInfo, dispatchDsInfo } = props;
-  const { loading, vizData, vizMeta } = state;
+  const { vizHeight, dispatchDsInfo } = props;
+  const { vizData, vizMeta } = state;
 
   // here can be several situations.
   // (1) a user didn't yet select any visualisation,
@@ -128,23 +122,21 @@ const Viz = (props: VisualizationProps) => {
   // (3) data is ready. display corresponding
   //     graph(s).
 
-  if (loading) {
-    return <Loader loading={true}/>;
-  }
-
-  if (vizMeta && vizData) {
-    return <>
-      <VizGraph
-          meta={vizMeta}
-          data={vizData}
-          id="root"
-          filterProposals={dsInfo.filterProposals}
-          dispatchDsInfo={dispatchDsInfo}
-      />
-    </>;
-  }
-
-  return <VizHint dsInfo={dsInfo}/>;
+  return <div ref={elementRef} className="block">
+    <Loader loading={loading}/>
+    {
+      vizMeta && vizData ?
+          <VizGraph
+              style={{ height: typeof vizHeight === 'number' ? `${vizHeight}px` : 'auto' }}
+              meta={vizMeta}
+              data={vizData}
+              id="root"
+              filterProposals={dsInfo.filterProposals}
+              dispatchDsInfo={dispatchDsInfo}
+          /> :
+          <VizHint dsInfo={dsInfo}/>
+    }
+  </div>;
 }
 
-export default Viz;
+export default forwardRef(Viz);

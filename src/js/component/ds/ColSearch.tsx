@@ -25,7 +25,6 @@ const ColSearch = ({ filterProposal, dispatchDsInfo }: ColSearchProps) => {
   }
 
   return <wired-search-input
-      // @ts-ignore
       style={{ width: '100%' }}
       ref={inputRef}
       value={filterProposal.term}

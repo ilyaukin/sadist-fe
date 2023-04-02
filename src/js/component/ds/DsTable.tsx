@@ -6,12 +6,12 @@ import React, {
   useRef,
   useState
 } from 'react';
-import equal from 'deep-equal';
 import ErrorDialog from "../common/ErrorDialog";
 import ColDropdown from "./ColDropdown";
 import Loader from "../common/Loader";
 import { DsInfo } from "../../model/ds";
 import { DsInfoAction } from '../../reducer/dsInfo-reducer';
+import { useQueuedRequest } from '../../hook/queued-hook';
 
 interface DsTableProps {
   /**
@@ -35,16 +35,7 @@ const DsTable = (props: DsTableProps) => {
     loading: false
   });
 
-  const requestedDsId = useRef<string | undefined>();
-
-  const requestedQuery = useRef<any | undefined>();
-
   const colRefs = useRef<( HTMLTableDataCellElement | null )[] | undefined>();
-  if (props.dsId != requestedDsId.current) {
-    // we're changing DS so invalidate colRefs,
-    // loading sign will be displayed with no cols re-rendering
-    colRefs.current = undefined;
-  }
 
   let table: HTMLDivElement | null;
 
@@ -59,29 +50,20 @@ const DsTable = (props: DsTableProps) => {
     }
   }, [props.tableContentHeight, props.dsInfo, props.ds]);
 
-  useEffect(() => {
-    let query: any;
+  const { dsId, dsInfo, onLoadDs, ds } = props;
+  const query = dsInfo.getFilterQuery();
 
-    const { dsId, dsInfo, onLoadDs } = props;
+  useQueuedRequest({ dsId, query }, ({ dsId, query }) => {
     if (!dsId) {
-      return;
-    } else if (dsId === requestedDsId.current) {
-      query = dsInfo.getFilterQuery();
-
-      if (equal(query, requestedQuery.current)) {
-        return;
-      }
+      return Promise.resolve();
     }
 
-    // now we remember that we're doing
-    // request with the certain ID and query, and
-    // will do next request if and only if some of
-    // it changed
+    // we're changing DS so invalidate colRefs,
+    // loading sign will be displayed with no cols re-rendering
+    colRefs.current = undefined;
     setState({ ...state, loading: true });
-    requestedDsId.current = dsId;
-    requestedQuery.current = query;
 
-    fetch(!query ?
+    return fetch(!query ?
       `/ds/${dsId}` :
       `/ds/${dsId}/filter?query=${encodeURIComponent(JSON.stringify(query))}`)
       .then((response) => {
@@ -102,7 +84,6 @@ const DsTable = (props: DsTableProps) => {
   }, [props.dsId, props.dsInfo]);
 
   function handleError(err: string) {
-    const { onLoadDs } = props;
     onLoadDs([]);
     ErrorDialog.raise(err);
   }
@@ -247,13 +228,11 @@ const DsTable = (props: DsTableProps) => {
     </div>
   }
 
-  let { dsId, dsInfo, ds } = props;
-
   if (!dsId || !dsInfo.meta.cols) {
     return <br/>;
   }
 
-  return <>
+  return <div className="block">
     {[
       <Loader loading={state.loading}/>,
 
@@ -267,7 +246,7 @@ const DsTable = (props: DsTableProps) => {
       // table using ReactDom.render in componentDidUpdate
       state.table ? state.table : null
     ]}
-  </>
+  </div>
 }
 
 DsTable.defaultProps = {

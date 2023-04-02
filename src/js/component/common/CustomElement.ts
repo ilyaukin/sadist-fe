@@ -2,7 +2,7 @@
  * All custom elements from packages will be here.
  * (inspired by {@link https://coryrylan.com/blog/how-to-use-web-components-with-typescript-and-react}).
  */
-import { ClassAttributes, DOMAttributes } from "react";
+import { HTMLProps } from "react";
 import '/packages/wired-spinner';
 import { WiredSpinner } from '/packages/wired-spinner';
 import '/packages/wired-listbox';
@@ -40,7 +40,7 @@ import { WiredHistogram } from '/packages/wired-histogram';
 import '/packages/wired-globe';
 import { WiredGlobe } from '/packages/wired-globe';
 
-type CustomElement<T> = Partial<Partial<T> & DOMAttributes<T> & ClassAttributes<T> & { children: any; }>;
+type CustomElement<T> = Partial<Omit<T, keyof HTMLElement> & Omit<HTMLProps<T>, keyof Omit<T, keyof HTMLElement>>>;
 type CustomElementWithEvent<T, K extends string> = CustomElement<T> & { [k in `on${K}`]?: (e: CustomEvent) => void };
 
 declare global {
