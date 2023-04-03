@@ -134,7 +134,10 @@ const Viz = (props: VizProps, ref: React.ForwardedRef<VizElement>) => {
               filterProposals={dsInfo.filterProposals}
               dispatchDsInfo={dispatchDsInfo}
           /> :
-          <VizHint dsInfo={dsInfo}/>
+          <VizHint
+              dsInfo={dsInfo}
+              dispatchDsInfo={dispatchDsInfo}
+          />
     }
   </div>;
 }
