@@ -286,7 +286,7 @@ export class WiredGlobe extends WiredBaseGraph {
     if (shapes.length === 1) {
       multiShapes.push([shapes[0]]);
     } else if (shapes.length > 1) {
-      let skyline = [];
+      let skyline: { i: number; ii: number[]; angle: number; onward: boolean; }[] = [];
       for (let i = 0; i < shapes.length; i++) {
         const shape1 = shapes[i];
         skyline.push({
@@ -320,6 +320,24 @@ export class WiredGlobe extends WiredBaseGraph {
       if (start) {
         skyline = skyline.slice(start).concat(skyline.slice(0, start));
       }
+
+      // rectifier
+      const stack0: { i: number; ii: number[]; angle: number; onward: boolean; }[] = [];
+      for (let i = 0; i < skyline.length; i++) {
+        const p = skyline[i];
+        if (!stack0.find(p1 => p.i === p1.i)) {
+          stack0.push(p);
+        } else {
+          const p0 = stack0.pop()!;
+          if (p0.i !== p.i) {
+            const j = skyline.findIndex((p1, i1) => i1 > i && p1.i === p0.i);
+            console.assert(j !== -1);
+            skyline[i] = skyline[j];
+            skyline[j] = p;
+          }
+        }
+      }
+
       const stack: { i: number; ii: number[]; angle: number; onward: boolean; }[] = [];
       for (let i = 0; i < skyline.length; i++) {
         const p = skyline[i];
