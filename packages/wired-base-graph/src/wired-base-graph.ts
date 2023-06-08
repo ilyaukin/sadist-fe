@@ -42,6 +42,9 @@ export abstract class WiredBaseGraph extends WiredBase {
 
   protected pointed?: DataPoint;
 
+  protected _initialScale: typeof this.scale = this.scale;
+  protected _base!: number;
+
   static get styles(): CSSResult {
     return css`
       :host {
@@ -86,7 +89,7 @@ export abstract class WiredBaseGraph extends WiredBase {
         <svg/>
       </div>
       <div id="container">
-        <slot id="slot"></slot>
+        <slot id="slot" @slotchange="${this.onSlotChange}"></slot>
       </div>
     `;
   }
@@ -117,7 +120,10 @@ export abstract class WiredBaseGraph extends WiredBase {
     }
   }
 
-  protected updateScale(base: number, updateChildren: boolean = false) {
+  protected updateScale(base: number = 0) {
+    this.scale = this._initialScale;
+    base = base || this._base;
+    this._base = base;
     const series: { [x: string]: number[]; } = {};
     const scales: { [x: string]: number; } = {};
     const name2key: { [x: string]: string; } = {};
@@ -148,11 +154,9 @@ export abstract class WiredBaseGraph extends WiredBase {
         this.scale[name] = scales[key];
       }
     }
-    if (updateChildren) {
-      this.datapoints?.forEach(dp => {
-        dp.scale = this.getScale(dp.name);
-      });
-    }
+    this.datapoints?.forEach(dp => {
+      dp.scale = this.getScale(dp.name);
+    });
   }
 
   protected initData() {
@@ -229,6 +233,12 @@ export abstract class WiredBaseGraph extends WiredBase {
         sourceEvent: event
       });
     }
+  }
+
+  protected onSlotChange() {
+    this.initData();
+    this.updateScale();
+    this.poseData();
   }
 
 }

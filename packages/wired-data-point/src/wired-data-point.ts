@@ -116,6 +116,10 @@ export class WiredDataPoint extends WiredBase {
     }
   }
 
+  protected shouldUpdateWiredShapes(rect: DOMRect, changed: PropertyValues | undefined): boolean | undefined {
+    return super.shouldUpdateWiredShapes(rect, changed) || changed?.has('data-value') || changed?.has('data-scale');
+  }
+
   hover(hover: boolean) {
     const wasHover = this.classList.contains('wired-data-point-hovered');
     if (wasHover != hover) {

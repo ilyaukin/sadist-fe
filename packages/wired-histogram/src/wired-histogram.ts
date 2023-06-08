@@ -10,7 +10,7 @@ export class WiredHistogram extends WiredBaseGraph {
 
     super.updated(_changedProperties);
     if (!( rect.height === lastSize[1] )) {
-      this.updateScale(rect.height, true);
+      this.updateScale(rect.height);
     }
     if (!( rect.width === lastSize[0] && rect.height === lastSize[1] )) {
       this.poseData();

@@ -140,7 +140,7 @@ export class WiredGlobe extends WiredBaseGraph {
         base = this['data-point-r'] * this['data-point-r'];
       }
 
-      this.updateScale(base, true);
+      this.updateScale(base);
     }
 
     this.poseData();
@@ -403,8 +403,16 @@ export class WiredGlobe extends WiredBaseGraph {
     return super.datapoints?.filter(dp => this.isGeoDataPoint(dp));
   }
 
+  get nonGeoDatapoints(): DataPoint[] | undefined {
+    return super.datapoints?.filter(dp => !this.isGeoDataPoint(dp));
+  }
+
   protected poseData(): void {
     const rect = this.getBoundingClientRect();
+
+    this.nonGeoDatapoints?.forEach(dp => {
+      dp.element.style.display = 'none';
+    });
 
     this.groups.forEach(({ id, nodes }) => {
       const [x, y, z] = this.xyz([id.coordinates[0], id.coordinates[1]]);

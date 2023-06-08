@@ -145,12 +145,12 @@ describe('wired-combo', () => {
     addItem('banana', 'Banana');
     addItem('cherry', 'Cherry');
 
+    await elementus.updateComplete;
     __click_on_combo();
     expect(elementus.items.length).to.be.equal(3);
-    // fails but not reproducing manually
-    // expect(elementus.items[0].innerText).to.be.equal('Apple');
-    // expect(elementus.items[1].innerText).to.be.equal('Banana');
-    // expect(elementus.items[2].innerText).to.be.equal('Cherry');
+    expect(elementus.items[0].innerText).to.be.equal('Apple');
+    expect(elementus.items[1].innerText).to.be.equal('Banana');
+    expect(elementus.items[2].innerText).to.be.equal('Cherry');
 
     // non selected initially
     expect(elementus.items[0].getAttribute('aria-selected')).not.to.exist;

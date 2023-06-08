@@ -24,7 +24,7 @@ export abstract class WiredBase extends LitElement {
     if (this.svg) {
       // condition to render: size is changed
       const rect = this.getBoundingClientRect();
-      if (rect.width === this.lastSize[0] && rect.height === this.lastSize[1]) {
+      if (!this.shouldUpdateWiredShapes(rect, _changed)) {
         return;
       }
       // set size of svg to size of this
@@ -42,6 +42,10 @@ export abstract class WiredBase extends LitElement {
       this.lastSize = [rect.width, rect.height];
       this.classList.add('wired-rendered');
     }
+  }
+
+  protected shouldUpdateWiredShapes(rect: DOMRect, _changed: PropertyValues | undefined): boolean | undefined {
+    return rect.width !== this.lastSize[0] || rect.height !== this.lastSize[1];
   }
 
   disconnectedCallback() {
