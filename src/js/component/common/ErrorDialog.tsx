@@ -7,8 +7,7 @@ interface ErrorDialogProps {
 
 class ErrorDialog extends Component<ErrorDialogProps> {
   // will be overwritten by SPA
-  // @ts-ignore
-  static raise = (err: string) => {
+  static raise = (_err: string) => {
   };
   static close = () => {
   };
@@ -23,7 +22,6 @@ class ErrorDialog extends Component<ErrorDialogProps> {
           </wired-card>
 
           <wired-button
-            //@ts-ignore
             style={{ margin: '10px' }}
             id="closeDialog"
             onClick={() => ErrorDialog.close()}>Close

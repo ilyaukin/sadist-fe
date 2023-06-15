@@ -20,7 +20,6 @@ interface ComboValue {
 
 @customElement('wired-combo')
 export class WiredCombo extends WiredBase {
-  @property({ type: Object }) value?: ComboValue;
   @property({ type: String }) selected?: string;
   @property({ type: Boolean, reflect: true }) disabled = false;
 
@@ -29,6 +28,22 @@ export class WiredCombo extends WiredBase {
   private cardShowing = false;
   private itemNodes: WiredItem[] = [];
   private selectedItem?: WiredItem;
+
+  @property() get value(): ComboValue | undefined {
+    if (this.selectedItem) {
+      return {
+        value: this.selectedItem.value || '',
+        text: this.selectedItem.textContent || ''
+      };
+    } else {
+      return undefined;
+    }
+  }
+
+  set value(value: ComboValue | undefined) {
+    this.select(this.getItem(value?.value));
+    this.selected = this.selectedItem?.value;
+  }
 
   static get styles(): CSSResult {
     return css`
@@ -100,7 +115,7 @@ export class WiredCombo extends WiredBase {
         width: calc(100% - 20px);
         position: absolute;
         background: var(--wired-combo-popup-bg, white);
-        z-index: 1;
+        z-index: 100;
         box-shadow: 1px 5px 15px -6px rgba(0, 0, 0, 0.8);
       }
 
@@ -136,31 +151,33 @@ export class WiredCombo extends WiredBase {
   //
   render(): TemplateResult {
     return html`
-    <input id="searchInput" @keyup="${this.onSearch}">
-    <div id="container" @click="${this.onCombo}">
-      <div id="textPanel" class="inline" data-wired-shape="rectangle">
-        <div id="text">
-          <span>${this.value && this.value.text}</span>
+      <input id="searchInput" @keyup="${this.onSearch}">
+      <div id="container" @click="${this.onCombo}">
+        <div id="textPanel" class="inline" data-wired-shape="rectangle">
+          <div id="text">
+            <span>${this.value && this.value.text}</span>
+          </div>
+        </div><!-- to remove whitespace
+        --><div id="dropPanel" class="inline"
+             data-wired-shape="rectangle;arrow-down:offset-top=5,offset-left=8,offset-bottom=5,offset-right=8"></div>
+        <div class="overlay">
+          <svg id="svg"></svg>
         </div>
-      </div><!-- to remove whitespace
-      --><div id="dropPanel" class="inline" data-wired-shape="rectangle;arrow-down:offset-top=5,offset-left=8,offset-bottom=5,offset-right=8"></div>
-      <div class="overlay">
-        <svg id="svg"></svg>
       </div>
-    </div>
-    <wired-card id="card" tabindex="-1" role="listbox" @mousedown="${this.onItemClick}" @touchstart="${this.onItemClick}"
-      style="display: none;">
-      <div id="item-container">
-        <slot id="slot" @slotchange="${this.onSlotChange}"></slot>
-      </div>
-    </wired-card>
+      <wired-card id="card" tabindex="-1" role="listbox"
+                  @mousedown="${this.onItemClick}"
+                  @touchstart="${this.onItemClick}"
+                  style="display: none;">
+        <div id="item-container">
+          <slot id="slot" @slotchange="${this.onSlotChange}"></slot>
+        </div>
+      </wired-card>
     `;
   }
 
   firstUpdated() {
     this.setAttribute('role', 'combobox');
     this.setAttribute('aria-haspopup', 'listbox');
-    this.select(this.getSelectedItemBySelected());
 
     this.addEventListener('blur', () => {
       if (this.cardShowing) {
@@ -189,7 +206,7 @@ export class WiredCombo extends WiredBase {
         case 27:
           event.preventDefault();
           if (this.cardShowing) {
-            this.select(this.getSelectedItemBySelected());
+            this.select(this.getItem());
             this.setCardShowing(false);
           }
           break;
@@ -230,19 +247,19 @@ export class WiredCombo extends WiredBase {
     } else {
       this.classList.remove('wired-disabled');
     }
-    this.tabIndex = this.disabled ? -1 : +(this.getAttribute('tabindex') || 0);
+    this.tabIndex = this.disabled ? -1 : +( this.getAttribute('tabindex') || 0 );
   }
 
-  private getSelectedItemBySelected() {
+  private getItem(value: string | undefined = this.selected) {
     const slot = this.shadowRoot!.getElementById('slot') as HTMLSlotElement;
     const nodes = slot.assignedNodes() as WiredItem[];
 
-    if (!nodes || !this.selected) {
+    if (!nodes || !value) {
       return undefined;
     }
 
     return nodes.find(node => {
-      return node.tagName === "WIRED-ITEM" && this.selected === node.value;
+      return node.tagName === "WIRED-ITEM" && value === node.value;
     });
   }
 
@@ -271,7 +288,7 @@ export class WiredCombo extends WiredBase {
     if (showing) {
       setTimeout(() => {
         this.card!.requestUpdate();
-        const nodes = (this.shadowRoot!.getElementById('slot') as HTMLSlotElement).assignedNodes().filter((d) => {
+        const nodes = ( this.shadowRoot!.getElementById('slot') as HTMLSlotElement ).assignedNodes().filter((d) => {
           return d.nodeType === Node.ELEMENT_NODE;
         });
         nodes.forEach((n) => {
@@ -299,7 +316,7 @@ export class WiredCombo extends WiredBase {
       const area = this.shadowRoot?.getElementById('item-container') as HTMLElement;
       const item0Offset = this.itemNodes[0].offsetTop;
       if (area.scrollTop + area.offsetHeight < item.offsetTop - item0Offset
-        || item.offsetTop - item0Offset < area.scrollTop) {
+          || item.offsetTop - item0Offset < area.scrollTop) {
         area.scrollTo({ top: item.offsetTop - item0Offset });
       }
     }
@@ -321,19 +338,7 @@ export class WiredCombo extends WiredBase {
   }
 
   private fireSelected() {
-    // update selected
     this.selected = this.selectedItem ? this.selectedItem.value : '';
-
-    // update value
-    if (this.selectedItem) {
-      this.value = {
-        value: this.selectedItem.value || '',
-        text: this.selectedItem.textContent || ''
-      };
-    } else {
-      this.value = undefined;
-    }
-
     fire(this, 'selected', { selected: this.selected });
   }
 
@@ -342,7 +347,7 @@ export class WiredCombo extends WiredBase {
       return;
     }
     const item = this.selectedItem?.previousElementSibling as WiredItem
-      || this.itemNodes[this.itemNodes.length - 1];
+        || this.itemNodes[this.itemNodes.length - 1];
     this.select(item);
 
     const searchInput = this.shadowRoot!.getElementById('searchInput') as HTMLInputElement;
@@ -354,7 +359,7 @@ export class WiredCombo extends WiredBase {
       return;
     }
     let item = this.selectedItem?.nextElementSibling as WiredItem
-      || this.itemNodes[0];
+        || this.itemNodes[0];
     this.select(item);
 
     const searchInput = this.shadowRoot!.getElementById('searchInput') as HTMLInputElement;
@@ -394,15 +399,20 @@ export class WiredCombo extends WiredBase {
 
   private onSlotChange() {
     this.itemNodes = [];
-    const nodes = (this.shadowRoot!.getElementById('slot') as HTMLSlotElement).assignedNodes();
+    this.selectedItem = undefined;
+    const nodes = ( this.shadowRoot!.getElementById('slot') as HTMLSlotElement ).assignedNodes();
     if (nodes && nodes.length) {
       for (let i = 0; i < nodes.length; i++) {
-        const element = nodes[i] as WiredItem;
-        if (element.tagName === 'WIRED-ITEM') {
-          element.setAttribute('role', 'option');
-          this.itemNodes.push(element);
+        const node = nodes[i] as WiredItem;
+        if (node.tagName === 'WIRED-ITEM') {
+          node.setAttribute('role', 'option');
+          this.itemNodes.push(node);
+          if (node.value === this.selected) {
+            this.select(node);
+          }
         }
       }
     }
+    this.requestUpdate();
   }
 }

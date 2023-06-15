@@ -1,0 +1,42 @@
+{
+  "name": "@my-handicapped-pet/wired-base-graph",
+  "version": "2.0.5",
+  "description": "Base class for data visualization components",
+  "keywords": [
+    "sketchy",
+    "web-component",
+    "statistics",
+    "visualization"
+  ],
+  "author": "Ilya Lyaukin <kzerby@gmail.com>",
+  "homepage": "https://github.com/ilyaukin/sadist-fe#readme",
+  "license": "MIT",
+  "main": "lib/wired-base-graph.js",
+  "directories": {
+    "lib": "lib",
+    "test": "../wired-globe/__tests__"
+  },
+  "files": [
+    "lib"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ilyaukin/sadist-fe.git"
+  },
+  "scripts": {
+    "build": "rm -rf ./lib && tsc",
+    "test": "echo \"Error: run tests from root\" && exit 1"
+  },
+  "bugs": {
+    "url": "https://github.com/ilyaukin/sadist-fe/issues"
+  },
+  "dependencies": {
+    "@my-handicapped-pet/wired-base": "^2.0.5",
+    "@my-handicapped-pet/wired-data-point": "^2.0.5",
+    "@my-handicapped-pet/wired-legend": "^2.0.5",
+    "@my-handicapped-pet/wired-lib": "^2.0.0"
+  }
+}

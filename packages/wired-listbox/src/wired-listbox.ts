@@ -15,13 +15,28 @@ interface ListboxValue {
 
 @customElement('wired-listbox')
 export class WiredListbox extends WiredBase {
-  @property({ type: Object }) value?: ListboxValue;
   @property({ type: String }) selected?: string;
   @property({ type: Boolean }) horizontal = false;
 
   private itemNodes: WiredListboxItem[] = [];
   private selectedItem?: WiredListboxItem;
   private itemClickHandler = this.onItemClick.bind(this);
+
+  @property() get value(): ListboxValue | undefined {
+    if (this.selectedItem) {
+      return {
+        value: this.selectedItem.value || '',
+        text: this.selectedItem.textContent || ''
+      };
+    } else {
+      return undefined;
+    }
+  }
+
+  set value(value: ListboxValue | undefined) {
+    this.select(this.getItem(value?.value));
+    this.selected = this.selectedItem?.value;
+  }
 
   static get styles(): CSSResultArray {
     return [
@@ -72,7 +87,6 @@ export class WiredListbox extends WiredBase {
     this.setAttribute(WiredListbox.SHAPE_ATTR, 'rectangle');
     this.setAttribute('role', 'listbox');
     this.tabIndex = +((this.getAttribute('tabindex') || 0));
-    this.select(this.getSelectedItemBySelected());
     this.addEventListener('click', this.itemClickHandler);
     this.addEventListener('keydown', (event) => {
       switch (event.keyCode) {
@@ -99,10 +113,10 @@ export class WiredListbox extends WiredBase {
     }
   }
 
-  private getSelectedItemBySelected() {
+  private getItem(value: string | undefined = this.selected) {
     //first time look up item by "selected" attribute
-    if (this.selected) {
-      return this.itemNodes.filter(node => node.value === this.selected)[0];
+    if (value) {
+      return this.itemNodes.filter(node => node.value === value)[0];
     }
     return undefined;
   }
@@ -115,12 +129,6 @@ export class WiredListbox extends WiredBase {
     if (item) {
       item.selected = true;
       item.setAttribute('aria-selected', 'true');
-      this.value = {
-        value: item.value || '',
-        text: item.textContent || ''
-      };
-    } else {
-      this.value = undefined;
     }
     this.selectedItem = item;
   }
@@ -152,13 +160,17 @@ export class WiredListbox extends WiredBase {
 
   private onSlotChanged() {
     this.itemNodes = [];
+    this.selectedItem = undefined;
     const nodes = (this.shadowRoot!.getElementById('slot') as HTMLSlotElement).assignedNodes();
     if (nodes && nodes.length) {
       for (let i = 0; i < nodes.length; i++) {
-        const element = nodes[i] as WiredListboxItem;
-        if (element.tagName === 'WIRED-ITEM') {
-          element.setAttribute('role', 'option');
-          this.itemNodes.push(element);
+        const node = nodes[i] as WiredListboxItem;
+        if (node.tagName === 'WIRED-ITEM') {
+          node.setAttribute('role', 'option');
+          this.itemNodes.push(node);
+          if (node.value === this.selected) {
+            this.select(node);
+          }
         }
       }
     }

@@ -20,7 +20,7 @@ interface DsNewState {
 }
 
 class DsNew extends Component<DsNewProps, DsNewState> {
-  _nullProvider = new NullProvider();
+  _nullProvider = new NullProvider({});
   providers!: AbstractProvider[];
 
   constructor(props: DsNewProps) {
@@ -38,7 +38,7 @@ class DsNew extends Component<DsNewProps, DsNewState> {
     ];
   }
 
-  onProviderSelected(value: string, event: CustomEvent) {
+  onProviderSelected(value: string, _event: CustomEvent) {
     this.setState({
       provider:
         this.providers.find((p) => p.type === value) || this._nullProvider
@@ -110,7 +110,6 @@ class DsNew extends Component<DsNewProps, DsNewState> {
     return <DelayedRender>
       Source Type:<br/>
       <wired-combo
-        // @ts-ignore
         style={{ width: '100%' }}
         onselected={(event) => this.onProviderSelected(event.detail.selected, event)}
       >

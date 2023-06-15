@@ -46,6 +46,11 @@ img.item {
 }
 
 .block {
+    display: block;
+    position: relative;
+}
+
+.inline-block {
     display: inline-block;
     position: relative;
     margin: var(--block-margin);
@@ -61,24 +66,24 @@ img.item {
 }
 
 .new-dialog .left-pane {
-    @extend .block;
+    @extend .inline-block;
     float: left;
     width: calc(50% - 2 * var(--block-margin));
 }
 
 .new-dialog .right-pane {
-    @extend .block;
+    @extend .inline-block;
     float: right;
     width: calc(50% - 2 * var(--block-margin));
 }
 
 .new-dialog .full-pane {
-    @extend .block;
+    @extend .inline-block;
     width: calc(100% - 2 * var(--block-margin));
 }
 
 .new-dialog .button-pane {
-    @extend .block;
+    @extend .inline-block;
     width: calc(100% - 2 * var(--block-margin));
 }
 
@@ -106,11 +111,18 @@ wired-spinner#loader {
 }
 
 wired-dialog {
-    --wired-dialog-z-index: 1;
+    --wired-dialog-z-index: 200;
 }
 
 wired-dialog#error-dialog {
-    --wired-dialog-z-index: 2;
+    --wired-dialog-z-index: 300;
+}
+
+.error {
+    width: 100%;
+    padding: 5px;
+    background-color: #888888;
+    color: maroon;
 }
 
 .field-error {
@@ -157,20 +169,20 @@ wired-dialog#error-dialog {
 }
 
 .google-login-button {
-    @extend .block;
+    @extend .inline-block;
     width: 100%;
     cursor: pointer;
     text-align: center;
 }
 
 .or-divider {
-    @extend .block;
+    @extend .inline-block;
     width: 100%;
     text-align: center;
 }
 
 .google-sheet-list-block {
-    @extend .block;
+    @extend .inline-block;
     width: 100%;
     min-height: 70px;
     background-color: #888888;
@@ -196,7 +208,7 @@ p {
     height: 100%;
 }
 
-.col-filter {
+.col-dropdown {
     @extend .dropdown;
 }
 
@@ -206,7 +218,7 @@ img.col-icon {
     float: right;
 }
 
-.col-filter .pane {
+.col-dropdown .pane {
     position: relative;
     left: 0;
     top: 18px;
@@ -216,21 +228,29 @@ img.col-icon {
     text-align: right;
 }
 
-.col-filter-pane-item {
+.col-dropdown-content {
+    position: fixed;
+    z-index: 99;
+    background: #ccc;
+    min-width: 160px;
+    max-width: 200px;
+}
+
+.col-dropdown-pane-item {
     padding: 4px;
 }
 
-.col-filter-hint {
+.col-action-hint {
     font-size: 8pt;
     display: block;
     margin-right: 20px;
 }
 
-.col-filter-element {
-    padding-right: 10px;
+.uniselector {
 }
 
 .clock {
+    background: yellow;
     color: blue;
 }
 
@@ -244,9 +264,6 @@ img.col-icon {
     60%{    color: transparent; }
     99%{    color:transparent;  }
     100%{   color: #000;    }
-}
-
-.map-container {
 }
 
 .comment {

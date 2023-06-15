@@ -98,7 +98,6 @@ String.prototype.replaceAccent = function () {
 @customElement('wired-combo-lazy')
 export class WiredComboLazy extends WiredBase {
   @property({ type: Array }) values: ComboValue[] = [];
-  @property({ type: Object }) value?: ComboValue;
   @property({ type: String }) selected?: string;
   @property({ type: Boolean, reflect: true }) disabled = false;
 
@@ -107,9 +106,20 @@ export class WiredComboLazy extends WiredBase {
   private cardShowing = false;
   private itemNodes: WiredItem[] = [];
   private selectedItem?: WiredItem;
+  private selectedValue?: ComboValue;
 
   // maximum number of items displayed at once
   private depth = 10;
+
+  @property() get value(): ComboValue | undefined {
+    return this.selectedValue;
+  }
+
+  set value(value: ComboValue | undefined) {
+    this.select(this.getItem(value?.value));
+    this.selectedValue = value;
+    this.selected = this.selectedValue?.value;
+  }
 
   static get styles(): CSSResult {
     return css`
@@ -181,7 +191,7 @@ export class WiredComboLazy extends WiredBase {
       width: calc(100% - 20px);
       position: absolute;
       background: var(--wired-combo-popup-bg, white);
-      z-index: 1;
+      z-index: 100;
       box-shadow: 1px 5px 15px -6px rgba(0, 0, 0, 0.8);
     }
 
@@ -242,7 +252,6 @@ export class WiredComboLazy extends WiredBase {
   firstUpdated() {
     this.setAttribute('role', 'combobox');
     this.setAttribute('aria-haspopup', 'listbox');
-    this.select(this.getSelectedItemBySelected());
 
     this.addEventListener('blur', () => {
       if (this.cardShowing) {
@@ -271,7 +280,7 @@ export class WiredComboLazy extends WiredBase {
         case 27:
           event.preventDefault();
           if (this.cardShowing) {
-            this.select(this.getSelectedItemBySelected());
+            this.select(this.getItem());
             this.setCardShowing(false);
           }
           break;
@@ -305,7 +314,8 @@ export class WiredComboLazy extends WiredBase {
     // aria
     this.setAttribute('aria-expanded', `${this.cardShowing}`);
     if (changed.has('values')) {
-      this.setValues(this.values.slice(0, this.depth));
+      this.selectedValue = this.values.find(value1 => value1.value === this.selected);
+      this.updateItemNodes(this.values.slice(0, this.depth));
     }
     if (changed.has('selected') && !this.selected) {
       (this.shadowRoot!.getElementById('searchInput') as HTMLInputElement).value = '';
@@ -321,13 +331,13 @@ export class WiredComboLazy extends WiredBase {
     this.tabIndex = this.disabled ? -1 : +(this.getAttribute('tabindex') || 0);
   }
 
-  private getSelectedItemBySelected() {
-    if (!this.itemNodes || !this.selected) {
+  private getItem(value: string | undefined = this.selected) {
+    if (!this.itemNodes || !value) {
       return undefined;
     }
 
     return this.itemNodes.find(node => {
-      return node.tagName === "WIRED-ITEM" && this.selected === node.value;
+      return node.tagName === "WIRED-ITEM" && value === node.value;
     });
   }
 
@@ -373,6 +383,10 @@ export class WiredComboLazy extends WiredBase {
     if (item) {
       item.selected = true;
       item.setAttribute('aria-selected', 'true');
+      this.selectedValue = {
+        value: item.value || '',
+        text: item.textContent || ''
+      };
 
       // scroll to the item if it's out of visible area
       const area = this.shadowRoot?.getElementById('itemContainer') as HTMLElement;
@@ -381,6 +395,8 @@ export class WiredComboLazy extends WiredBase {
         || item.offsetTop - item0Offset < area.scrollTop) {
         area.scrollTo({ top: item.offsetTop - item0Offset });
       }
+    } else {
+      this.selectedValue = undefined;
     }
 
     // update selected item for internal usage,
@@ -400,19 +416,7 @@ export class WiredComboLazy extends WiredBase {
   }
 
   private fireSelected() {
-    // update selected
     this.selected = this.selectedItem ? this.selectedItem.value : '';
-
-    // update value
-    if (this.selectedItem) {
-      this.value = {
-        value: this.selectedItem.value || '',
-        text: this.selectedItem.textContent || ''
-      };
-    } else {
-      this.value = undefined;
-    }
-
     fire(this, 'selected', { selected: this.selected });
   }
 
@@ -453,7 +457,7 @@ export class WiredComboLazy extends WiredBase {
       return value.text?.toLocaleLowerCase()?.replaceAccent()?.startsWith(searchValue)
     }).slice(0, this.depth);
     if (values.length) {
-      this.setValues(values);
+      this.updateItemNodes(values);
       this.select(this.itemNodes[0]);
       return;
     }
@@ -462,10 +466,8 @@ export class WiredComboLazy extends WiredBase {
     values = this.values.filter(value => {
       return value.text && value.text.toLocaleLowerCase().replaceAccent().indexOf(searchValue) !== -1
     }).slice(0, this.depth);
-    this.setValues(values);
-    if (values.length) {
-      this.select(this.itemNodes[0]);
-    }
+    this.updateItemNodes(values);
+    this.select(this.itemNodes[0]);
   }
 
   private onCombo(event: Event) {
@@ -473,7 +475,7 @@ export class WiredComboLazy extends WiredBase {
     this.setCardShowing(!this.cardShowing);
   }
 
-  private setValues(values: ComboValue[]) {
+  private updateItemNodes(values: ComboValue[]) {
     const itemContainer = this.shadowRoot!.getElementById('itemContainer')!;
     while (itemContainer.hasChildNodes()) {
       itemContainer.removeChild(itemContainer.lastChild!);
@@ -488,6 +490,7 @@ export class WiredComboLazy extends WiredBase {
       this.itemNodes.push(item);
     }
 
+    this.requestUpdate();
     if (this.cardShowing) {
       (this.shadowRoot!.getElementById('card') as WiredCard).requestUpdate();
     }

@@ -171,6 +171,17 @@ export function line(parent: SVGElement, x1: number, y1: number, x2: number, y2:
   return node;
 }
 
+export function renderElevation(parent: SVGElement, x1: number, y1: number, x2: number, y2: number, elev: number): void {
+  for (let i = 0; i < elev - 1; i++) {
+    for (let _ = 0; _ < 2; _++) {
+      line(parent, x1 + i * 2, y2 + i * 2, x2 + i * 2, y2 + i * 2)
+          .style.opacity = `${( 75 - 10 * i ) / 100}`;
+      line(parent, x2 + i * 2, y2 + i * 2, x2 + i * 2, y1 + i * 2)
+          .style.opacity = `${( 75 - 10 * i ) / 100}`;
+    }
+  }
+}
+
 export function rectangle(parent: SVGElement, x: number, y: number, width: number, height: number): SVGElement {
   x = x + 2;
   y = y + 2;
@@ -282,6 +293,22 @@ export function fire(element: HTMLElement, name: string, detail?: any, bubbles: 
     const CE = ((window as any).SlickCustomEvent || CustomEvent);
     element.dispatchEvent(new CE(name, init));
   }
+}
+
+const ncolorMem = [0x0000ff];
+
+export function ncolor(n: number): string {
+  if (!( n < ncolorMem.length )) {
+    for (let i = ncolorMem.length; i < n + 1; i++) {
+      const color: number = i % 3 === 0 ?
+          ( ( ( ncolorMem[i - 1] & 0x0000ff ) + ( ncolorMem[i - 2] & 0x0000ff ) ) >> 1 ) +
+          ( ( ( ncolorMem[i - 1] & 0x00ff00 ) + ( ncolorMem[i - 2] & 0x00ff00 ) ) >> 9 << 8 ) +
+          ( ( ( ncolorMem[i - 1] & 0xff0000 ) + ( ncolorMem[i - 2] & 0xff0000 ) ) >> 17 << 16 ) :
+          ( ncolorMem[i - 1] << 8 | ncolorMem[i - 1] >> 16 ) & 0xffffff;
+      ncolorMem.push(color);
+    }
+  }
+  return `#${ncolorMem[n].toString(16).padStart(6, '0')}`;
 }
 
 export function debugLog(s: string) {

@@ -1,0 +1,40 @@
+{
+  "name": "@my-handicapped-pet/wired-marker",
+  "version": "2.0.5",
+  "description": "Marker for a wired graph",
+  "keywords": [
+    "sketchy",
+    "graph",
+    "marker",
+    "point"
+  ],
+  "author": "Ilya Lyaukin <kzerby@gmail.com>",
+  "homepage": "https://github.com/ilyaukin/sadist-fe#readme",
+  "license": "MIT",
+  "main": "lib/wired-marker.js",
+  "directories": {
+    "lib": "lib",
+    "test": "__tests__"
+  },
+  "files": [
+    "lib"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ilyaukin/sadist-fe.git"
+  },
+  "scripts": {
+    "build": "rm -rf ./lib && tsc",
+    "test": "echo \"Error: run tests from root\" && exit 1"
+  },
+  "bugs": {
+    "url": "https://github.com/ilyaukin/sadist-fe/issues"
+  },
+  "dependencies": {
+    "@my-handicapped-pet/wired-data-point": "^2.0.5",
+    "@my-handicapped-pet/wired-lib": "^2.0.0"
+  }
+}

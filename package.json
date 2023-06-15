@@ -7,7 +7,7 @@
     "test": "npm run build && web-test-runner --node-resolve",
     "test:watch": "npm run build && web-test-runner --node-resolve --watch",
     "build": "lerna clean -y && lerna link && lerna bootstrap && lerna run build && webpack --mode production ",
-    "build-n-copy": "lerna clean -y && lerna link && lerna bootstrap && lerna run build && webpack --mode production && cp -r dist/*.js dist/img ../sadist-be/app/static ",
+    "build-n-copy": "lerna clean -y && lerna link && lerna bootstrap && lerna run build && webpack --mode production && cp -r dist/*.js dist/*.geojson dist/img ../sadist-be/app/static ",
     "start": "webpack serve --mode development --open"
   },
   "keywords": [],
@@ -32,6 +32,7 @@
     "@web/test-runner-puppeteer": "^0.10.5",
     "babel-loader": "^8.0.6",
     "babel-plugin-root-import": "^6.4.1",
+    "copy-webpack-plugin": "^11.0.0",
     "css-loader": "^3.4.2",
     "file-loader": "^5.0.2",
     "html-loader": "^0.5.5",
@@ -50,8 +51,7 @@
     "gapi-script": "^1.2.0",
     "moment": "^2.24.0",
     "react": "^0.0.0-experimental-ee8509801-20230117",
-    "react-dom": "^0.0.0-experimental-ee8509801-20230117",
-    "react-jvectormap": "0.0.16"
+    "react-dom": "^0.0.0-experimental-ee8509801-20230117"
   },
   "overrides": {
     "react": "$react",

@@ -1,11 +1,13 @@
 const path = require('path');
 const HtmlWebPackPlugin = require("html-webpack-plugin");
+const CopyWebpackPlugin = require("copy-webpack-plugin");
 const express = require('express');
 
 module.exports = {
   entry: {
     root: ['./src/index.js'],
     labelling: ['./src/labelling.js'],
+    'component-demo': ['./src/component-demo.js'],
   },
   output: {
     filename: '[name].js'
@@ -50,6 +52,17 @@ module.exports = {
       template: "./src/labelling.html",
       filename: "./labelling.html",
       chunks: ["labelling"]
+    }),
+    new HtmlWebPackPlugin({
+      template: "./src/component-demo.html",
+      filename: "./component-demo.html",
+      chunks: ["component-demo"]
+    }),
+    new CopyWebpackPlugin({
+      patterns: [{
+        from: './src/*.geojson',
+        to: '[name][ext]'
+      }]
     })
   ],
   resolve: {
@@ -218,6 +231,16 @@ module.exports = {
               'Location': 'Moscow',
               'Comment': 'The 4th Reich'
             }
+          ],
+          success: true
+        })
+      });
+      app.get('/ds/2222/label-values', function (req, res) {
+        res.send({
+          list: [
+            { id: 1, name: 'Moscow', coordinates: [ 37.61556, 55.75222 ]},
+            { id: 2, name: 'Paris', coordinates: [ 2.3488, 48.85341 ]},
+            { id: 3, name: 'New York', coordinates: [ -74.00597, 40.71427 ]},
           ],
           success: true
         })

@@ -53,7 +53,6 @@ const GoogleSheetList = ({ onSheetSelected }: GoogleSheetListProps) => {
   }
 
   const renderSheet = (sheet: gapi.client.drive.File, i: number) => {
-    // @ts-ignore
     return <wired-item key={i} className="google-sheet-list-item" value={`${i}`}>
       {sheet.name}
     </wired-item>;

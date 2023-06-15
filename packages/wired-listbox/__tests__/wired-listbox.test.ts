@@ -1,15 +1,12 @@
 import { TemplateResult } from 'lit-element';
 import { expect, fixture, html } from '@open-wc/testing';
+import { WiredListbox } from '..';
 import '..';
 import '../../wired-item';
 
-interface WiredListboxElement extends HTMLElement {
+interface WiredListboxElement extends WiredListbox {
   slotElement: HTMLSlotElement;
   items: Array<HTMLElement>;
-}
-
-interface SelectedEvent extends Event {
-  detail: any;
 }
 
 describe('wired-listbox', () => {
@@ -33,8 +30,8 @@ describe('wired-listbox', () => {
     return element;
   }
 
-  const events: SelectedEvent[] = [];
-  const listener: (evt: Event) => void = evt => events.push(<SelectedEvent>evt);
+  const events: CustomEvent[] = [];
+  const listener: (evt: Event) => void = evt => events.push(<CustomEvent>evt);
   const __addEventListener = (element: WiredListboxElement): void => {
     element.addEventListener('selected', listener);
   }
@@ -64,4 +61,31 @@ describe('wired-listbox', () => {
     // cleanup
     __removeEventListener(element);
   });
-})
+
+  it('should display selected item by default', async function () {
+    const element = await __fixture(html`
+      <wired-listbox selected="1">
+        <wired-item value="1">Item #1</wired-item>
+        <wired-item value="2">Item #2</wired-item>
+        <wired-item value="3">Item #3</wired-item>
+      </wired-listbox>
+    `);
+
+    expect(element.items[0].getAttribute('aria-selected')).to.be.equal('true');
+  });
+
+  it('should update value from code', async function () {
+    const element = await __fixture(html`
+      <wired-listbox selected="1">
+        <wired-item value="1">Item #1</wired-item>
+        <wired-item value="2">Item #2</wired-item>
+        <wired-item value="3">Item #3</wired-item>
+      </wired-listbox>
+    `);
+
+    element.value = { value: '2', text: 'Item #2' };
+
+    await element.updateComplete;
+    expect(element.items[1].getAttribute('aria-selected')).to.be.equal('true');
+  });
+});

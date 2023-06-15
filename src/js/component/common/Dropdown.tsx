@@ -30,7 +30,7 @@ const __Dropdown: React.ForwardRefRenderFunction<DropdownElement, DropdownProps>
   useEffect(() => {
     if (open) {
       const listener = (event: Event) => {
-        if (dropdown.current && !dropdown.current.contains(event.target as Node)) {
+        if (pane.current && !pane.current.contains(event.target as Node)) {
           setOpen(false);
         }
       };
@@ -52,7 +52,10 @@ const __Dropdown: React.ForwardRefRenderFunction<DropdownElement, DropdownProps>
     }
   }, [root.current, pane.current, open])
 
-  const onOpen = () => setOpen(x => !x);
+  const onOpen = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    event.stopPropagation();
+    setOpen(x => !x);
+  };
 
   return <div ref={root} className={className}>
     <div style={{ width: "100%" }}>

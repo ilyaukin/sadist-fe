@@ -8,8 +8,7 @@ class ClassLabellingInterface extends LabellingInterface {
     this.list!.selected = undefined;
   }
 
-  // @ts-ignore
-  renderQuiz(text: string | undefined, label: string | undefined, labels: string[]) {
+  renderQuiz(text: string | undefined, _label: string | undefined, labels: string[]) {
     if (!text) {
       return '';
     }
@@ -24,7 +23,6 @@ class ClassLabellingInterface extends LabellingInterface {
           {
             labels.map(label =>
               <wired-radio
-                // @ts-ignore
                 style={{ textAlign: 'left', width: '100px', marginLeft: 'calc(50% - 100px)' }}
                 key={label}
                 name={label}

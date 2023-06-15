@@ -230,8 +230,7 @@ class LabellingInterface extends Component<LabellingInterfaceProps, LabellingInt
     this.shadowCheckboxes[text][label] = checkbox;
   }
 
-  // @ts-ignore
-  renderQuiz(text: string | undefined, label: any | undefined, labels: any[]): ReactNode {
+  renderQuiz(_text: string | undefined, _label: any | undefined, _labels: any[]): ReactNode {
     return 'implement me!'
   }
 

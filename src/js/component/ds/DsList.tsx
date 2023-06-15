@@ -1,4 +1,5 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
+import { WiredCombo } from '/packages/wired-combo';
 import ErrorDialog from "../common/ErrorDialog";
 import Icon from "../../icon/Icon";
 import DsNew from "./DsNew";
@@ -26,7 +27,7 @@ const DsList = (props: DsListProps) => {
     index: {},
   });
 
-  const combo = useRef<HTMLElement & { value: any } | null>(null);
+  const combo = useRef<WiredCombo | null>(null);
 
   const dsValue = useRef<any | undefined>();
 
@@ -61,13 +62,12 @@ const DsList = (props: DsListProps) => {
   useEffect(() => {
     if (state.newItem) {
       const { id, name } = state.newItem;
-      combo.current!.value = { value: id, text: name };
+      combo.current!.value = { value: id!, text: name! };
       combo.current!.dispatchEvent(new CustomEvent('selected', { detail: { selected: id } }));
     }
   }, [state.newItem]);
 
-  // @ts-ignore
-  function onDsSelected(value: string, event: CustomEvent) {
+  function onDsSelected(value: string, _event: CustomEvent) {
     // special handling for creating new ds
     if (value === 'new') {
       setState({ ...state, creatingNew: true });
@@ -136,7 +136,6 @@ const DsList = (props: DsListProps) => {
       <DsNew onDsCreated={onDsCreated}/>
     </CancelableDialog>
     <wired-combo
-      // @ts-ignore
       ref={combo}
       disabled={isVal(loading)}
       onselected={(e: CustomEvent) => onDsSelected(e.detail?.selected, e)}

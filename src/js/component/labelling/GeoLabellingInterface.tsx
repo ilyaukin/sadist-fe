@@ -43,13 +43,11 @@ class GeoLabellingInterface extends LabellingInterface {
     return label.text;
   }
 
-  // @ts-ignore
   onSelectLabel = (event: CustomEvent) => {
     this.selectLabel(event.detail.selected);
   }
 
-  // @ts-ignore
-  renderQuiz(text: string | undefined, label: any | undefined, labels: any[]) {
+  renderQuiz(text: string | undefined, _label: any | undefined, _labels: any[]) {
     if (!text) {
       return '';
     }

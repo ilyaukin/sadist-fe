@@ -1,318 +1,343 @@
-import React, { ReactNode } from 'react'
-import moment from 'moment'
 import equal from 'deep-equal'
-import CountDown from '../component/visualization/CountDown'
-import { ColInfo, DsInfo, DsMeta, FilteringValue, Grouping } from '../model/ds';
+import {
+  ComplexValueType,
+  DsInfo,
+  DsMeta,
+  Filter,
+  FilterProposal,
+  FilterQuery,
+  MultiselectFilterProposal,
+  VizDataItem,
+  VizMeta,
+  VizPipeline
+} from '../model/ds';
 
 /**
- * Define all functions of {@link DsInfo}
- * @param dsInfo data fields of the object
- * @return {DsInfo} object with given data and correct functions
+ * Default object containing all functions of {@link DsInfo}
  */
-function initDsInfo(dsInfo: Partial<DsInfo>): DsInfo {
-  return {
-    ...dsInfo,
+export const defaultDsInfo: DsInfo = {
 
-    initColInfo: function ({ meta }: { meta: DsMeta }): ColInfo[] {
-      if (!meta?.cols) {
-        return [];
-      }
+  meta: {},
 
-      const colInfo: ColInfo[] = meta.cols.map(col => ( { name: col } ));
+  init(meta: DsMeta): DsInfo {
+    const dsInfo = this.meta.id != meta.id ? { ...defaultDsInfo, meta } : {
+      ...defaultDsInfo,
+      meta,
+      vizMeta: this.vizMeta,
+      filters: this.filters
+    };
 
-      if (meta.detailization) {
-        Object.entries(meta.detailization)
-          .filter(kv => kv[1].status === 'finished')
-          .forEach(kv => {
-            let col = kv[0]
-            let colInfo1 = colInfo.find(colSpec => colSpec.name === col)
-            if (colInfo1) {
-              let labels = kv[1].labels
-              if (labels) {
-                for (let label of labels) {
-                  // if grouping is already known, keep it the same
-                  ( colInfo1.groupings = colInfo1.groupings || [] )
-                    .push(this.getGrouping(col, label) || { key: label })
-                }
-              }
+    // propose viz & filters
+    const __proposeViz = (col: string, v: VizMeta) => {
+      ( dsInfo.vizMetaProposed ||= [] ).push(v);
+      ( ( dsInfo.vizMetaProposedByCol ||= {} )[col] ||= [] ).push(v);
+    }
+    const __proposeFilter = (col: string, f: FilterProposal) => {
+      ( dsInfo.filterProposals ||= [] ).push(f);
+      ( ( dsInfo.filterProposalsByCol ||= {} )[col] ||= [] ).push(f);
+    }
+    if (meta.detailization) {
+      Object.entries(meta.detailization).forEach(([col, details]) => {
+        if (details.status === 'finished' && details.labels) {
+          details.labels.forEach((label) => {
+            switch (label) {
+              case 'city':
+                __proposeViz(col, {
+                  key: `${col} city`,
+                  type: 'globe',
+                  props: {
+                    action: 'group',
+                    col: col,
+                    label: 'city',
+                  },
+                  toString() {
+                    return 'Show cities';
+                  },
+                  getLabel(i: VizDataItem): string {
+                    return `${i.id?.name}`;
+                  }
+                });
+                __proposeFilter(col, {
+                  type: 'multiselect',
+                  col,
+                  label,
+                  values: [],
+                  selected: [],
+                  propose(): Filter {
+                    return {
+                      col,
+                      label: `${label}.id`,
+                      predicate: {
+                        op: 'in',
+                        values: (this as MultiselectFilterProposal<ComplexValueType>).selected.map(v => v?.id || null),
+                      }
+                    }
+                  },
+                  getLabel(item: ComplexValueType): string {
+                    return `${item?.name}`;
+                  }
+                });
+                break;
+              case 'country':
+                __proposeViz(col, {
+                  key: `${col} country`,
+                  type: 'globe',
+                  props: {
+                    action: 'group',
+                    col: col,
+                    label: 'country',
+                  },
+                  toString(): string {
+                    return 'Show counties';
+                  },
+                  getLabel(i: VizDataItem): string {
+                    return `${i.id?.name}`;
+                  }
+                });
+                __proposeFilter(col, {
+                  type: 'multiselect',
+                  col,
+                  label,
+                  values: [],
+                  selected: [],
+                  propose(): Filter {
+                    return {
+                      col,
+                      label: `${label}.id`,
+                      predicate: {
+                        op: 'in',
+                        values: (this as MultiselectFilterProposal<ComplexValueType>).selected.map(v => v?.id || null),
+                      }
+                    }
+                  },
+                  getLabel(item: ComplexValueType): string {
+                    return `${item?.name}`;
+                  }
+                });
+                break;
+              case 'number':
+                __proposeViz(col, {
+                  key: `${col} average`,
+                  type: 'bar',
+                  props: {
+                    action: 'accumulate',
+                    col: col,
+                    label: 'number',
+                    accumulater: 'average',
+                  },
+                  toString(): string {
+                    return 'Show average';
+                  }
+                });
+                __proposeViz(col, {
+                  key: `${col} min`,
+                  type: 'bar',
+                  props: {
+                    action: 'accumulate',
+                    col: col,
+                    label: 'number',
+                    accumulater: 'min',
+                  },
+                  toString(): string {
+                    return 'Show minimum';
+                  }
+                });
+                __proposeViz(col, {
+                  key: `${col} max`,
+                  type: 'bar',
+                  props: {
+                    action: 'accumulate',
+                    col: col,
+                    label: 'number',
+                    accumulater: 'max',
+                  },
+                  toString(): string {
+                    return 'Show maximum';
+                  }
+                });
+                break;
             }
-          })
-      }
-
-      return colInfo
-    },
-
-    getGrouping: function (col: string, label: string): Grouping | undefined {
-      return this.colInfo
-        ?.find(colInfo1 => colInfo1.name === col)
-        ?.groupings
-        ?.find(grouping => grouping.key === label);
-    },
-
-    /**
-     * Select grouping by given col and key and deselect all others
-     * @param col
-     * @param key
-     * @returns new colSpecs
-     */
-    applyGrouping: function (col: string, key: string): ColInfo[] {
-      return this.colInfo!
-        .map((colInfo1) => ( {
-          ...colInfo1, groupings: colInfo1.groupings?.map(grouping => ( {
-            ...grouping, selected: col === colInfo1.name && key === grouping.key
-          } ))
-        } ))
-    },
-
-    /**
-     * get "visualization pipeline", not to be confused
-     * with mongo's aggregation pipeline
-     * @returns {[]} of visualization pipeline items, format TBD
-     */
-    getPipeline: function () {
-      let pipeline = []
-
-      // 1. grouping
-      let selectedGrouping: Grouping | undefined
-      let colInfo1 = this.colInfo!.find(colInfo1 =>
-        selectedGrouping = colInfo1.groupings?.find(grouping => grouping.selected))
-      if (colInfo1 && selectedGrouping) {
-        pipeline.push({
-          col: colInfo1.name,
-          key: selectedGrouping.key,
-        })
-      }
-
-      // 2., ... accumulated values
-      // todo
-
-      return pipeline
-    },
-
-    /**
-     * get list of filtering values for given column
-     * @param col column name
-     * @param key filtering key
-     * @return {string[]} filtering values
-     */
-    getFilteringValues: function (col: string, key: string): FilteringValue[] | undefined {
-      return this.colInfo!.find(colInfo1 => colInfo1.name === col)
-        ?.filterings?.find(filtering => filtering.key === key)
-        ?.values
-    },
-
-    /**
-     * set list of filtering values for given column
-     * @param col column name
-     * @param key filtering key
-     * @param values filtering values
-     * @return new colSpecs
-     */
-    applyFiltering: function (col: string, key: string, values: string[]): ColInfo[] {
-      return this.colInfo!.map(colInfo1 => colInfo1.name === col ? {
-        ...colInfo1,
-        filterings: [{ key, values }]
-      } : colInfo1)
-    },
-
-    /**
-     * Drop filtering by given column
-     * @param col column name
-     */
-    dropFiltering: function (col: string): ColInfo[] {
-      return this.colInfo!.map(colInfo1 => {
-        if (colInfo1.name === col) {
-          colInfo1 = { ...colInfo1 }
-          delete colInfo1['filterings']
-        }
-        return colInfo1
-      })
-    },
-
-    /**
-     * get filtering query
-     * @returns {[]} (`query` argument) for /ds/{}/filter API.
-     * if no filtering, return undefined.
-     */
-    getFilteringQuery: function () {
-      let query: any[] = [];
-      this.colInfo!.forEach(colInfo1 => {
-        if (colInfo1.filterings) {
-          colInfo1.filterings.forEach(filtering => {
-            query.push({
-              col: colInfo1.name,
-              key: filtering.key,
-              values: filtering.values
-            });
           });
         }
       });
+      // // let it be text filters by all cols across so far,
+      // // at least to test filtering engine
+      // meta.cols?.forEach((col) => {
+      //   __proposeFilter(col, {
+      //     type: 'search',
+      //     propose(): Filter {
+      //       return {
+      //         col: col,
+      //         predicate: {
+      //           op: 'instr',
+      //           value: this.term || '',
+      //         }
+      //       };
+      //     }
+      //   });
+      // });
+    }
 
-      if (!query.length) {
-        return undefined;
-      }
+    return dsInfo;
+  },
 
-      return query;
-    },
-
-    getHint: function (): ReactNode {
-      // check error
-      if (this.err) {
-        return <p>Failed to get status ({this.err}). Please
-          refresh the page. </p>;
-      }
-
-      // display status of classification
-      let { classification, detailization } = this.meta!;
-      classification = classification || {};
-      detailization = detailization || {};
-      let hint = [];
-      if (classification.status !== 'finished') {
-        const p1 = <p>Please wait while data classification
-          is done. </p>;
-        if (classification.status) {
-          const p2text = `Status: ${classification.status}`;
-          if (classification.started && classification.estimated) {
-            let finished_estimation = moment(classification.started)
-              .add(classification.estimated, 'millisecond')
-            const countDown = CountDown({ to: finished_estimation });
-            hint.push(<countDown.Render
-              before={
-                <>
-                  {p1}
-                  <p>{p2text} (<countDown.Clock/> left)</p>
-                </>
-              }
-              after={<p>Seems classification needs too much
-                time or it's hung, please contact &nbsp;
-                <a
-                  href="mailto:kzerby@gmail.com"
-                  target="_blank"> developer
-                </a>
-              </p>}
-            />);
-          } else {
-            hint.push(p1);
-            hint.push(<p>{p2text}</p>);
-          }
-        } else {
-          hint.push(p1);
+  appendViz(vizMeta: VizMeta): VizMeta | undefined {
+    // default accumulater if no other one selected
+    const tail: { [key: string]: VizMeta } = {
+      count: {
+        key: 'count',
+        type: 'marker',
+        props: {
+          action: 'accumulate',
+          accumulater: 'count',
         }
-
-        return hint;
       }
+    };
 
-      // display status of columns detailization
-      let detailizationByCol = Object.entries(detailization);
-      if (!detailizationByCol.length) {
-        return <p>Unfortunately, no columns are recognized as known
-          data type. </p>;
+    switch (vizMeta.props.action) {
+
+      // if user selects a group, replace the exising group, if any,
+      // (no group of group such as histogram of histogram or
+      // a graph which point itself is a graph/chart so far
+      case 'group':
+        return {
+          ...vizMeta,
+          children: this.vizMeta?.props.action === 'group' ? this.vizMeta.children : tail
+        }
+      // if user selects accumulated value, add it to the group,
+      // if any, or create a null-group
+      case 'accumulate':
+        return {
+          ...( this.vizMeta || {
+            key: 'root',
+            type: 'histogram',
+            props: {
+              action: 'group',
+            }
+          } ),
+          children: {
+            ...(equal(this.vizMeta?.children, tail) ? {} : this.vizMeta?.children),
+            [vizMeta.key]: vizMeta
+          }
+        };
+
+      default:
+        console.error(`Failure of adding ${vizMeta.key}`);
+        return this.vizMeta;
+    }
+  },
+
+  isVizSelected(vizMeta: VizMeta): boolean {
+    // match vizMeta by props
+    return this.__rolloutVizMeta((_key: string, v: VizMeta) => equal(vizMeta.props, v.props));
+  },
+
+  getPipeline(): VizPipeline | undefined {
+    let pipeline: VizPipeline | undefined;
+
+    function __appendItem(key: string, vizMeta: VizMeta) {
+      ( pipeline = pipeline || [] ).push({ key, ...vizMeta.props });
+    }
+
+    this.__rolloutVizMeta(__appendItem);
+
+    return pipeline;
+  },
+
+  applyFilter(filter: Filter): Filter[] | undefined {
+    let ff = this.dropFilter(filter);
+    return ff ? [...ff, filter] : [filter];
+  },
+
+  dropFilter(filter: Filter): Filter[] | undefined {
+    let ff = this.filters?.filter(f => !( f.col == filter.col && f.label == filter.label ));
+    return ff?.length ? ff : undefined;
+  },
+
+  getFilterQuery(): FilterQuery | undefined {
+    return this.filters;
+  },
+
+  isMetaFinal(): boolean {
+    if (this.err) {
+      // no automatic update if got an error once
+      return true;
+    }
+
+    let { classification, detailization } = this.meta;
+    classification = classification || {};
+    detailization = detailization || {};
+
+    return classification.status === 'finished' &&
+      Object.entries(detailization)
+        .map(kv => kv[1].status === 'finished')
+        .reduce((a, b) => a && b, true);
+  },
+
+  __rolloutVizMeta: function (callback: (key: string, vizMeta: VizMeta) => any): any {
+    // roll out tail recursion
+    if (this.vizMeta) {
+      let entries: [string, VizMeta][] = [[this.vizMeta.key, this.vizMeta]];
+      while (entries.length) {
+        for (const e of entries) {
+          // stop roll out at the first truthy value returned by callback
+          const result = callback(...e);
+          if (result) {
+            return result;
+          }
+        }
+        entries = entries
+          .map(([, v]) => v)
+          .filter(v => v.children)
+          .map(v => Object.entries(v.children!))
+          .reduce((ee0, ee1) => ee0.concat(ee1), []);
       }
-
-      if (detailizationByCol.find((kv) => kv[1].status === 'finished')) {
-        hint.push(
-          <p>Please use dropdowns near the table columns, to
-            visualize data. </p>
-        );
-      } else {
-        hint.push(
-          <p>Please wait while columns analysis is done. </p>
-        );
-      }
-      hint.push(
-        <p>Status:</p>
-      );
-      hint.push(
-        <ul>{detailizationByCol.map((kv) => <li key={kv[0]}> {kv[0]}: {kv[1].status}</li>)}</ul>
-      );
-      return hint;
-    },
-
-    isFinal: function (): boolean {
-      if (this.err) {
-        // no automatic update if got an error once
-        return true;
-      }
-
-      let { classification, detailization } = this.meta!;
-      classification = classification || {};
-      detailization = detailization || {};
-
-      return classification.status === 'finished' &&
-        Object.entries(detailization)
-          .map(kv => kv[1].status === 'finished')
-          .reduce((a, b) => a && b, true);
-    },
-  };
-}
-
-export const defaultDsInfo: DsInfo = initDsInfo({
-  meta: {},
-  colInfo: [],
-  shouldUpdateVisualization: false,
-});
+    }
+  },
+};
 
 export function reduceDsInfo(dsInfo: DsInfo, action: DsInfoAction): DsInfo {
   switch (action.type) {
     case DsInfoActionType.SELECT_DS:
-      return initDsInfo({
-        meta: action.meta,
-        colInfo: dsInfo.initColInfo({ meta: action.meta! }),
-        shouldUpdateVisualization: true
-      });
+      return dsInfo.init(action.meta);
 
-    case DsInfoActionType.SELECT_GROUPING:
-      if (dsInfo.getGrouping(action.col!, action.key!)?.selected) {
-        // already selected
-        return dsInfo;
-      }
+    case DsInfoActionType.ADD_VIZ:
       return {
         ...dsInfo,
-        colInfo: dsInfo.applyGrouping(action.col!, action.key!),
-        shouldUpdateVisualization: true
+        vizMeta: dsInfo.appendViz(action.vizMeta),
       };
 
-    case DsInfoActionType.FILTER:
+    case DsInfoActionType.ADD_FILTER:
       return {
         ...dsInfo,
-        colInfo: dsInfo.applyFiltering(action.col!, action.key!, action.values!),
-        shouldUpdateVisualization: false
+        filters: dsInfo.applyFilter(action.filter),
       };
 
     case DsInfoActionType.DROP_FILTER:
       return {
         ...dsInfo,
-        colInfo: dsInfo.dropFiltering(action.col!),
-        shouldUpdateVisualization: false
+        filters: dsInfo.dropFilter(action.filter),
       };
 
     case DsInfoActionType.UPDATE_STATUS_SUCCESS:
       // dsId has changed so the meta is irrelevant
-      if (dsInfo.meta!.id !== action.meta!.id) {
+      if (dsInfo.meta.id !== action.meta.id) {
         return dsInfo;
       }
 
       // not to cause unnecessary re-rendering
-      if (equal(dsInfo.meta!, action.meta!)) {
+      if (equal(dsInfo.meta, action.meta)) {
         return dsInfo;
       }
 
-      return initDsInfo({
-        meta: action.meta,
-        colInfo: dsInfo.initColInfo({ meta: action.meta! }),
-        shouldUpdateVisualization: false
-      });
+      return dsInfo.init(action.meta);
 
     case DsInfoActionType.UPDATE_STATUS_ERROR:
       return {
         ...dsInfo,
         err: action.err,
-        shouldUpdateVisualization: false
       };
   }
-
-  console.error(`The action ${action.type} is cannot be dispatched, stay with the current state`);
-  return dsInfo;
 }
 
 /**
@@ -326,14 +351,14 @@ export enum DsInfoActionType {
   SELECT_DS,
 
   /**
-   * Grouping by certain col and key was selected
+   * Grouping by certain col was selected
    */
-  SELECT_GROUPING,
+  ADD_VIZ,
 
   /**
-   * Filter by certain col, key and values was selected
+   * Filter by certain col was selected
    */
-  FILTER,
+  ADD_FILTER,
 
   /**
    * Filter by certain col was dropped
@@ -351,11 +376,16 @@ export enum DsInfoActionType {
   UPDATE_STATUS_ERROR,
 }
 
-export interface DsInfoAction {
-  type: DsInfoActionType;
-  meta?: DsMeta;
-  col?: string;
-  key?: string;
-  values?: FilteringValue[];
+export type DsInfoAction = {
+  type: DsInfoActionType.SELECT_DS | DsInfoActionType.UPDATE_STATUS_SUCCESS;
+  meta: DsMeta;
+} | {
+  type: DsInfoActionType.ADD_VIZ;
+  vizMeta: VizMeta;
+} | {
+  type: DsInfoActionType.ADD_FILTER | DsInfoActionType.DROP_FILTER;
+  filter: Filter;
+} | {
+  type: DsInfoActionType.UPDATE_STATUS_ERROR;
   err?: string;
 }

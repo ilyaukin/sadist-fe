@@ -1,0 +1,39 @@
+{
+  "name": "@my-handicapped-pet/wired-legend",
+  "version": "2.0.5",
+  "description": "Data lagend for a wired graph",
+  "keywords": [
+    "sketchy",
+    "visualization",
+    "graph",
+    "legend"
+  ],
+  "author": "Ilya Lyaukin <kzerby@gmail.com>",
+  "homepage": "https://github.com/ilyaukin/sadist-fe#readme",
+  "license": "MIT",
+  "main": "lib/wired-legend.js",
+  "directories": {
+    "lib": "lib",
+    "test": "__tests__"
+  },
+  "files": [
+    "lib"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ilyaukin/sadist-fe.git"
+  },
+  "scripts": {
+    "build": "rm -rf ./lib && tsc",
+    "test": "echo \"Error: run tests from root\" && exit 1"
+  },
+  "bugs": {
+    "url": "https://github.com/ilyaukin/sadist-fe/issues"
+  },
+  "dependencies": {
+    "@my-handicapped-pet/wired-base": "^2.0.5"
+  }
+}

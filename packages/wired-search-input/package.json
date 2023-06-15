@@ -1,0 +1,36 @@
+{
+  "name": "wired-search-input",
+  "version": "2.0.0",
+  "description": "Hand-drawn sketchy text input - web component",
+  "main": "lib/wired-search-input.js",
+  "module": "lib/wired-search-input.js",
+  "types": "lib/wired-search-input.d.ts",
+  "scripts": {
+    "build": "rm -rf ./lib && tsc",
+    "test": "echo \"Error: run tests from root\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ilyaukin/sadist-fe.git"
+  },
+  "keywords": [
+    "input",
+    "text input",
+    "text field",
+    "search",
+    "search input",
+    "webcomponent",
+    "web component",
+    "rough",
+    "sketchy",
+    "hand-drawn",
+    "hand drawn",
+    "wireframe"
+  ],
+  "author": "Preet Shihn <preetshihn@gmail.com> (https://twitter.com/preetster)",
+  "license": "MIT",
+  "dependencies": {
+    "@my-handicapped-pet/wired-base-legacy": "^2.0.5",
+    "@my-handicapped-pet/wired-lib": "^2.0.0"
+  }
+}
