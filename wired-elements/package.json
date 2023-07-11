@@ -1,0 +1,49 @@
+{
+  "name": "@my-handicapped-pet/wired-elements",
+  "version": "3.0.0",
+  "description": "frontend components for my-handicapped-pet-pet.io. It's customization of wired-elements.",
+  "main": "lib/wired-elemensts.js",
+  "types": "lib/wired-elemensts.d.ts",
+  "exports": {
+    ".": {
+      "default": "./lib/wired-elemensts.js"
+    }
+  },
+  "scripts": {
+    "build": "rm -rf ./lib && tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wiredjs/wired-elements.git"
+  },
+  "keywords": [
+    "rough",
+    "sketchy",
+    "hand-drawn",
+    "hand drawn"
+  ],
+  "author": "Preet Shihn <preetshihn@gmail.com> (https://twitter.com/preetster)",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/geojson": "^7946.0.10"
+  },
+  "dependencies": {
+    "lit-element": "^2.5.1",
+    "roughjs": "^3.1.0"
+  },
+  "bugs": {
+    "url": "https://github.com/wiredjs/wired-elements/issues"
+  },
+  "homepage": "https://github.com/wiredjs/wired-elements#readme",
+  "directories": {
+    "lib": "lib",
+    "test": "__tests__"
+  },
+  "files": [
+    "lib"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}

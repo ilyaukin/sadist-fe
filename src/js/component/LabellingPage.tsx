@@ -1,11 +1,8 @@
 import React from "react";
-import '/packages/wired-radio-group';
-import '/packages/wired-radio';
-import '/packages/wired-button';
-import '/packages/wired-checkbox';
 import '../../css/index.scss';
 import '../../css/labelling.css';
 import { renderPage } from "../helper/react-helper";
+import './common/CustomElement';
 import { defaultLabellingInterfaceProps, LabellingInterfaceProps } from "./labelling/LabellingInterface";
 import ClassLabellingInterface from "./labelling/ClassLabellingInterface";
 import GeoLabellingInterface from "./labelling/GeoLabellingInterface";

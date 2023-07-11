@@ -1,5 +1,5 @@
 import React, { Dispatch, useEffect, useRef } from 'react';
-import { WiredSearchInput } from '/packages/wired-search-input';
+import { WiredSearchInput } from '/wired-elements/lib/wired-search-input';
 import { SearchFilterProposal } from '../../model/ds';
 import { DsInfoAction, DsInfoActionType } from '../../reducer/dsInfo-reducer';
 
