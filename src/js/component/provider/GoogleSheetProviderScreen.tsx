@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { WiredInput } from '/packages/wired-input';
+import { WiredInput } from '/wired-elements/lib/wired-input';
 import Or from '../common/Or';
 import GoogleSheetList from './GoogleSheetList';
 import ValidationError from "./ValidationError";

@@ -6,8 +6,8 @@
   "scripts": {
     "test": "npm run build && web-test-runner --node-resolve",
     "test:watch": "npm run build && web-test-runner --node-resolve --watch",
-    "build": "lerna clean -y && lerna link && lerna bootstrap && lerna run build && webpack --mode production ",
-    "build-n-copy": "lerna clean -y && lerna link && lerna bootstrap && lerna run build && webpack --mode production && cp -r dist/*.js dist/*.geojson dist/img ../sadist-be/app/static ",
+    "build": "cd wired-elements && npm i && npm run build && cd .. && webpack --mode production ",
+    "build-n-copy": "cd wired-elements && npm i && npm run build && cd .. && webpack --mode production && cp -r dist/*.js dist/*.geojson dist/img ../sadist-be/app/static ",
     "start": "webpack serve --mode development --open"
   },
   "keywords": [],
@@ -37,7 +37,6 @@
     "file-loader": "^5.0.2",
     "html-loader": "^0.5.5",
     "html-webpack-plugin": "^5.5.0",
-    "lerna": "^4.0.0",
     "sass": "^1.52.2",
     "sass-loader": "^13.0.0",
     "style-loader": "^1.1.3",

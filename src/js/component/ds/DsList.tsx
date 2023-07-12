@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import { WiredCombo } from '/packages/wired-combo';
+import { WiredCombo } from '/wired-elements/lib/wired-combo';
 import ErrorDialog from "../common/ErrorDialog";
 import Icon from "../../icon/Icon";
 import DsNew from "./DsNew";

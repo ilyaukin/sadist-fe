@@ -1,7 +1,7 @@
 import React, { Component, ReactNode } from "react";
+import { WiredCheckbox } from '/wired-elements/lib/wired-checkbox';
 import ErrorDialog from "../common/ErrorDialog";
 import Loader from "../common/Loader";
-import { WiredCheckbox } from '/packages/wired-checkbox';
 
 export interface LabellingInterfaceProps {
   type: string;

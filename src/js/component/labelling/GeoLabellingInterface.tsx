@@ -1,7 +1,9 @@
 import React from "react";
-import '/packages/wired-combo-lazy';
-import { WiredComboLazy } from '/packages/wired-combo-lazy';
-import LabellingInterface, { LabellingInterfaceProps, LabellingInterfaceState } from "./LabellingInterface";
+import { WiredComboLazy } from '/wired-elements/lib/wired-combo-lazy';
+import LabellingInterface, {
+  LabellingInterfaceProps,
+  LabellingInterfaceState
+} from "./LabellingInterface";
 
 class GeoLabellingInterface extends LabellingInterface {
   private combo: WiredComboLazy | null | undefined;
