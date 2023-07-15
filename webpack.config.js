@@ -8,6 +8,8 @@ module.exports = {
     root: ['./src/index.js'],
     labelling: ['./src/labelling.js'],
     'component-demo': ['./src/component-demo.js'],
+    'privacy-policy': ['./src/privacy-policy.js'],
+    tos: ['./src/tos.js'],
   },
   output: {
     filename: '[name].js'
@@ -63,7 +65,17 @@ module.exports = {
         from: './src/*.geojson',
         to: '[name][ext]'
       }]
-    })
+    }),
+    new HtmlWebPackPlugin({
+      template: "./src/privacy-policy.html",
+      filename: "./privacy-policy.html",
+      chunks: ["privacy-policy"]
+    }),
+    new HtmlWebPackPlugin({
+      template: "./src/tos.html",
+      filename: "./tos.html",
+      chunks: ["tos"]
+    }),
   ],
   resolve: {
     extensions: [".js", ".jsx", ".ts", ".tsx"]
