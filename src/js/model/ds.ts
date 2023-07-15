@@ -64,7 +64,7 @@ export interface ColSpecificProps {
   col: string;
   /**
    * the label key in the classification collection for the given
-   * column which is used instead of column value;
+   * column; classified (detailed) value by this key is used instead of column value;
    * if not specified, column value directly is used
    */
   label?: string;
