@@ -7,6 +7,7 @@ import DsList from './ds/DsList';
 import DsTable from './ds/DsTable';
 import Viz, { VizElement } from './visualization/Viz';
 import Splitter from './common/Splitter';
+import Footer from './common/Footer';
 import withUserContext from './user/withUserContext';
 import { defaultDsInfo, DsInfoActionType, reduceDsInfo } from '../reducer/dsInfo-reducer';
 import { renderPage } from '../helper/react-helper';
@@ -80,6 +81,7 @@ let SPA = () => {
     />
 
     {viz}
+    <Footer/>
   </div>;
 };
 
