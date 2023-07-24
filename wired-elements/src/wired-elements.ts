@@ -14,6 +14,5 @@ export * from './wired-legend';
 export * from './wired-listbox';
 export * from './wired-marker';
 export * from './wired-radio';
-export * from './wired-radio-group';
 export * from './wired-search-input';
 export * from './wired-spinner'

@@ -14,7 +14,8 @@ import { BaseCSS, WiredBaseLegacy } from "./wired-base-legacy";
 export class WiredRadio extends WiredBaseLegacy {
   @property({ type: Boolean }) checked = false;
   @property({ type: Boolean, reflect: true }) disabled = false;
-  @property({ type: String }) name?: string;
+  @property({ type: String, reflect: true }) name?: string;
+  @property({ type: String, reflect: true }) value?: string;
   @property() private focused = false;
 
   @query('input') private input?: HTMLInputElement;
@@ -25,45 +26,52 @@ export class WiredRadio extends WiredBaseLegacy {
     return [
       BaseCSS,
       css`
-      :host {
-        display: inline-block;
-        font-family: inherit;
-      }
-      :host([disabled]) {
-        opacity: 0.6 !important;
-        cursor: default;
-        pointer-events: none;
-      }
-      :host([disabled]) svg {
-        background: rgba(0, 0, 0, 0.07);
-      }
+        :host {
+          display: inline-block;
+          font-family: inherit;
+        }
 
-      #container {
-        display: flex;
-        flex-direction: row;
-        position: relative;
-        user-select: none;
-        min-height: 24px;
-        cursor: pointer;
-      }
-      span {
-        margin-left: 1.5ex;
-        line-height: 24px;
-      }
-      input {
-        opacity: 0;
-      }
-      path {
-        stroke: var(--wired-radio-icon-color, currentColor);
-        stroke-width: var(--wired-radio-default-swidth, 0.7);
-      }
-      g path {
-        stroke-width: 0;
-        fill: var(--wired-radio-icon-color, currentColor);
-      }
-      #container.focused {
-        --wired-radio-default-swidth: 1.5;
-      }
+        :host([disabled]) {
+          opacity: 0.6 !important;
+          cursor: default;
+          pointer-events: none;
+        }
+
+        :host([disabled]) svg {
+          background: rgba(0, 0, 0, 0.07);
+        }
+
+        #container {
+          display: flex;
+          flex-direction: row;
+          position: relative;
+          user-select: none;
+          min-height: 24px;
+          cursor: pointer;
+        }
+
+        span {
+          margin-left: 1.5ex;
+          line-height: 24px;
+        }
+
+        input {
+          opacity: 0;
+        }
+
+        path {
+          stroke: var(--wired-radio-icon-color, currentColor);
+          stroke-width: var(--wired-radio-default-swidth, 0.7);
+        }
+
+        g path {
+          stroke-width: 0;
+          fill: var(--wired-radio-icon-color, currentColor);
+        }
+
+        #container.focused {
+          --wired-radio-default-swidth: 1.5;
+        }
       `
     ];
   }
@@ -83,20 +91,31 @@ export class WiredRadio extends WiredBaseLegacy {
 
   render(): TemplateResult {
     return html`
-    <label id="container" class="${this.focused ? 'focused' : ''}">
-      <input type="checkbox" .checked="${this.checked}" ?disabled="${this.disabled}" 
-        @change="${this.onChange}"
-        @focus="${() => this.focused = true}"
-        @blur="${() => this.focused = false}">
-      <span><slot></slot></span>
-      <div id="overlay"><svg></svg></div>
-    </label>
+      <label id="container" class="${this.focused ? 'focused' : ''}">
+        <input
+          type="radio" name="${this.name}" value="${this.value}"
+          .checked="${this.checked}" ?disabled="${this.disabled}"
+          @change="${this.onChange}"
+          @focus="${() => this.focused = true}"
+          @blur="${() => this.focused = false}">
+        <span><slot></slot></span>
+        <div id="overlay">
+          <svg></svg>
+        </div>
+      </label>
     `;
   }
 
   private onChange() {
     this.checked = this.input!.checked;
     this.refreshCheckVisibility();
+    if (this.checked) {
+      document.querySelectorAll(`wired-radio[name="${this.name}"]`).forEach((element => {
+        if (element != this) {
+          ( element as WiredRadio ).checked = false;
+        }
+      }));
+    }
     fire(this, 'change', { checked: this.checked });
   }
 

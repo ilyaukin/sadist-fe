@@ -6,8 +6,8 @@ import { HTMLProps } from "react";
 import "/wired-elements/lib/wired-elements";
 import {
   WiredDivider, WiredSpinner, WiredItem, WiredListbox, WiredDialog,
-  WiredCard, WiredButton, WiredCombo, WiredRadio, WiredRadioGroup,
-  WiredInput, WiredSearchInput, WiredCheckbox, WiredComboLazy,
+  WiredCard, WiredButton, WiredCombo, WiredRadio, WiredInput,
+  WiredSearchInput, WiredCheckbox, WiredComboLazy,
   WiredBar, WiredMarker, WiredHistogram, WiredGlobe
 } from '/wired-elements/lib/wired-elements';
 
@@ -27,8 +27,7 @@ declare global {
       ['wired-card']: CustomElement<WiredCard>;
       ['wired-button']: CustomElement<WiredButton>;
       ['wired-combo']: CustomElementWithEvent<WiredCombo, 'selected'>;
-      ['wired-radio']: CustomElement<WiredRadio>;
-      ['wired-radio-group']: CustomElementWithEvent<WiredRadioGroup, 'selected'>;
+      ['wired-radio']: CustomElementWithEvent<WiredRadio, 'change'>;
       ['wired-input']: CustomElement<WiredInput>;
       ['wired-search-input']: CustomElementWithEvent<WiredSearchInput, 'close'>;
       ['wired-checkbox']: CustomElementWithEvent<WiredCheckbox, 'change'>;

@@ -3,8 +3,10 @@ import React, { Component } from 'react';
 interface AccessScreenProps {
 }
 
+type AccessType = 'public' | 'private';
+
 interface AccessScreenState {
-  selectedType: 'public' | 'private';
+  selectedType: AccessType;
 }
 
 class AccessScreen extends Component<AccessScreenProps, AccessScreenState> {
@@ -20,21 +22,34 @@ class AccessScreen extends Component<AccessScreenProps, AccessScreenState> {
     return this.state.selectedType;
   }
 
-  onSelected = (event: CustomEvent) => {
-    this.setState({ selectedType: event.detail.selected });
+  onSelected = (type: AccessType, event: CustomEvent) => {
+    if (event.detail.checked) {
+      this.setState({ selectedType: type });
+    }
   }
 
   render() {
-    const { selectedType } = this.state;
-
-    return <div>
-      <wired-radio-group selected={selectedType} onselected={this.onSelected}>
-        <wired-radio name="public">Public</wired-radio><br/>
-        <span className="comment">Data source will be accessible to everyone.</span><br/><br/>
-        <wired-radio name="private">Private</wired-radio><br/>
+    return <div className="radio-group">
+      <wired-radio id="access-type-public" name="access-type" value="public"
+                   onchange={(event) => this.onSelected('public', event)}>
+        <div>
+          Public
+        </div>
+        <div>
+        <span
+            className="comment">Data source will be accessible to everyone.</span>
+        </div>
+      </wired-radio>
+      <wired-radio id="access-type-private" name="access-type" value="private"
+                   onchange={(event) => this.onSelected('private', event)}>
+        <div>
+          Private
+        </div>
+        <div>
         <span className="comment">Data source will be accessible only by you
-        once you're logged in.</span><br/><br/>
-      </wired-radio-group>
+        once you're logged in.</span>
+        </div>
+      </wired-radio>
     </div>;
   }
 }
