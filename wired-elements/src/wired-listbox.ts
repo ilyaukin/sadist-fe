@@ -1,7 +1,6 @@
 import { css, CSSResultArray, customElement, html, property, PropertyValues, TemplateResult } from 'lit-element';
 import { fire } from './wired-lib';
-import { BaseCSS } from "./wired-base-legacy";
-import { WiredBase } from "./wired-base";
+import { BaseCSS, WiredBase } from "./wired-base";
 
 interface WiredListboxItem extends HTMLElement {
   value: string;
@@ -104,8 +103,8 @@ export class WiredListbox extends WiredBase {
     });
   }
 
-  updated() {
-    super.updated();
+  updated(_changed?: PropertyValues) {
+    super.updated(_changed);
     if (this.horizontal) {
       this.classList.add('wired-horizontal');
     } else {

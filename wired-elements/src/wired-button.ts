@@ -1,26 +1,21 @@
-import { css, CSSResultArray, customElement, html, property, query, TemplateResult } from 'lit-element';
-import { Point, rectangle, renderElevation } from './wired-lib';
-import { BaseCSS, ResizeObserver, WiredBaseLegacy } from "./wired-base-legacy";
+import {
+  css,
+  CSSResultArray,
+  customElement,
+  html,
+  property,
+  PropertyValues,
+  query,
+  TemplateResult
+} from 'lit-element';
+import { BaseCSS, WiredBase } from './wired-base';
 
 @customElement('wired-button')
-export class WiredButton extends WiredBaseLegacy {
+export class WiredButton extends WiredBase {
   @property({ type: Number }) elevation = 1;
   @property({ type: Boolean, reflect: true }) disabled = false;
 
   @query('button') private button?: HTMLButtonElement;
-
-  private resizeObserver?: ResizeObserver;
-
-  constructor() {
-    super();
-    if ((window as any).ResizeObserver) {
-      this.resizeObserver = new (window as any).ResizeObserver(() => {
-        if (this.svg) {
-          this.wiredRender(true);
-        }
-      });
-    }
-  }
 
   static get styles(): CSSResultArray {
     return [
@@ -70,7 +65,7 @@ export class WiredButton extends WiredBaseLegacy {
   render(): TemplateResult {
     return html`
     <button ?disabled="${this.disabled}">
-      <slot @slotchange="${this.wiredRender}"></slot>
+      <slot @slotchange="${this.updated}"></slot>
       <div id="overlay">
         <svg></svg>
       </div>
@@ -78,53 +73,16 @@ export class WiredButton extends WiredBaseLegacy {
     `;
   }
 
+  protected firstUpdated(_changedProperties: PropertyValues) {
+    super.firstUpdated(_changedProperties);
+    this.setAttribute(WiredBase.SHAPE_ATTR, `rectangle:elevation=${this.elevation}`);
+  }
+
   focus() {
     if (this.button) {
       this.button.focus();
     } else {
       super.focus();
-    }
-  }
-
-  protected canvasSize(): Point {
-    if (this.button) {
-      const size = this.button.getBoundingClientRect();
-      const elev = Math.min(Math.max(1, this.elevation), 5);
-      const w = size.width + ((elev - 1) * 2);
-      const h = size.height + ((elev - 1) * 2);
-      return [w, h];
-    }
-    return this.lastSize;
-  }
-
-  protected draw(svg: SVGSVGElement, size: Point) {
-    const elev = Math.min(Math.max(1, this.elevation), 5);
-    const s = {
-      width: size[0] - ((elev - 1) * 2),
-      height: size[1] - ((elev - 1) * 2)
-    };
-    rectangle(svg, 0, 0, s.width, s.height);
-    renderElevation(svg, 0, 0, s.width, s.height, elev);
-  }
-
-  updated() {
-    super.updated();
-    this.attachResizeListener();
-  }
-
-  disconnectedCallback() {
-    this.detachResizeListener();
-  }
-
-  private attachResizeListener() {
-    if (this.button && this.resizeObserver && this.resizeObserver.observe) {
-      this.resizeObserver.observe(this.button);
-    }
-  }
-
-  private detachResizeListener() {
-    if (this.button && this.resizeObserver && this.resizeObserver.unobserve) {
-      this.resizeObserver.unobserve(this.button);
     }
   }
 }

@@ -1,5 +1,40 @@
-import { LitElement, PropertyValues, query } from "lit-element";
-import { debugLog, hachureFill, Point, polygon, rectangle, renderElevation } from "./wired-lib";
+import { css, LitElement, PropertyValues, query } from "lit-element";
+import {
+  debugLog, ellipse,
+  hachureFill,
+  Point,
+  polygon,
+  rectangle,
+  renderElevation
+} from "./wired-lib";
+
+export const BaseCSS = css`
+:host {
+  opacity: 0;
+}
+:host(.wired-rendered) {
+  opacity: 1;
+}
+#overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+svg {
+  display: block;
+}
+path {
+  stroke: currentColor;
+  stroke-width: 0.7;
+  fill: transparent;
+}
+.hidden {
+  display: none !important;
+}
+`;
 
 export abstract class WiredBase extends LitElement {
   @query('svg') protected svg?: SVGSVGElement;
@@ -23,29 +58,36 @@ export abstract class WiredBase extends LitElement {
   updated(_changed?: PropertyValues) {
     if (this.svg) {
       // condition to render: size is changed
-      const rect = this.getBoundingClientRect();
-      if (!this.shouldUpdateWiredShapes(rect, _changed)) {
+      const point = this.getSize();
+      if (!this.shouldUpdateWiredShapes(point, _changed)) {
         return;
       }
       // set size of svg to size of this
-      // consider elevation
-      let elev = 0;
-      if (this.hasAttribute(WiredBase.SHAPE_ATTR) && /elevation=\d+/.test(this.getAttribute(WiredBase.SHAPE_ATTR)!)) {
-        elev = Math.min(parseInt(/elevation=(\d+)/.exec(this.getAttribute(WiredBase.SHAPE_ATTR)!)![1]), 5);
-      }
-      this.svg.setAttribute('width', `${rect.width + (elev ? elev - 1 : 0)}`);
-      this.svg.setAttribute('height', `${rect.height + (elev ? elev - 1 : 0)}`);
+      this.svg.setAttribute('width', `${point[0]}`);
+      this.svg.setAttribute('height', `${point[1]}`);
       // remove old shapes
       this.removeWiredShapes();
       // draw new shapes
       this.renderWiredShapes();
-      this.lastSize = [rect.width, rect.height];
+      this.lastSize = point;
       this.classList.add('wired-rendered');
     }
   }
 
-  protected shouldUpdateWiredShapes(rect: DOMRect, _changed: PropertyValues | undefined): boolean | undefined {
-    return rect.width !== this.lastSize[0] || rect.height !== this.lastSize[1];
+  protected getSize(): Point {
+    // consider elevation
+    let elev = 0;
+    if (this.hasAttribute(WiredBase.SHAPE_ATTR) && /elevation=\d+/.test(this.getAttribute(WiredBase.SHAPE_ATTR)!)) {
+      elev = Math.min(parseInt(/elevation=(\d+)/.exec(this.getAttribute(WiredBase.SHAPE_ATTR)!)![1]), 5);
+    }
+    let rect = this.getBoundingClientRect();
+    let width = rect.width + (elev ? elev - 1 : 0);
+    let height = rect.height + (elev ? elev - 1 : 0);
+    return [width,height];
+  }
+
+  protected shouldUpdateWiredShapes(size: Point, _changed: PropertyValues | undefined): boolean | undefined {
+    return size[0] !== this.lastSize[0] || size[1] !== this.lastSize[1];
   }
 
   disconnectedCallback() {
@@ -67,7 +109,7 @@ export abstract class WiredBase extends LitElement {
    *
    * wired-shape  ::= single-shape[;single-shape;...]
    * single-shape ::= shape[:k=v,k=v,...]
-   * shape        ::= 'rectangle'|'arrow-down'|'arrow-up'
+   * shape        ::= 'rectangle'|'ellipse'|'arrow-down'|'arrow-up'
    * k            ::= 'offset'|'offset-top'|'offset-left'|'offset-bottom'|'offset-right'|'fill'|
    *                  'border'|'elevation'|'class'
    * v            ::= number|string
@@ -161,6 +203,9 @@ export abstract class WiredBase extends LitElement {
               renderElevation(this.svg!, x0, y0, x1, y1, elev);
             }
             break;
+          case "ellipse":
+            svg = ellipse(this.svg!, (x0 + x1) / 2, (y0 + y1) / 2, x1 - x0, y1 - y0);
+            break;
           case "arrow-down":
             svg = polygon(this.svg!, [[x0, y0], [x1, y0], [(x0 + x1) / 2, y1]]);
             break;
@@ -185,4 +230,3 @@ export abstract class WiredBase extends LitElement {
     });
   }
 }
-

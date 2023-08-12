@@ -3,15 +3,15 @@ import {
   CSSResultArray,
   customElement,
   html,
-  property,
+  property, PropertyValues,
   query,
   TemplateResult
 } from 'lit-element';
 import { ellipse, fire, Point, svgNode } from './wired-lib';
-import { BaseCSS, WiredBaseLegacy } from "./wired-base-legacy";
+import { BaseCSS, WiredBase } from './wired-base';
 
 @customElement('wired-radio')
-export class WiredRadio extends WiredBaseLegacy {
+export class WiredRadio extends WiredBase {
   @property({ type: Boolean }) checked = false;
   @property({ type: Boolean, reflect: true }) disabled = false;
   @property({ type: String, reflect: true }) name?: string;
@@ -76,19 +76,6 @@ export class WiredRadio extends WiredBaseLegacy {
     ];
   }
 
-  focus() {
-    if (this.input) {
-      this.input.focus();
-    } else {
-      super.focus();
-    }
-  }
-
-  wiredRender(force = false) {
-    super.wiredRender(force);
-    this.refreshCheckVisibility();
-  }
-
   render(): TemplateResult {
     return html`
       <label id="container" class="${this.focused ? 'focused' : ''}">
@@ -100,36 +87,50 @@ export class WiredRadio extends WiredBaseLegacy {
           @blur="${() => this.focused = false}">
         <span><slot></slot></span>
         <div id="overlay">
-          <svg></svg>
+          <svg data-wired-shape="ellipse"></svg>
         </div>
       </label>
     `;
+  }
+
+  updated(_changed?: PropertyValues) {
+    super.updated(_changed);
+    this.refreshCheckVisibility();
+  }
+
+  protected getSize(): Point {
+    return [24, 24];
+  }
+
+  protected renderWiredShapes() {
+    super.renderWiredShapes();
+    this.svgCheck = svgNode('g');
+    this.svg!.appendChild(this.svgCheck);
+    const size = this.getSize();
+    const iw = Math.max(size[0] * 0.6, 5);
+    const ih = Math.max(size[1] * 0.6, 5);
+    ellipse(this.svgCheck, size[0] / 2, size[1] / 2, iw, ih);
+  }
+
+  focus() {
+    if (this.input) {
+      this.input.focus();
+    } else {
+      super.focus();
+    }
   }
 
   private onChange() {
     this.checked = this.input!.checked;
     this.refreshCheckVisibility();
     if (this.checked) {
-      document.querySelectorAll(`wired-radio[name="${this.name}"]`).forEach((element => {
+      document.querySelectorAll(`wired-radio[name="${this.name}"]`).forEach(( element => {
         if (element != this) {
           ( element as WiredRadio ).checked = false;
         }
-      }));
+      } ));
     }
     fire(this, 'change', { checked: this.checked });
-  }
-
-  protected canvasSize(): Point {
-    return [24, 24];
-  }
-
-  protected draw(svg: SVGSVGElement, size: Point) {
-    ellipse(svg, size[0] / 2, size[1] / 2, size[0], size[1]);
-    this.svgCheck = svgNode('g');
-    svg.appendChild(this.svgCheck);
-    const iw = Math.max(size[0] * 0.6, 5);
-    const ih = Math.max(size[1] * 0.6, 5);
-    ellipse(this.svgCheck, size[0] / 2, size[1] / 2, iw, ih);
   }
 
   private refreshCheckVisibility() {

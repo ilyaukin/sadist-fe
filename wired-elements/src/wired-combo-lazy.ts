@@ -249,7 +249,8 @@ export class WiredComboLazy extends WiredBase {
     this.setCardShowing(true);
   }
 
-  firstUpdated() {
+  firstUpdated(_changedProperties: PropertyValues) {
+    super.firstUpdated(_changedProperties);
     this.setAttribute('role', 'combobox');
     this.setAttribute('aria-haspopup', 'listbox');
 
@@ -303,8 +304,8 @@ export class WiredComboLazy extends WiredBase {
     });
   }
 
-  updated(changed: PropertyValues) {
-    if (changed.has('disabled')) {
+  updated(changed?: PropertyValues) {
+    if (changed?.has('disabled')) {
       this.refreshDisabledState();
     }
     const textBounds = this.shadowRoot!.getElementById('textPanel')!.getBoundingClientRect();
@@ -313,11 +314,11 @@ export class WiredComboLazy extends WiredBase {
 
     // aria
     this.setAttribute('aria-expanded', `${this.cardShowing}`);
-    if (changed.has('values')) {
+    if (changed?.has('values')) {
       this.selectedValue = this.values.find(value1 => value1.value === this.selected);
       this.updateItemNodes(this.values.slice(0, this.depth));
     }
-    if (changed.has('selected') && !this.selected) {
+    if (changed?.has('selected') && !this.selected) {
       (this.shadowRoot!.getElementById('searchInput') as HTMLInputElement).value = '';
     }
   }

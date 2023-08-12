@@ -1,4 +1,3 @@
-import { BaseCSS } from './wired-base-legacy';
 import {
   css,
   CSSResultArray,
@@ -8,7 +7,7 @@ import {
   PropertyValues,
   TemplateResult
 } from 'lit-element';
-import { WiredBase } from "./wired-base";
+import { BaseCSS, WiredBase } from "./wired-base";
 
 @customElement('wired-card')
 export class WiredCard extends WiredBase {

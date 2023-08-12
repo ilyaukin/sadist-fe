@@ -175,7 +175,8 @@ export class WiredCombo extends WiredBase {
     `;
   }
 
-  firstUpdated() {
+  firstUpdated(_changedProperties: PropertyValues) {
+    super.firstUpdated(_changedProperties);
     this.setAttribute('role', 'combobox');
     this.setAttribute('aria-haspopup', 'listbox');
 
@@ -229,8 +230,8 @@ export class WiredCombo extends WiredBase {
     });
   }
 
-  updated(changed: PropertyValues) {
-    if (changed.has('disabled')) {
+  updated(changed?: PropertyValues) {
+    if (changed?.has('disabled')) {
       this.refreshDisabledState();
     }
     const textBounds = this.shadowRoot!.getElementById('textPanel')!.getBoundingClientRect();
