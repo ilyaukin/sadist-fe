@@ -390,9 +390,4 @@ export interface DsInfo {
    * If {@link meta} is final, i.e. all server-side processing of the DS is done
    */
   isMetaFinal(): boolean;
-
-  /**
-   * to be able to define auxilary fields or methods with names starting with __
-   */
-  [x: `__${string}`]: any;
 }

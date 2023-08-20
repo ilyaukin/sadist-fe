@@ -11,11 +11,12 @@ import {
   VizMeta,
   VizPipeline
 } from '../model/ds';
+import { __as } from '../helper/type-helper';
 
 /**
  * Default object containing all functions of {@link DsInfo}
  */
-export const defaultDsInfo: DsInfo = {
+export const defaultDsInfo: DsInfo = __as<DsInfo>({
 
   meta: {},
 
@@ -294,7 +295,7 @@ export const defaultDsInfo: DsInfo = {
       }
     }
   },
-};
+});
 
 export function reduceDsInfo(dsInfo: DsInfo, action: DsInfoAction): DsInfo {
   switch (action.type) {

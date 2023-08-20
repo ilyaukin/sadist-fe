@@ -95,7 +95,8 @@ const ColMultiselectFilter = <T extends ValueType | ComplexValueType>({
     if (id === ALL) {
       removeAll();
     } else if (id === UNCATEGORIZED) {
-      selectValue(null as T);
+      // @ts-ignore
+      selectValue(null);
     } else {
       selectValue(index[id]);
     }

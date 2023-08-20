@@ -28,8 +28,8 @@ declare global {
       ['wired-button']: CustomElement<WiredButton>;
       ['wired-combo']: CustomElementWithEvent<WiredCombo, 'selected'>;
       ['wired-radio']: CustomElementWithEvent<WiredRadio, 'change'>;
-      ['wired-input']: CustomElement<WiredInput>;
-      ['wired-search-input']: CustomElementWithEvent<WiredSearchInput, 'close'>;
+      ['wired-input']: CustomElementWithEvent<WiredInput, 'change' | 'input'>;
+      ['wired-search-input']: CustomElementWithEvent<WiredSearchInput, 'change' | 'input' | 'close'>;
       ['wired-checkbox']: CustomElementWithEvent<WiredCheckbox, 'change'>;
       ['wired-combo-lazy']: CustomElementWithEvent<WiredComboLazy, 'selected'>;
       ['wired-bar']: CustomElement<WiredBar>;

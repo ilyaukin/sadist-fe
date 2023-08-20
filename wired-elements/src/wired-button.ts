@@ -39,7 +39,7 @@ export class WiredButton extends WiredBase {
           letter-spacing: 1.25px;
           text-transform: uppercase;
           text-align: center;
-          padding: 10px;
+          padding: var(--wired-button-padding, 10px);
           color: inherit;
           outline: none;
         }

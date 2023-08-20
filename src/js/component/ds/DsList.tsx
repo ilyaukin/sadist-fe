@@ -3,7 +3,7 @@ import { WiredCombo } from '/wired-elements/lib/wired-combo';
 import ErrorDialog from "../common/ErrorDialog";
 import Icon from "../../icon/Icon";
 import DsNew from "./DsNew";
-import CancelableDialog from "../common/CancelableDialog";
+import Dialog, { DialogButton } from "../common/Dialog";
 import { isVal } from "../../helper/wired-helper";
 import { DsMeta } from '../../model/ds';
 import UserContext from '../../context/UserContext';
@@ -98,7 +98,12 @@ const DsList = (props: DsListProps) => {
       list = list.filter(item => item.name !== name);
       // add new item
       list = [...list, item];
-      newState = { ...newState, list, index: { ...state.index, [id]: item }, /*to simulate callback*/ newItem: { id, name } };
+      newState = {
+        ...newState,
+        list,
+        index: { ...state.index, [id]: item }, /*to simulate callback*/
+        newItem: { id, name }
+      };
     }
 
     setState(newState);
@@ -122,8 +127,8 @@ const DsList = (props: DsListProps) => {
         pic = Icon.question;
     }
     return <wired-item
-      key={item.id}
-      value={item.id}>
+        key={item.id}
+        value={item.id}>
       <img className="item" src={pic} alt={item.type || '?'}/>
       {item.name}
     </wired-item>;
@@ -132,17 +137,19 @@ const DsList = (props: DsListProps) => {
   const { loading, list, creatingNew } = state;
 
   return <div style={{ margin: '10px' }}>
-    <CancelableDialog open={creatingNew} onCancel={onCancelDsCreate}>
+    <Dialog className="new-dialog"
+            open={creatingNew} buttons={[DialogButton.FULL, DialogButton.CLOSE]}
+            onClose={onCancelDsCreate}>
       <DsNew onDsCreated={onDsCreated}/>
-    </CancelableDialog>
+    </Dialog>
     <wired-combo
-      ref={combo}
-      disabled={isVal(loading)}
-      onselected={(e: CustomEvent) => onDsSelected(e.detail?.selected, e)}
+        ref={combo}
+        disabled={isVal(loading)}
+        onselected={(e: CustomEvent) => onDsSelected(e.detail?.selected, e)}
     >
       {renderItem({ id: 'new', 'name': 'New', type: 'New' })}
       {list.map(
-        item => renderItem(item)
+          item => renderItem(item)
       )}
     </wired-combo>
   </div>
