@@ -60,9 +60,6 @@ class GoogleSheetProvider extends AbstractProvider {
             extra: { source: url, access: { type: 'public' } },
           };
 
-          url = url.replace('htmlview', 'export');
-          url += (url.indexOf('?') === -1 ? '?' : '&') + 'format=csv';
-
           fetch(url).then((response) => {
             let header = response.headers.get('Content-disposition');
             if (header) {

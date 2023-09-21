@@ -60,6 +60,11 @@ class GoogleSheetProviderScreen extends Component<GoogleSheetProviderScreenProps
     });
   }
 
+  parseUrl(url: string): string | null {
+    const groups = url.match(/^https:\/\/docs\.google\.com\/spreadsheets\/d\/[a-zA-Z0-9]+\//);
+    return !groups ? null : `${groups[0]}export?format=csv`;
+  }
+
   getSheetUrl(): Promise<string> {
     // here we can get direct link to the selected sheet
     // but it **LIKELY** will be blocked by browser's cross-site policy
@@ -71,19 +76,18 @@ class GoogleSheetProviderScreen extends Component<GoogleSheetProviderScreenProps
             listError: selectedSheet?.id ? undefined : message
           },
           () => selectedSheet?.id ?
-              resolve(`https://docs.google.com/spreadsheets/d/${selectedSheet.id}/htmlview`) :
+              resolve(`https://docs.google.com/spreadsheets/d/${selectedSheet.id}/export?format=csv`) :
               reject(new ValidationError(message)));
     });
   }
 
   getDirectUrl(): Promise<string> {
-    const url = this.urlInput?.value;
+    const url = this.urlInput?.value && this.parseUrl(this.urlInput.value);
     return new Promise((resolve, reject) => {
-      const ok = url && url.startsWith('https://docs.google.com/spreadsheets/');
       const message = 'Please enter a valid URL starting with ' +
           'https://docs.google.com/spreadsheets/';
-      this.setState({ ...this.state, urlError: ok ? undefined : message },
-          () => ok ? resolve(url) : reject(new ValidationError(message)));
+      this.setState({ ...this.state, urlError: url ? undefined : message },
+          () => url ? resolve(url) : reject(new ValidationError(message)));
     });
   }
 
@@ -127,7 +131,7 @@ class GoogleSheetProviderScreen extends Component<GoogleSheetProviderScreenProps
         >Select a Sheet
         </wired-radio>
         <GoogleSheetList onSheetSelected={this.onSheetSelected}/>
-        {listError ? <span className="field-error">{listError}</span> : ''}
+        {listError && <span className="field-error">{listError}</span>}
         <Or/>
         <wired-radio
             name="google-sheet-radio"
@@ -142,7 +146,7 @@ class GoogleSheetProviderScreen extends Component<GoogleSheetProviderScreenProps
             id="url"
             onFocus={this.onFocusUrl}
         />
-        {urlError ? <span className="field-error">{urlError}</span> : ''}
+        {urlError && <span className="field-error">{urlError}</span>}
     </div>;
   }
 }
