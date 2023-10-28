@@ -1,5 +1,6 @@
 import React, { HTMLProps } from 'react';
 import Icon from '../../icon/Icon';
+import { scrollToVisible } from '../../helper/scroll-helper';
 
 interface HTMLTreeProps extends HTMLProps<any> {
   node: Node;
@@ -108,22 +109,7 @@ class HTMLTree extends React.Component<HTMLTreeProps> {
 
     // scroll to the node
     let { container } = this.props;
-    if (container) {
-      const containerRect = container?.getBoundingClientRect();
-      const thisRect = this.baseElement?.getBoundingClientRect();
-      // vertically
-      if (thisRect &&
-          !( containerRect.top <= thisRect.top &&
-              thisRect.top < containerRect.bottom )) {
-        container.scrollTo({ top: container.scrollTop + thisRect.top - containerRect.top });
-      }
-      // horizontally
-      if (thisRect &&
-          !( containerRect.left <= thisRect.left &&
-              thisRect.left < containerRect.right )) {
-        container.scrollTo({ left: container.offsetLeft + thisRect.left - containerRect.left });
-      }
-    }
+    scrollToVisible(this.baseElement, container);
   }
 
   deselect() {

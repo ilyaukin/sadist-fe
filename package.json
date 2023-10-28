@@ -57,6 +57,8 @@
     "monaco-editor": "^0.43.0",
     "react": "^0.0.0-experimental-ee8509801-20230117",
     "react-dom": "^0.0.0-experimental-ee8509801-20230117",
+    "react-router": "^6.17.0",
+    "react-router-dom": "^6.17.0",
     "serialize-javascript": "^6.0.1"
   },
   "overrides": {

@@ -22,6 +22,12 @@ export type VizAction =
 export type ValueType = string | number | boolean | null;
 
 /**
+ * Address of a cell in the table.
+ * In format row id, column number on name
+ */
+export type CellType = [string | number, string | number];
+
+/**
  * {@link Predicate} that matches exact value
  */
 export interface EqPredicate<T> {
@@ -338,16 +344,22 @@ export interface DsInfo {
   err?: string;
 
   /**
+   * Cell selected by default
+   */
+  anchor?: CellType;
+
+  /**
    * Initialize the {@link DsInfo} object given new {@link meta},
    * when a user selects the other DS or DS processing on the server updates.
    *
    * ***WARNING*** it can use some intellectual algorithm to map meta
    * to the available visualization and filters, better to invent some
    * meta-language to describe it in a declarative manner.
-   * @param meta {@link meta} returned by the server
+   * @param info can contain {@link meta} returned by the server,
+   * pre-set visualization and filters
    * @return new copy of the object
    */
-  init(meta: DsMeta): DsInfo;
+  init(info: Partial<DsInfo>): DsInfo;
 
   /**
    * Add proposed graph to visualization.

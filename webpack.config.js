@@ -65,7 +65,7 @@ module.exports = {
     new HtmlWebPackPlugin({
       template: "./src/component-demo.html",
       filename: "./component-demo.html",
-      chunks: ["component-demo"]
+      chunks: ["demo"]
     }),
     new CopyWebpackPlugin({
       patterns: [{
@@ -76,7 +76,7 @@ module.exports = {
     new HtmlWebPackPlugin({
       template: "./src/privacy-policy.html",
       filename: "./privacy-policy.html",
-      chunks: ["privacy-policy"]
+      chunks: ["policy"]
     }),
     new HtmlWebPackPlugin({
       template: "./src/tos.html",

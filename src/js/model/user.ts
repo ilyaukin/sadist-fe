@@ -21,6 +21,11 @@ export interface UserContextData {
     loading: boolean;
 
     /**
+     * if loading of the current user is finished
+     */
+    loaded: boolean;
+
+    /**
      * if login in progress
      */
     isLogin: boolean;

@@ -10,6 +10,11 @@ a:hover {
     background-color: yellow;
 }
 
+a.bare {
+    text-decoration: underline;
+    cursor: pointer;
+}
+
 h1, h2, h3 {
     text-align: center;
 }
@@ -25,6 +30,11 @@ h1, h2, h3 {
 table, tr, th, td {
     border: solid 1px;
     border-collapse: collapse;
+}
+
+td:focus {
+    background-color: rgba(11, 87, 208, .7);
+    box-shadow: 1px 1px blue;
 }
 
 .fake-table {

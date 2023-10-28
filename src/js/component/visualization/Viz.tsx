@@ -10,9 +10,10 @@ import ErrorDialog from '../common/ErrorDialog';
 import Loader from '../common/Loader';
 import VizHint from './VizHint';
 import VizGraph from './VizGraph';
-import { DsInfo, DsMeta, VizData, VizMeta } from '../../model/ds';
+import { DsInfo, VizData, VizMeta } from '../../model/ds';
 import { DsInfoAction, DsInfoActionType } from '../../reducer/dsInfo-reducer';
 import { useQueuedRequest } from '../../hook/queued-hook';
+import { getMeta } from '../../helper/data-helper';
 
 interface VizProps {
   vizHeight?: number;
@@ -35,7 +36,7 @@ const Viz = (props: VizProps, ref: React.ForwardedRef<VizElement>) => {
 
   const timeoutHandle = useRef<NodeJS.Timeout | undefined>();
 
-  useImperativeHandle(ref, () => ({ element: elementRef.current, ...state }));
+  useImperativeHandle(ref, () => ( { element: elementRef.current, ...state } ));
 
   useEffect(() => {
     if (timeoutHandle.current) {
@@ -57,7 +58,7 @@ const Viz = (props: VizProps, ref: React.ForwardedRef<VizElement>) => {
     }
 
     return fetch(`/ds/${dsId}/visualize?` +
-      `pipeline=${encodeURIComponent(JSON.stringify(pipeline))}`).then((response) => {
+        `pipeline=${encodeURIComponent(JSON.stringify(pipeline))}`).then((response) => {
       response.json().then((data) => {
         if (data.success) {
           // put vizMeta to the state to make it consistent with vizData
@@ -82,28 +83,20 @@ const Viz = (props: VizProps, ref: React.ForwardedRef<VizElement>) => {
     }
 
     return setTimeout(() => {
-      fetch(`/ls?id=${dsId}`).then((response) => {
-        response.json().then((data) => {
-          if (!data.success) {
-            handleUpdateStatusError(data.error || 'Unknown error');
-          } else {
-            const meta = data.list.find((record: DsMeta) => record.id === dsId);
-            if (!meta) {
-              handleUpdateStatusError(`Server did not return record for id=${dsId}`);
-            } else {
-              if (props.dsId === meta.id) {
-                dispatchDsInfo({ type: DsInfoActionType.UPDATE_STATUS_SUCCESS, meta });
-                scheduleUpdateStatus();
-              }
-            }
-          }
-        }).catch((e) => handleUpdateStatusError('Error parsing response: ' + e.toString()));
-      }).catch((e) => handleUpdateStatusError('Error fetching data: ' + e.toString()));
+      getMeta(dsId)
+          .then((meta) => {
+            dispatchDsInfo({
+              type: DsInfoActionType.UPDATE_STATUS_SUCCESS,
+              meta,
+            });
+          })
+          .catch((err) => {
+            dispatchDsInfo({
+              type: DsInfoActionType.UPDATE_STATUS_ERROR,
+              err: err.toString(),
+            })
+          })
     }, 1000);
-  }
-
-  function handleUpdateStatusError(err: string) {
-    props.dispatchDsInfo({ type: DsInfoActionType.UPDATE_STATUS_ERROR, err });
   }
 
   function handleError(err: string) {
