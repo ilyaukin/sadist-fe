@@ -7,10 +7,10 @@ import {
   TemplateResult
 } from 'lit-element';
 import { line, Point } from './wired-lib';
-import { BaseCSS, WiredBaseLegacy } from "./wired-base-legacy";
+import { BaseCSS, WiredBase } from './wired-base';
 
 @customElement('wired-divider')
-export class WiredDivider extends WiredBaseLegacy {
+export class WiredDivider extends WiredBase {
   @property({ type: Number }) elevation = 1;
 
   static get styles(): CSSResultArray {
@@ -29,16 +29,22 @@ export class WiredDivider extends WiredBaseLegacy {
     return html`<svg></svg>`;
   }
 
-  protected canvasSize(): Point {
-    const size = this.getBoundingClientRect();
-    const elev = Math.min(Math.max(1, this.elevation), 5);
-    return [size.width, elev * 6];
+  protected getSize(): Point {
+    const rect = this.getBoundingClientRect();
+    const elev = this.getElev();
+    return [rect.width, elev * 6];
   }
 
-  protected draw(svg: SVGSVGElement, size: Point) {
-    const elev = Math.min(Math.max(1, this.elevation), 5);
+  protected renderWiredShapes() {
+    super.renderWiredShapes();
+    const rect = this.getBoundingClientRect();
+    const elev = this.getElev();
     for (let i = 0; i < elev; i++) {
-      line(svg, 0, (i * 6) + 3, size[0], (i * 6) + 3);
+      line(this.svg!, 0, (i * 6) + 3, rect.width, (i * 6) + 3);
     }
+  }
+
+  private getElev() {
+    return Math.min(Math.max(1, this.elevation), 5);
   }
 }

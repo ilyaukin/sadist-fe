@@ -1,7 +1,7 @@
 import React, {
   CSSProperties,
   Dispatch,
-  HTMLProps,
+  HTMLProps, ReactNode,
   useEffect,
   useRef,
   useState
@@ -9,9 +9,10 @@ import React, {
 import ErrorDialog from "../common/ErrorDialog";
 import ColDropdown from "./ColDropdown";
 import Loader from "../common/Loader";
-import { DsInfo } from "../../model/ds";
+import { CellType, DsInfo } from "../../model/ds";
 import { DsInfoAction } from '../../reducer/dsInfo-reducer';
 import { useQueuedRequest } from '../../hook/queued-hook';
+import { scrollToVisible } from '../../helper/scroll-helper';
 
 interface DsTableProps {
   /**
@@ -23,6 +24,7 @@ interface DsTableProps {
   dispatchDsInfo: Dispatch<DsInfoAction>;
   onLoadDs: (ds: any[]) => any;
   ds: any[];
+  onSelectCell: (cell: CellType) => any;
 }
 
 interface DsTableState {
@@ -37,24 +39,34 @@ const DsTable = (props: DsTableProps) => {
 
   const colRefs = useRef<( HTMLTableDataCellElement | null )[] | undefined>();
 
-  let table: HTMLDivElement | null;
+  const tableRef = useRef<HTMLDivElement | null>(null);
 
-  let tableContent: HTMLDivElement | null;
+  const tableContentRef = useRef<HTMLDivElement | null>(null);
+
+  const selectedCellRef = useRef<Element | null>(null);
+
+  const { tableContentHeight, dsId, dsInfo, onLoadDs, ds, onSelectCell } = props;
 
   useEffect(() => {
     // console.log(colRefs.current?.map(colRef => colRef?.offsetWidth))
     if (colRefs.current) {
-      const { tableContentHeight, dsInfo, ds } = props;
-      const table = renderTable(dsInfo.meta.cols!, ds, tableContentHeight);
+      const table = renderTable(tableContentHeight);
       setState({ ...state, table, loading: false });
     }
-  }, [props.tableContentHeight, props.dsInfo, props.ds]);
+  }, [tableContentHeight, dsInfo, ds]);
 
-  const { dsId, dsInfo, onLoadDs, ds } = props;
+  useEffect(() => {
+    if (state.table && dsInfo.anchor) {
+      selectCell(dsInfo.anchor);
+    }
+  }, [state.table, dsInfo.anchor]);
+
   const query = dsInfo.getFilterQuery();
+  const colnames = dsInfo.meta.cols;
+  const coltypes = colnames?.map(col => col.split(':')[1]);
 
-  useQueuedRequest({ dsId, query }, ({ dsId, query }) => {
-    if (!dsId) {
+  useQueuedRequest({ dsId, cols: colnames, query }, ({ dsId, cols, query }) => {
+    if (!dsId || !cols) {
       return Promise.resolve();
     }
 
@@ -64,32 +76,54 @@ const DsTable = (props: DsTableProps) => {
     setState({ ...state, loading: true });
 
     return fetch(!query ?
-      `/ds/${dsId}` :
-      `/ds/${dsId}/filter?query=${encodeURIComponent(JSON.stringify(query))}`)
-      .then((response) => {
-        response.json().then((data) => {
+        `/ds/${dsId}` :
+        `/ds/${dsId}/filter?query=${encodeURIComponent(JSON.stringify(query))}`)
+        .then((response) => response.json())
+        .then((data) => {
           // for the current DS colRefs will be assigned after rendering with received data
-          colRefs.current = new Array(dsInfo.meta.cols?.length);
+          colRefs.current = new Array(cols.length);
           if (data.success) {
             onLoadDs(data.list);
           } else {
             handleError('Error: ' + ( data.error || 'Unknown error' ));
           }
         }).catch((err) => {
-          handleError(`Error parsing json: ${err.toString()}`)
-        })
-      }).catch((err) => {
-      handleError(`Error fetching ${dsId}: ` + err.toString());
-    });
-  }, [props.dsId, props.dsInfo]);
+          handleError(`Error fetching ${dsId}: ` + err.toString());
+        });
+  }, [props.dsInfo]);
 
   function handleError(err: string) {
     onLoadDs([]);
     ErrorDialog.raise(err);
   }
 
+  function selectCell(cell: CellType) {
+    // find element
+    const element = tableContentRef.current
+        ?.querySelector(typeof cell[1] == 'number' ?
+            `tbody tr[data-id="${cell[0]}"] td:nth-child(${cell[1] + 1})` :
+            `tbody tr[data-id="${cell[0]}"] td[data-id="${cell[1]}"]`);
+
+    if (selectedCellRef.current === element) {
+      return;
+    }
+
+    if (element) {
+      // focus element
+      ( element as HTMLElement ).focus();
+
+      // scroll for visibility
+      scrollToVisible(element, tableContentRef.current);
+
+      // propagate state
+      onSelectCell(cell);
+    }
+
+    selectedCellRef.current = element || null;
+  }
+
   const onScrollHorizontally = () => {
-    tableContent!.style.width = `calc(100% + ${table!.scrollLeft}px)`;
+    tableContentRef.current!.style.width = `calc(100% + ${tableRef.current!.scrollLeft}px)`;
   };
 
   const refColHeader = (e: HTMLTableHeaderCellElement | null, n: number) => {
@@ -117,13 +151,13 @@ const DsTable = (props: DsTableProps) => {
     return <th {...thProps}>
       <div className="col-space">
         {col}
-        {(dsInfo.vizMetaProposedByCol?.[col] || dsInfo.filterProposalsByCol?.[col]) && isReal ?
-          <ColDropdown
-            col={col}
-            dsInfo={dsInfo}
-            dispatchDsInfo={dispatchDsInfo}
-          /> :
-          ''}
+        {( dsInfo.vizMetaProposedByCol?.[col] || dsInfo.filterProposalsByCol?.[col] ) && isReal ?
+            <ColDropdown
+                col={col}
+                dsInfo={dsInfo}
+                dispatchDsInfo={dispatchDsInfo}
+            /> :
+            ''}
       </div>
     </th>;
   };
@@ -132,10 +166,26 @@ const DsTable = (props: DsTableProps) => {
 
   const renderRealColHeader = (col: string, n: number) => renderColHeader(col, n, true);
 
-  function renderRow(row: any, colnames: string[], isReal: boolean) {
+  function renderRow(row: any, _n: number, isReal: boolean) {
     const cols = [];
-    for (let i = 0; i < colnames.length; i++) {
-      const v = `${row[colnames[i]]}`;
+    for (let i = 0; i < colnames!.length; i++) {
+      let v = row[colnames![i]];
+      // allow type-specific display
+      let V: ReactNode;
+      switch (coltypes![i]) {
+        case "html":
+          V = <div dangerouslySetInnerHTML={{ __html: v }}/>;
+          break;
+        case "#":
+          V = isNaN(parseInt(v)) ? `${v}` :
+              <a className="bare" onClick={(e) => {
+                e.stopPropagation();
+                selectCell([v, i]);
+              }}>{`#${v}`}</a>;
+          break;
+        default:
+          V = `${v}`;
+      }
 
       const tdProps: HTMLProps<HTMLTableDataCellElement> = {
         key: `row${i}`
@@ -145,36 +195,42 @@ const DsTable = (props: DsTableProps) => {
           minWidth: colRefs.current![i]!.offsetWidth,
           maxWidth: colRefs.current![i]!.offsetWidth
         };
+        tdProps.onClick = () => {
+          selectCell([row.id, colnames![i]]);
+        };
+        tdProps.tabIndex = 0;
       }
 
-      cols.push(<td {...tdProps}>{v}</td>);
+      cols.push(<td data-id={colnames![i]} {...tdProps}>{V}</td>);
     }
 
-    return cols;
+    return <tr key={row.id} data-id={row.id}>{cols}</tr>;
   }
 
-  const renderFakeRow = (row: any, colnames: string[]) => renderRow(row, colnames, false);
+  const renderFakeRow = (row: any, n: number) => {
+    return renderRow(row, n, false);
+  };
 
-  const renderRealRow = (row: any, colnames: string[]) => renderRow(row, colnames, true);
+  const renderRealRow = (row: any, n: number) => {
+    return renderRow(row, n, true);
+  };
 
-  function renderFakeTable(colnames: string[], ds: any[]) {
+  function renderFakeTable() {
     return <div key="fake" className="fake-table">
       <table cellPadding="2">
         <thead>
         <tr>
-          {colnames.map(renderFakeColHeader)}
+          {colnames!.map(renderFakeColHeader)}
         </tr>
         </thead>
         <tbody>
-        {ds.slice(0, 10).map((row) => <tr key={row.id}>
-          {renderFakeRow(row, colnames)}
-        </tr>)}
+        {ds.slice(0, 10).map((row, i) => renderFakeRow(row, i))}
         </tbody>
       </table>
     </div>
   }
 
-  function renderTable(colnames: string[], ds: any[], height = 200) {
+  function renderTable(height = tableContentHeight) {
     const headHeight = colRefs.current![0]!.offsetHeight;
     const outerDivStyle: CSSProperties = {
       position: 'relative',
@@ -203,32 +259,30 @@ const DsTable = (props: DsTableProps) => {
     };
 
     return <div
-      key="real"
-      style={outerDivStyle}
-      ref={e => table = e}
-      onScroll={onScrollHorizontally}
+        key="real"
+        style={outerDivStyle}
+        ref={tableRef}
+        onScroll={onScrollHorizontally}
     >
       <div
-        style={innerDivStyle}
-        ref={e => tableContent = e}
+          style={innerDivStyle}
+          ref={tableContentRef}
       >
         <table style={tableStyle}>
           <thead>
           <tr style={theadTrStyle}>
-            {colnames.map(renderRealColHeader)}
+            {colnames!.map(renderRealColHeader)}
           </tr>
           </thead>
           <tbody>
-          {ds.map((row) => <tr key={row.id}>
-            {renderRealRow(row, colnames)}
-          </tr>)}
+          {ds.map((row, i) => renderRealRow(row, i))}
           </tbody>
         </table>
       </div>
     </div>
   }
 
-  if (!dsId || !dsInfo.meta.cols) {
+  if (!dsId || !colnames) {
     return <br/>;
   }
 
@@ -239,8 +293,8 @@ const DsTable = (props: DsTableProps) => {
       // first we render table inside div of height=0,
       // with default table-row positioning, in order
       // to determine natural col widths with aid of
-      // browser's rendering engine engine
-      renderFakeTable(dsInfo.meta.cols, ds),
+      // browser's rendering engine
+      renderFakeTable(),
 
       // after that values are defined, render proper
       // table using ReactDom.render in componentDidUpdate

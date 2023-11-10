@@ -7,10 +7,10 @@ import {
   TemplateResult
 } from 'lit-element';
 import { ellipse, hachureEllipseFill, Point } from './wired-lib';
-import { BaseCSS, WiredBaseLegacy } from "./wired-base-legacy";
+import { BaseCSS, WiredBase } from './wired-base';
 
 @customElement('wired-spinner')
-export class WiredSpinner extends WiredBaseLegacy {
+export class WiredSpinner extends WiredBase {
   @property({ type: Boolean }) spinning = false;
   @property({ type: Number }) duration = 1500;
 
@@ -45,15 +45,26 @@ export class WiredSpinner extends WiredBaseLegacy {
     return html`<svg></svg>`;
   }
 
-  protected canvasSize(): Point {
+  updated() {
+    super.updated();
+    if (this.spinning) {
+      this.startSpinner();
+    } else {
+      this.stopSpinner();
+    }
+  }
+
+  protected getSize(): Point {
     return [76, 76];
   }
 
-  protected draw(svg: SVGSVGElement, size: Point) {
-    ellipse(svg, size[0] / 2, size[1] / 2, Math.floor(size[0] * 0.8), Math.floor(0.8 * size[1]));
+  protected renderWiredShapes() {
+    super.renderWiredShapes();
+    const size = this.getSize();
+    ellipse(this.svg!, size[0] / 2, size[1] / 2, Math.floor(size[0] * 0.8), Math.floor(0.8 * size[1]));
     this.knob = hachureEllipseFill(0, 0, 20, 20);
     this.knob.classList.add('knob');
-    svg.appendChild(this.knob);
+    this.svg!.appendChild(this.knob);
     this.updateCursor();
   }
 
@@ -64,15 +75,6 @@ export class WiredSpinner extends WiredBaseLegacy {
         Math.round(38 + 25 * Math.sin(this.value * Math.PI * 2))
       ];
       this.knob.style.transform = `translate3d(${position[0]}px, ${position[1]}px, 0) rotateZ(${Math.round(this.value * 360 * 2)}deg)`;
-    }
-  }
-
-  updated() {
-    super.updated();
-    if (this.spinning) {
-      this.startSpinner();
-    } else {
-      this.stopSpinner();
     }
   }
 

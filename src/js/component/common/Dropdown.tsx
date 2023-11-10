@@ -59,7 +59,7 @@ const __Dropdown: React.ForwardRefRenderFunction<DropdownElement, DropdownProps>
 
   return <div ref={root} className={className}>
     <div style={{ width: "100%" }}>
-      <a ref={dropdown} href='#' onClick={onOpen}>
+      <a ref={dropdown} className="bare" onClick={onOpen}>
         {toggle}
       </a>
     </div>

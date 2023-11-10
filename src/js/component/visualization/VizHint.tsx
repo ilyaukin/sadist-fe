@@ -89,7 +89,7 @@ const VizHint: React.FC<VizHintProps> = ({
                         .map((vizMeta, i) => {
                           const link = <a
                               key={vizMeta.key}
-                              href="#"
+                              className="bare"
                               onClick={() => dispatchDsInfo({
                                 type: DsInfoActionType.ADD_VIZ,
                                 vizMeta

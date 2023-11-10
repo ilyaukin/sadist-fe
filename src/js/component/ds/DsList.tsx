@@ -3,12 +3,14 @@ import { WiredCombo } from '/wired-elements/lib/wired-combo';
 import ErrorDialog from "../common/ErrorDialog";
 import Icon from "../../icon/Icon";
 import DsNew from "./DsNew";
-import CancelableDialog from "../common/CancelableDialog";
+import Dialog, { DialogButton } from "../common/Dialog";
 import { isVal } from "../../helper/wired-helper";
 import { DsMeta } from '../../model/ds';
 import UserContext from '../../context/UserContext';
 
 interface DsListProps {
+  dsId?: string;
+  onLoadList: (dsList: DsMeta[]) => any;
   onDsSelected: (dsMeta: DsMeta) => any;
 }
 
@@ -27,47 +29,46 @@ const DsList = (props: DsListProps) => {
     index: {},
   });
 
-  const combo = useRef<WiredCombo | null>(null);
+  const { dsId, onLoadList, onDsSelected } = props;
 
-  const dsValue = useRef<any | undefined>();
+  const comboRef = useRef<WiredCombo | null>(null);
 
   const userContextValue = useContext(UserContext);
 
   useEffect(() => {
-    fetch('/ls').then((response) => {
-      response.json().then((data) => {
-        if (data.success && data.list) {
-          let index: { [dsId: string]: DsMeta } = {}
-          data.list.forEach((v: DsMeta) => {
-            index[v.id!] = v;
-          });
+    if (userContextValue.loaded) {
+      fetch('/ls')
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success && data.list) {
+              let index: { [dsId: string]: DsMeta } = {}
+              data.list.forEach((v: DsMeta) => {
+                index[v.id!] = v;
+              });
 
-          setState({
-            ...state,
-            list: data.list,
-            loading: false,
-            index
-          });
-        } else {
-          ErrorDialog.raise('Error: ' + ( data.error || 'Unknown error' ))
-        }
-      }).catch((err) => {
-        ErrorDialog.raise('Error parsing json: ' + err.toString())
+              setState({
+                ...state,
+                list: data.list,
+                loading: false,
+                index
+              });
+              onLoadList(data.list);
+            } else {
+              ErrorDialog.raise('Error: ' + ( data.error || 'Unknown error' ))
+            }
+          }).catch((err) => {
+        ErrorDialog.raise('Error fetching data: ' + err.toString())
       })
-    }).catch((err) => {
-      ErrorDialog.raise('Error fetching data: ' + err.toString())
-    })
-  }, [userContextValue.user]);
+    }
+  }, [userContextValue.user, userContextValue.loaded]);
 
   useEffect(() => {
     if (state.newItem) {
-      const { id, name } = state.newItem;
-      combo.current!.value = { value: id!, text: name! };
-      combo.current!.dispatchEvent(new CustomEvent('selected', { detail: { selected: id } }));
+      onDsSelected(state.newItem);
     }
   }, [state.newItem]);
 
-  function onDsSelected(value: string, _event: CustomEvent) {
+  function onComboValueSelected(value: string, _event: CustomEvent) {
     // special handling for creating new ds
     if (value === 'new') {
       setState({ ...state, creatingNew: true });
@@ -76,9 +77,6 @@ const DsList = (props: DsListProps) => {
 
     // pass DS list record (meta information about DS)
     const meta = state.index[value] || { id: value };
-
-    dsValue.current = combo.current!.value;
-    const { onDsSelected } = props;
     onDsSelected(meta);
   }
 
@@ -98,7 +96,12 @@ const DsList = (props: DsListProps) => {
       list = list.filter(item => item.name !== name);
       // add new item
       list = [...list, item];
-      newState = { ...newState, list, index: { ...state.index, [id]: item }, /*to simulate callback*/ newItem: { id, name } };
+      newState = {
+        ...newState,
+        list,
+        index: { ...state.index, [id]: item }, /*to simulate callback*/
+        newItem: item,
+      };
     }
 
     setState(newState);
@@ -106,7 +109,6 @@ const DsList = (props: DsListProps) => {
 
   const onCancelDsCreate = () => {
     setState({ ...state, creatingNew: undefined });
-    combo.current!.value = dsValue.current;
   }
 
   function renderItem(item: DsMeta) {
@@ -122,8 +124,8 @@ const DsList = (props: DsListProps) => {
         pic = Icon.question;
     }
     return <wired-item
-      key={item.id}
-      value={item.id}>
+        key={item.id}
+        value={item.id}>
       <img className="item" src={pic} alt={item.type || '?'}/>
       {item.name}
     </wired-item>;
@@ -132,18 +134,19 @@ const DsList = (props: DsListProps) => {
   const { loading, list, creatingNew } = state;
 
   return <div style={{ margin: '10px' }}>
-    <CancelableDialog open={creatingNew} onCancel={onCancelDsCreate}>
+    <Dialog className="new-dialog"
+            open={creatingNew} buttons={[DialogButton.FULL, DialogButton.CLOSE]}
+            onClose={onCancelDsCreate}>
       <DsNew onDsCreated={onDsCreated}/>
-    </CancelableDialog>
+    </Dialog>
     <wired-combo
-      ref={combo}
-      disabled={isVal(loading)}
-      onselected={(e: CustomEvent) => onDsSelected(e.detail?.selected, e)}
+        ref={comboRef}
+        disabled={isVal(loading)}
+        selected={dsId}
+        onselected={(e: CustomEvent) => onComboValueSelected(e.detail?.selected, e)}
     >
       {renderItem({ id: 'new', 'name': 'New', type: 'New' })}
-      {list.map(
-        item => renderItem(item)
-      )}
+      {list.map(renderItem)}
     </wired-combo>
   </div>
 }

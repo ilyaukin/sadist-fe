@@ -4,14 +4,15 @@ import {
   customElement,
   html,
   property,
+  PropertyValues,
   query,
   TemplateResult
 } from 'lit-element';
-import { ellipse, fire, line, Point, rectangle, svgNode } from './wired-lib';
-import { BaseCSS, WiredBaseLegacy } from './wired-base-legacy';
+import { ellipse, fire, line, svgNode } from './wired-lib';
+import { BaseCSS, WiredBase } from './wired-base';
 
 @customElement('wired-search-input')
-export class WiredSearchInput extends WiredBaseLegacy {
+export class WiredSearchInput extends WiredBase {
   @property({ type: Boolean, reflect: true }) disabled = false;
   @property({ type: String }) placeholder = '';
   @property({ type: String }) autocomplete = '';
@@ -120,21 +121,9 @@ export class WiredSearchInput extends WiredBaseLegacy {
     }
   }
 
-  focus(options?: FocusOptions) {
-    const input = this.input;
-    if (input) {
-      input.focus(options);
-    } else {
-      this.pendingFocus = true;
-    }
-  }
-
-  wiredRender(force = false) {
-    super.wiredRender(force);
-    this.refreshIconState();
-  }
-
-  firstUpdated() {
+  firstUpdated(_changed: PropertyValues) {
+    super.firstUpdated(_changed);
+    this.setAttribute(WiredBase.SHAPE_ATTR, 'rectangle:offset=2');
     this.value = this.pendingValue || this.value || this.getAttribute('value') || '';
     delete this.pendingValue;
     if (this.pendingFocus) {
@@ -143,25 +132,35 @@ export class WiredSearchInput extends WiredBaseLegacy {
     }
   }
 
-  protected canvasSize(): Point {
-    const s = this.getBoundingClientRect();
-    return [s.width, s.height];
+  updated(_changed?: PropertyValues) {
+    super.updated(_changed);
+    this.refreshIconState();
   }
 
-  protected draw(svg: SVGSVGElement, size: Point) {
-    rectangle(svg, 2, 2, size[0] - 2, size[1] - 2);
+  protected renderWiredShapes() {
+    super.renderWiredShapes();
 
+    const size = this.getSize();
     this.searchIcon = svgNode('g');
     this.searchIcon.classList.add('thicker');
-    svg.appendChild(this.searchIcon);
+    this.svg!.appendChild(this.searchIcon);
     ellipse(this.searchIcon, size[0] - 30, (size[1] - 30) / 2 + 10, 20, 20);
     line(this.searchIcon, size[0] - 10, (size[1] - 30) / 2 + 30, size[0] - 25, (size[1] - 30) / 2 + 15);
 
     this.closeIcon = svgNode('g');
     this.closeIcon.classList.add('thicker');
-    svg.appendChild(this.closeIcon);
+    this.svg!.appendChild(this.closeIcon);
     line(this.closeIcon, size[0] - 33, (size[1] - 30) / 2 + 2, size[0] - 7, (size[1] - 30) / 2 + 28);
     line(this.closeIcon, size[0] - 7, (size[1] - 30) / 2 + 2, size[0] - 33, (size[1] - 30) / 2 + 28);
+  }
+
+  focus(options?: FocusOptions) {
+    const input = this.input;
+    if (input) {
+      input.focus(options);
+    } else {
+      this.pendingFocus = true;
+    }
   }
 
   private refreshIconState() {

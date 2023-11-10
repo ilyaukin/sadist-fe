@@ -12,13 +12,15 @@ const UserDropdown = () => {
   const dropdownRef = useRef<DropdownElement | null>(null);
 
   const {
-    user, loading, isLogin, isLogout, isLoginDialogOpen,
+    user, loading, loaded, isLogin, isLogout, isLoginDialogOpen,
     whoami, logout, openLoginDialog, closeLoginDialog
   } = userContext;
 
   useEffect(() => {
-    whoami();
-  }, []);
+    if (!loaded) {
+      whoami();
+    }
+  }, [loaded]);
 
   const onLogin = () => {
     openLoginDialog();

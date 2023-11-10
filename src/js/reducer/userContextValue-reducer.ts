@@ -3,6 +3,7 @@ import { User, UserContextData } from "../model/user";
 export const defaultUserContextData: UserContextData = {
   user: { type: 'anon', },
   loading: false,
+  loaded: false,
   isLogin: false,
   isLogout: false,
   isLoginDialogOpen: false,
@@ -13,7 +14,7 @@ export function reduceUserContextData(data: UserContextData, action: UserAction)
     case UserActionType.WHOAMI_START:
       return { ...data, loading: true };
     case UserActionType.WHOAMI_SUCCCESS:
-      return { ...data, user: action.user!, loading: false };
+      return { ...data, user: action.user!, loading: false, loaded: true };
     case UserActionType.WHOAMI_FAIL:
       return { ...data, loading: false };
     case UserActionType.LOGIN_DIALOG_OPEN:

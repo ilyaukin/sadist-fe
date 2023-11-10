@@ -1,5 +1,6 @@
 import { css, CSSResult, html, property, PropertyValues } from 'lit-element';
 import { WiredBase } from './wired-base';
+import { Point } from './wired-lib';
 
 export class DataPoint {
   private wrapped: WiredDataPoint;
@@ -116,8 +117,8 @@ export class WiredDataPoint extends WiredBase {
     }
   }
 
-  protected shouldUpdateWiredShapes(rect: DOMRect, changed: PropertyValues | undefined): boolean | undefined {
-    return super.shouldUpdateWiredShapes(rect, changed) || changed?.has('data-value') || changed?.has('data-scale');
+  protected shouldUpdateWiredShapes(size: Point, _changed: PropertyValues | undefined): boolean | undefined {
+    return super.shouldUpdateWiredShapes(size, _changed) || _changed?.has('data-value') || _changed?.has('data-scale');
   }
 
   hover(hover: boolean) {

@@ -1,6 +1,5 @@
 import { css, CSSResultArray, customElement, html, property, PropertyValues, TemplateResult } from 'lit-element';
-import { BaseCSS } from './wired-base-legacy';
-import { WiredBase } from "./wired-base";
+import { BaseCSS, WiredBase } from "./wired-base";
 
 @customElement('wired-item')
 export class WiredItem extends WiredBase {

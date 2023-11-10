@@ -2,17 +2,19 @@ const path = require('path');
 const HtmlWebPackPlugin = require("html-webpack-plugin");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const express = require('express');
+const MonacoEditorWebpackPlugin = require('monaco-editor-webpack-plugin');
 
 module.exports = {
   entry: {
     root: ['./src/index.js'],
     labelling: ['./src/labelling.js'],
-    'component-demo': ['./src/component-demo.js'],
-    'privacy-policy': ['./src/privacy-policy.js'],
+    demo: ['./src/component-demo.js'],
+    policy: ['./src/privacy-policy.js'],
     tos: ['./src/tos.js'],
   },
   output: {
-    filename: '[name].js'
+    filename: '[name].js',
+    chunkFilename: "[name].bundle.js"
   },
   module: {
     rules: [
@@ -41,6 +43,10 @@ module.exports = {
           context: 'src',
           publicPath: 'static',
         }
+      },
+      {
+        test: /\.ttf$/,
+        type: "asset/resource"
       }
     ]
   },
@@ -50,6 +56,7 @@ module.exports = {
       filename: "./index.html",
       chunks: ["root"]
     }),
+    new MonacoEditorWebpackPlugin(),
     new HtmlWebPackPlugin({
       template: "./src/labelling.html",
       filename: "./labelling.html",
@@ -58,7 +65,7 @@ module.exports = {
     new HtmlWebPackPlugin({
       template: "./src/component-demo.html",
       filename: "./component-demo.html",
-      chunks: ["component-demo"]
+      chunks: ["demo"]
     }),
     new CopyWebpackPlugin({
       patterns: [{
@@ -69,7 +76,7 @@ module.exports = {
     new HtmlWebPackPlugin({
       template: "./src/privacy-policy.html",
       filename: "./privacy-policy.html",
-      chunks: ["privacy-policy"]
+      chunks: ["policy"]
     }),
     new HtmlWebPackPlugin({
       template: "./src/tos.html",
@@ -79,6 +86,22 @@ module.exports = {
   ],
   resolve: {
     extensions: [".js", ".jsx", ".ts", ".tsx"]
+  },
+  optimization: {
+    splitChunks: {
+      cacheGroups: {
+        react: {
+          test: /node_modules\/react.*/,
+          name: "react",
+          chunks: "all"
+        },
+        // ace: {
+        //   test: /node_modules\/ace.*/,
+        //   name: "ace",
+        //   chunks: "all"
+        // },
+      }
+    }
   },
   // API mock
   devServer: {
@@ -282,7 +305,7 @@ module.exports = {
           text: 'hue´m po stolu',
           success: true
         })
-      })
+      });
 
 
       // app.post('/dl/session/s1234', function (req, res) {
@@ -333,6 +356,68 @@ module.exports = {
       //   })
       // })
 
+      app.put('/wc/template', function (req, res) {
+        res.send({
+          success: true
+        })
+      });
+      app.get('/wc/template', function (req, res) {
+        res.send(`[{"name":"simple single-page scrapper","text":"return (function scratch(page) {\\n  return page.goto(\u003C%url\\"http:\u002F\u002Flj.rossia.org\u002Fusers\u002Fdodjer\u002F18590.html\\"%\u003E)\\n      .then(() =\u003E {\\n        const r = [[\u003C%title%\u003E]];\\n        page.querySelectorAll(\u003C%row%\u003E)\\n            .forEach((row, i) =\u003E {\u003C%fields%\u003E\\n              r.push([\u003C%values%\u003E]);\\n            });\\n        return r;\\n      });\\n})(page)","$Use as row":function $UseAsRow(s) {
+        this.__replace('row', JSON.stringify(s));
+      },"$Use as field":function $UseAsField(s, name) {
+        var varName = name.replace(/[^a-zA-Z0-9$]+/g, '_');
+        this.__add('fields', "\\n              const ".concat(varName, " = row.querySelector(").concat(JSON.stringify(s), ")?.textContent?.trim();"));
+        this.__add('title', " ".concat(JSON.stringify(name), ", "), true);
+        this.__add('values', " ".concat(varName, ", "), true);
+      },"getUrl":function getUrl() {
+        return this.__url;
+      },"setUrl":function setUrl(url) {
+        this.__url = url;
+        this.__replace('url', JSON.stringify(url));
+      },"getScriptText":function getScriptText() {
+        return this.__removeplaceholders();
+      },"getScript":function getScript() {
+        var text = this.getScriptText();
+        var fn = new Function('page', text);
+        return {
+          execute: function execute(page) {
+            return fn(page);
+          }
+        };
+      },"__replace":function __replace(placeholder, value) {
+        var lborder = "<%".concat(placeholder);
+        var rborder = "%>";
+        var start = this.text.indexOf(lborder);
+        var stop = this.text.indexOf(rborder, start);
+        if (start >= 0 && stop >= 0) {
+          // we keep placeholders to make this script template editable
+          // with parameters; but it means that values cannot contain
+          // placeholder-like sequences
+          this.text = this.text.substring(0, start) + lborder + value + this.text.substring(stop);
+        }
+      },"__add":function __add(placeholder, value) {
+        var isTrimEnd = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
+        var lborder = "<%".concat(placeholder);
+        var rborder = "%>";
+        var start = this.text.indexOf(lborder);
+        var stop = this.text.indexOf(rborder, start);
+        if (start >= 0 && stop >= 0) {
+          var prevText = this.text.substring(0, stop);
+          if (isTrimEnd) {
+            prevText = prevText.trimEnd();
+          }
+          this.text = prevText + value + this.text.substring(stop);
+        }
+      },"__removeplaceholders":function __removeplaceholders() {
+        return this.text.replace(/<%\\w+/g, '').replace(/%>/g, '');
+      }}]`)
+      });
+    },
+    proxy: {
+      '/proxy': {
+        target: 'http://localhost:8080',
+        router: () => 'http://localhost:8000',
+      }
     }
   }
 }

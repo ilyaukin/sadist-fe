@@ -12,7 +12,7 @@ const Uniselector = (props: UniselectorProps) => {
         {
           props.selected ?
               <b>{props.children}</b> :
-              <a href="#" onClick={props.onClick}>{props.children}</a>
+              <a className="bare" onClick={props.onClick}>{props.children}</a>
         }
     </span>
     {' '}

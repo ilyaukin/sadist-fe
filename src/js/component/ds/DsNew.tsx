@@ -2,12 +2,13 @@ import React, { Component } from 'react';
 import AbstractProvider from "../provider/AbstractProvider";
 import ValidationError from "../provider/ValidationError";
 import NullProvider from "../provider/NullProvider";
-import GoogleSheetProvider from "../provider/GoogleSheetProvider";
+import GoogleSheetProvider from '../provider/GoogleSheetProvider';
+import WebCrawlerProvider from '../provider/WebCrawlerProvider';
 import ErrorDialog from "../common/ErrorDialog";
 import Loader from "../common/Loader";
+import DelayedRender from '../common/DelayedRender';
 import { isVal } from "../../helper/wired-helper";
 import { DsMeta } from '../../model/ds';
-import DelayedRender from '../common/DelayedRender';
 
 interface DsNewProps {
   onDsCreated: (meta: DsMeta) => any;
@@ -35,6 +36,7 @@ class DsNew extends Component<DsNewProps, DsNewState> {
     }
     this.providers = [
       new GoogleSheetProvider(providerProps),
+      new WebCrawlerProvider(providerProps),
     ];
   }
 
@@ -170,16 +172,14 @@ class DsNew extends Component<DsNewProps, DsNewState> {
     const screens = this.state.provider.renderScreens();
     const { screenNo } = this.state;
 
-    return <div className="new-dialog">
+    return <>
       <Loader loading={this.state.loading}/>
       <form>
-        <div>
-          {this.renderProviderSelector(screenNo)}
-          {screens.map(this.renderProviderScreen)}
-        </div>
+        {this.renderProviderSelector(screenNo)}
+        {screens.map(this.renderProviderScreen)}
         {this.renderButtons(screenNo, screens.length)}
       </form>
-    </div>
+    </>
   }
 }
 

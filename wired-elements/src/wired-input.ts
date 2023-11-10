@@ -3,15 +3,15 @@ import {
   CSSResultArray,
   customElement,
   html,
-  property,
+  property, PropertyValues,
   query,
   TemplateResult
 } from 'lit-element';
-import { fire, Point, rectangle } from './wired-lib';
-import { BaseCSS, WiredBaseLegacy } from "./wired-base-legacy";
+import { fire } from './wired-lib';
+import { BaseCSS, WiredBase } from './wired-base';
 
 @customElement('wired-input')
-export class WiredInput extends WiredBaseLegacy {
+export class WiredInput extends WiredBase {
   @property({ type: Boolean, reflect: true }) disabled = false;
   @property({ type: String }) placeholder = '';
   @property({ type: String }) name?: string;
@@ -101,22 +101,15 @@ export class WiredInput extends WiredBaseLegacy {
     }
   }
 
-  firstUpdated() {
+  firstUpdated(_changed: PropertyValues) {
+    super.firstUpdated(_changed);
+    this.setAttribute(WiredBase.SHAPE_ATTR, 'rectangle:offset=2');
     this.value = this.pendingValue || this.value || this.getAttribute('value') || '';
     delete this.pendingValue;
   }
 
   focus(options?: FocusOptions) {
     this.input?.focus(options);
-  }
-
-  protected canvasSize(): Point {
-    const s = this.getBoundingClientRect();
-    return [s.width, s.height];
-  }
-
-  protected draw(svg: SVGSVGElement, size: Point) {
-    rectangle(svg, 2, 2, size[0] - 2, size[1] - 2);
   }
 
   private refire(event: Event) {

@@ -1,5 +1,6 @@
 import equal from 'deep-equal'
 import {
+  CellType,
   ComplexValueType,
   DsInfo,
   DsMeta,
@@ -11,21 +12,23 @@ import {
   VizMeta,
   VizPipeline
 } from '../model/ds';
+import { __as } from '../helper/type-helper';
 
 /**
  * Default object containing all functions of {@link DsInfo}
  */
-export const defaultDsInfo: DsInfo = {
+export const defaultDsInfo: DsInfo = __as<DsInfo>({
 
   meta: {},
 
-  init(meta: DsMeta): DsInfo {
-    const dsInfo = this.meta.id != meta.id ? { ...defaultDsInfo, meta } : {
-      ...defaultDsInfo,
-      meta,
-      vizMeta: this.vizMeta,
-      filters: this.filters
-    };
+  init({ meta, vizMeta, filters, anchor }: DsInfo): DsInfo {
+    const dsInfo = this.meta.id != meta.id ?
+        { ...defaultDsInfo, meta, vizMeta, filters, anchor } : {
+          ...defaultDsInfo,
+          meta,
+          vizMeta: this.vizMeta,
+          filters: this.filters,
+        };
 
     // propose viz & filters
     const __proposeViz = (col: string, v: VizMeta) => {
@@ -69,7 +72,7 @@ export const defaultDsInfo: DsInfo = {
                       label: `${label}.id`,
                       predicate: {
                         op: 'in',
-                        values: (this as MultiselectFilterProposal<ComplexValueType>).selected.map(v => v?.id || null),
+                        values: ( this as MultiselectFilterProposal<ComplexValueType> ).selected.map(v => v?.id || null),
                       }
                     }
                   },
@@ -106,7 +109,7 @@ export const defaultDsInfo: DsInfo = {
                       label: `${label}.id`,
                       predicate: {
                         op: 'in',
-                        values: (this as MultiselectFilterProposal<ComplexValueType>).selected.map(v => v?.id || null),
+                        values: ( this as MultiselectFilterProposal<ComplexValueType> ).selected.map(v => v?.id || null),
                       }
                     }
                   },
@@ -196,16 +199,16 @@ export const defaultDsInfo: DsInfo = {
 
     switch (vizMeta.props.action) {
 
-      // if user selects a group, replace the exising group, if any,
-      // (no group of group such as histogram of histogram or
-      // a graph which point itself is a graph/chart so far
+        // if user selects a group, replace the exising group, if any,
+        // (no group of group such as histogram of histogram or
+        // a graph which point itself is a graph/chart so far
       case 'group':
         return {
           ...vizMeta,
           children: this.vizMeta?.props.action === 'group' ? this.vizMeta.children : tail
         }
-      // if user selects accumulated value, add it to the group,
-      // if any, or create a null-group
+        // if user selects accumulated value, add it to the group,
+        // if any, or create a null-group
       case 'accumulate':
         return {
           ...( this.vizMeta || {
@@ -216,7 +219,7 @@ export const defaultDsInfo: DsInfo = {
             }
           } ),
           children: {
-            ...(equal(this.vizMeta?.children, tail) ? {} : this.vizMeta?.children),
+            ...( equal(this.vizMeta?.children, tail) ? {} : this.vizMeta?.children ),
             [vizMeta.key]: vizMeta
           }
         };
@@ -269,9 +272,9 @@ export const defaultDsInfo: DsInfo = {
     detailization = detailization || {};
 
     return classification.status === 'finished' &&
-      Object.entries(detailization)
-        .map(kv => kv[1].status === 'finished')
-        .reduce((a, b) => a && b, true);
+        Object.entries(detailization)
+            .map(kv => kv[1].status === 'finished')
+            .reduce((a, b) => a && b, true);
   },
 
   __rolloutVizMeta: function (callback: (key: string, vizMeta: VizMeta) => any): any {
@@ -287,19 +290,24 @@ export const defaultDsInfo: DsInfo = {
           }
         }
         entries = entries
-          .map(([, v]) => v)
-          .filter(v => v.children)
-          .map(v => Object.entries(v.children!))
-          .reduce((ee0, ee1) => ee0.concat(ee1), []);
+            .map(([, v]) => v)
+            .filter(v => v.children)
+            .map(v => Object.entries(v.children!))
+            .reduce((ee0, ee1) => ee0.concat(ee1), []);
       }
     }
   },
-};
+});
 
 export function reduceDsInfo(dsInfo: DsInfo, action: DsInfoAction): DsInfo {
   switch (action.type) {
     case DsInfoActionType.SELECT_DS:
-      return dsInfo.init(action.meta);
+      return dsInfo.init({
+        meta: action.meta,
+        vizMeta: action.vizMeta,
+        filters: action.filters,
+        anchor: action.anchor,
+      });
 
     case DsInfoActionType.ADD_VIZ:
       return {
@@ -330,13 +338,19 @@ export function reduceDsInfo(dsInfo: DsInfo, action: DsInfoAction): DsInfo {
         return dsInfo;
       }
 
-      return dsInfo.init(action.meta);
+      return dsInfo.init({ meta: action.meta });
 
     case DsInfoActionType.UPDATE_STATUS_ERROR:
       return {
         ...dsInfo,
         err: action.err,
       };
+
+    case DsInfoActionType.SET_ANCHOR:
+      return {
+        ...dsInfo,
+        anchor: action.anchor,
+      }
   }
 }
 
@@ -374,11 +388,19 @@ export enum DsInfoActionType {
    * Error of updating status of the selected DS
    */
   UPDATE_STATUS_ERROR,
+
+  /**
+   * Select/anchor a cell
+   */
+  SET_ANCHOR,
 }
 
 export type DsInfoAction = {
   type: DsInfoActionType.SELECT_DS | DsInfoActionType.UPDATE_STATUS_SUCCESS;
   meta: DsMeta;
+  vizMeta?: VizMeta;
+  filters?: Filter[];
+  anchor?: CellType;
 } | {
   type: DsInfoActionType.ADD_VIZ;
   vizMeta: VizMeta;
@@ -388,4 +410,7 @@ export type DsInfoAction = {
 } | {
   type: DsInfoActionType.UPDATE_STATUS_ERROR;
   err?: string;
+} | {
+  type: DsInfoActionType.SET_ANCHOR;
+  anchor: CellType;
 }

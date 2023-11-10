@@ -52,9 +52,17 @@ class GoogleSheetProviderScreen extends Component<GoogleSheetProviderScreenProps
     const { selectedSheet } = this.state;
     return new Promise((resolve, reject) => {
       let message = 'Please select sheet';
-      this.setState({ ...this.state, listError: selectedSheet ? undefined : message },
-        () => selectedSheet ? resolve(selectedSheet) : reject(new ValidationError(message)));
+      this.setState({
+            ...this.state,
+            listError: selectedSheet ? undefined : message
+          },
+          () => selectedSheet ? resolve(selectedSheet) : reject(new ValidationError(message)));
     });
+  }
+
+  parseUrl(url: string): string | null {
+    const groups = url.match(/^https:\/\/docs\.google\.com\/spreadsheets\/d\/[a-zA-Z0-9]+\//);
+    return !groups ? null : `${groups[0]}export?format=csv`;
   }
 
   getSheetUrl(): Promise<string> {
@@ -63,21 +71,23 @@ class GoogleSheetProviderScreen extends Component<GoogleSheetProviderScreenProps
     const { selectedSheet } = this.state;
     return new Promise((resolve, reject) => {
       let message = 'Please select sheet';
-      this.setState({ ...this.state, listError: selectedSheet?.id ? undefined : message },
-        () => selectedSheet?.id ?
-          resolve(`https://docs.google.com/spreadsheets/d/${selectedSheet.id}/htmlview`) :
-          reject(new ValidationError(message)));
+      this.setState({
+            ...this.state,
+            listError: selectedSheet?.id ? undefined : message
+          },
+          () => selectedSheet?.id ?
+              resolve(`https://docs.google.com/spreadsheets/d/${selectedSheet.id}/export?format=csv`) :
+              reject(new ValidationError(message)));
     });
   }
 
   getDirectUrl(): Promise<string> {
-    const url = this.urlInput?.value;
+    const url = this.urlInput?.value && this.parseUrl(this.urlInput.value);
     return new Promise((resolve, reject) => {
-      const ok = url && url.startsWith('https://docs.google.com/spreadsheets/');
       const message = 'Please enter a valid URL starting with ' +
-        'https://docs.google.com/spreadsheets/';
-      this.setState({ ...this.state, urlError: ok ? undefined : message },
-        () => ok ? resolve(url) : reject(new ValidationError(message)));
+          'https://docs.google.com/spreadsheets/';
+      this.setState({ ...this.state, urlError: url ? undefined : message },
+          () => url ? resolve(url) : reject(new ValidationError(message)));
     });
   }
 
@@ -85,13 +95,22 @@ class GoogleSheetProviderScreen extends Component<GoogleSheetProviderScreenProps
     return this.isList() ? this.getSheetUrl() : this.getDirectUrl();
   }
 
-  onRadioSelected = (event: CustomEvent) => {
-    this.setState({ ...this.state, selectedRadio: event.detail.selected });
+  onRadioSelected = (radio: 'list' | 'url', event: CustomEvent) => {
+    if (event.detail.checked) {
+      this.setState({
+        ...this.state,
+        selectedRadio: radio
+      });
+    }
   }
 
   onSheetSelected = (sheet: gapi.client.drive.File, event: CustomEvent) => {
     event.stopPropagation();
-    this.setState({ ...this.state, selectedRadio: 'list', selectedSheet: sheet });
+    this.setState({
+      ...this.state,
+      selectedRadio: 'list',
+      selectedSheet: sheet
+    });
   }
 
   onFocusUrl = () => {
@@ -100,29 +119,34 @@ class GoogleSheetProviderScreen extends Component<GoogleSheetProviderScreenProps
 
   render() {
     const {
-      selectedRadio,
       listError,
       urlError
     } = this.state;
-    return <div>
-      <wired-radio-group
-        style={{ width: '100%' }}
-        selected={selectedRadio}
-        onselected={this.onRadioSelected}
-      >
-        <wired-radio name="list">Select a Sheet</wired-radio>
+    return <div style={{ width: '100%' }}>
+        <wired-radio
+            name="google-sheet-radio"
+            value="list"
+            checked={this.isList()}
+            onchange={(event) => this.onRadioSelected('list', event)}
+        >Select a Sheet
+        </wired-radio>
         <GoogleSheetList onSheetSelected={this.onSheetSelected}/>
-        {listError ? <span className="field-error">{listError}</span>: ''}
+        {listError && <span className="field-error">{listError}</span>}
         <Or/>
-        <wired-radio name="url">Enter URL:</wired-radio><br/>
+        <wired-radio
+            name="google-sheet-radio"
+            value="url"
+            checked={!this.isList()}
+            onchange={(event) => this.onRadioSelected('url', event)}
+        >Enter URL:
+        </wired-radio>
         <wired-input
-          ref={input => this.urlInput = input}
-          style={{ width: '100%' }}
-          id="url"
-          onFocus={this.onFocusUrl}
+            ref={input => this.urlInput = input}
+            style={{ width: '100%' }}
+            id="url"
+            onFocus={this.onFocusUrl}
         />
-        {urlError ? <span className="field-error">{urlError}</span> : ''}
-      </wired-radio-group>
+        {urlError && <span className="field-error">{urlError}</span>}
     </div>;
   }
 }
