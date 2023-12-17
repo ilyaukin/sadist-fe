@@ -391,9 +391,12 @@ export class WiredGlobe extends WiredBaseGraph {
   }
 
   protected isGeoDataPoint(dp: DataPoint): boolean {
-    return dp.id && typeof dp.id.coordinates == 'object'
-        && typeof dp.id.coordinates[0] == 'number'
-        && typeof dp.id.coordinates[1] == 'number';
+    // TODO consider other types of geo data points, e.g. rectangles
+    return dp.id && typeof dp.id.loc == 'object'
+        && dp.id.loc.type == 'Point'
+        && dp.id.loc.coordinates
+        && typeof dp.id.loc.coordinates[0] == 'number'
+        && typeof dp.id.loc.coordinates[1] == 'number';
   }
 
   get datapoints(): DataPoint[] | undefined {
@@ -412,7 +415,7 @@ export class WiredGlobe extends WiredBaseGraph {
     });
 
     this.groups.forEach(({ id, nodes }) => {
-      const [x, y, z] = this.xyz([id.coordinates[0], id.coordinates[1]]);
+      const [x, y, z] = this.xyz([id.loc.coordinates[0], id.loc.coordinates[1]]);
       const w = Math.floor(2 * this['data-point-r'] / this.legend.length);
       this.legend.forEach(({}, j) => {
         const display = nodes[j].style.display;
