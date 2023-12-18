@@ -162,7 +162,65 @@ module.exports = {
                   status: 'finished',
                   labels: ['city', 'country']
                 }
-              }
+              },
+              visualization: {
+                'Location': [
+                  {
+                    key: `Location country`,
+                    type: 'globe',
+                    props: {
+                      action: 'group',
+                      col: 'Location',
+                      label: 'country',
+                    },
+                    stringrepr: 'Show countries',
+                    labelselector: 'id.name'
+                  },
+                  {
+                    key: `Location city`,
+                    type: 'globe',
+                    props: {
+                      action: 'group',
+                      col: 'Location',
+                      label: 'city',
+                    },
+                    stringrepr: 'Show cities',
+                    labelselector: 'id.name'
+                  }
+                ]
+              },
+              filtering: {
+                'Location': [
+                  {
+                    type: 'multiselect',
+                    col: 'Location',
+                    label: 'country',
+                    values: [
+                      { id: 1, name: 'Moscow', },
+                      { id: 2, name: 'Paris', },
+                      { id: 3, name: 'New York', },
+                    ],
+                    selected: [],
+                    labelselector: 'name',
+                    valueselector: 'id',
+                    valuefield: 'country.id'
+                  },
+                  {
+                    type: 'multiselect',
+                    col: 'Location',
+                    label: 'city',
+                    values: [
+                      { id: 1, name: 'Moscow', },
+                      { id: 2, name: 'Paris', },
+                      { id: 3, name: 'New York', },
+                    ],
+                    selected: [],
+                    labelselector: 'name',
+                    valueselector: 'id',
+                    valuefield: 'city.id'
+                  }
+                ]
+              },
             }
           ],
           success: true

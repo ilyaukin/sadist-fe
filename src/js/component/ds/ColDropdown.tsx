@@ -62,7 +62,7 @@ const ColDropdown = (
             value={vizMeta.key}
             selected={dsInfo.isVizSelected(vizMeta)}
           >
-            {vizMeta.toString()}
+            {vizMeta.stringrepr}
           </wired-item>
         ))}
       </wired-listbox>

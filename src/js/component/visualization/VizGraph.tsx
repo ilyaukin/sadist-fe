@@ -9,6 +9,7 @@ import {
   VizMeta
 } from '../../model/ds';
 import { DsInfoAction, DsInfoActionType } from '../../reducer/dsInfo-reducer';
+import { select } from '../../helper/json-helper';
 
 interface VizGraphProps {
   style?: CSSProperties;
@@ -74,7 +75,7 @@ const VizGraph = (props: VizGraphProps) => {
               data={item[k]}
               id={item.id}
               name={k}
-              label={meta.getLabel?.(item)}
+              label={select(meta.labelselector, item) || item.id}
               selected={isSelected?.(item)}
           />
         </>

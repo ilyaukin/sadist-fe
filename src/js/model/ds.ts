@@ -150,14 +150,14 @@ export interface VizMeta {
   /**
    * String representation is used in UI
    */
-  toString(): string;
+  stringrepr?: string;
 
   /**
-   * Label of the visualization item in the graph.
-   * If not defind, id will be used
-   * @param i visualization data item
+   * Selector for label of a visualization item in the graph, in format of
+   *  `@gizt/selector`. Applying to {@link VizDataItem}
+   * If not defined, {@link VizDataItem.id} will be used
    */
-  getLabel?(i: VizDataItem): string;
+  labelselector?: string
 }
 
 /**
@@ -210,7 +210,23 @@ export interface MultiselectFilterProposal<T = ValueType> extends AbstractFilter
   label: string;
   values: T[];
   selected: T[];
-  getLabel?(item: T): string;
+
+  /**
+   * Selector for label of an item in the list, in format of
+   * `@gizt/selector`. Applying to `T`
+   */
+  labelselector?: string;
+
+  /**
+   * Selector for value of an item which is filter applied to,
+   * in format of `@gizt/selector`. Applying to `T`
+   */
+  valueselector?: string;
+
+  /**
+   * Field name in the DB
+   */
+  valuefield?: string;
 }
 
 /**
@@ -295,6 +311,23 @@ export interface DsMeta {
   detailization?: {
     [col: string]: { status?: string; labels?: string[]; };
   }
+
+  /**
+   * Proposed visualization returned by server,
+   * in the very format of visualization meta information
+   */
+  visualization?: {
+    [col: string]: VizMeta[];
+  }
+
+  /**
+   * Proposed filtering returned by server,
+   * in the very format of filter proposal. Beside of  {@code propose()}
+   * method, it's defined in the frontend depending on filter type.
+   */
+  filtering?: {
+    [col: string]: Omit<FilterProposal, 'propose'>[];
+  }
 }
 
 /**
@@ -352,9 +385,8 @@ export interface DsInfo {
    * Initialize the {@link DsInfo} object given new {@link meta},
    * when a user selects the other DS or DS processing on the server updates.
    *
-   * ***WARNING*** it can use some intellectual algorithm to map meta
-   * to the available visualization and filters, better to invent some
-   * meta-language to describe it in a declarative manner.
+   * Visualization and filter proposals are filled by thus returned from
+   * the server
    * @param info can contain {@link meta} returned by the server,
    * pre-set visualization and filters
    * @return new copy of the object

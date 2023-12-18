@@ -28,13 +28,7 @@ const SPAContent = () => {
 
   function propagateDsInfoToURL(dsInfo: DsInfo) {
     if (dsInfo.meta.id) {
-      let params: { [p: string]: string; } = { id: dsInfo.meta.id };
-      if (dsInfo.vizMeta) {
-        params.viz = JSON.stringify(dsInfo.vizMeta);
-      }
-      if (dsInfo.filters) {
-        params.fil = JSON.stringify(dsInfo.filters);
-      }
+      const params: { [p: string]: string; } = { id: dsInfo.meta.id };
       const anchor = searchParams.get('anchor');
       if (anchor && dsInfo.meta.id === searchParams.get('id')) {
         params.anchor = anchor;
@@ -44,18 +38,10 @@ const SPAContent = () => {
   }
 
   function propagateAnchorToURL(anchor: CellType) {
-    let params: { [p: string]: string; } = {};
+    const params: { [p: string]: string; } = {};
     const dsId = searchParams.get('id');
-    const viz = searchParams.get('viz');
-    const fil = searchParams.get('fil');
     if (dsId) {
       params.id = dsId;
-    }
-    if (viz) {
-      params.viz = viz;
-    }
-    if (fil) {
-      params.fil = fil;
     }
     if (anchor) {
       params.anchor = JSON.stringify(anchor);
@@ -65,7 +51,7 @@ const SPAContent = () => {
 
   useEffect(() => {
     propagateDsInfoToURL(dsInfo);
-  }, [dsInfo.meta.id, dsInfo.vizMeta, dsInfo.filters]);
+  }, [dsInfo.meta.id]);
 
   ErrorDialog.raise = setErr;
   ErrorDialog.close = () => setErr(undefined);
@@ -97,14 +83,10 @@ const SPAContent = () => {
           if (dsId) {
             const meta = list.find(item => item.id === dsId);
             if (meta) {
-              const viz = searchParams.get('viz');
-              const fil = searchParams.get('fil');
               const anchor = searchParams.get('anchor');
               dispatchDsInfo({
                 type: DsInfoActionType.SELECT_DS,
                 meta,
-                vizMeta: viz && JSON.parse(viz),
-                filters: fil && JSON.parse(fil),
                 anchor: anchor && JSON.parse(anchor),
               });
             }

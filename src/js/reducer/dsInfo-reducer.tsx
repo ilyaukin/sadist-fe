@@ -1,18 +1,18 @@
 import equal from 'deep-equal'
 import {
   CellType,
-  ComplexValueType,
   DsInfo,
   DsMeta,
   Filter,
   FilterProposal,
   FilterQuery,
   MultiselectFilterProposal,
-  VizDataItem,
+  SearchFilterProposal,
   VizMeta,
   VizPipeline
 } from '../model/ds';
 import { __as } from '../helper/type-helper';
+import { select } from '../helper/json-helper';
 
 /**
  * Default object containing all functions of {@link DsInfo}
@@ -39,146 +39,49 @@ export const defaultDsInfo: DsInfo = __as<DsInfo>({
       ( dsInfo.filterProposals ||= [] ).push(f);
       ( ( dsInfo.filterProposalsByCol ||= {} )[col] ||= [] ).push(f);
     }
-    if (meta.detailization) {
-      Object.entries(meta.detailization).forEach(([col, details]) => {
-        if (details.status === 'finished' && details.labels) {
-          details.labels.forEach((label) => {
-            switch (label) {
-              case 'city':
-                __proposeViz(col, {
-                  key: `${col} city`,
-                  type: 'globe',
-                  props: {
-                    action: 'group',
-                    col: col,
-                    label: 'city',
-                  },
-                  toString() {
-                    return 'Show cities';
-                  },
-                  getLabel(i: VizDataItem): string {
-                    return `${i.id?.name}`;
-                  }
-                });
-                __proposeFilter(col, {
-                  type: 'multiselect',
-                  col,
-                  label,
-                  values: [],
-                  selected: [],
-                  propose(): Filter {
-                    return {
-                      col,
-                      label: `${label}.id`,
-                      predicate: {
-                        op: 'in',
-                        values: ( this as MultiselectFilterProposal<ComplexValueType> ).selected.map(v => v?.id || null),
-                      }
-                    }
-                  },
-                  getLabel(item: ComplexValueType): string {
-                    return `${item?.name}`;
-                  }
-                });
-                break;
-              case 'country':
-                __proposeViz(col, {
-                  key: `${col} country`,
-                  type: 'globe',
-                  props: {
-                    action: 'group',
-                    col: col,
-                    label: 'country',
-                  },
-                  toString(): string {
-                    return 'Show counties';
-                  },
-                  getLabel(i: VizDataItem): string {
-                    return `${i.id?.name}`;
-                  }
-                });
-                __proposeFilter(col, {
-                  type: 'multiselect',
-                  col,
-                  label,
-                  values: [],
-                  selected: [],
-                  propose(): Filter {
-                    return {
-                      col,
-                      label: `${label}.id`,
-                      predicate: {
-                        op: 'in',
-                        values: ( this as MultiselectFilterProposal<ComplexValueType> ).selected.map(v => v?.id || null),
-                      }
-                    }
-                  },
-                  getLabel(item: ComplexValueType): string {
-                    return `${item?.name}`;
-                  }
-                });
-                break;
-              case 'number':
-                __proposeViz(col, {
-                  key: `${col} average`,
-                  type: 'bar',
-                  props: {
-                    action: 'accumulate',
-                    col: col,
-                    label: 'number',
-                    accumulater: 'average',
-                  },
-                  toString(): string {
-                    return 'Show average';
-                  }
-                });
-                __proposeViz(col, {
-                  key: `${col} min`,
-                  type: 'bar',
-                  props: {
-                    action: 'accumulate',
-                    col: col,
-                    label: 'number',
-                    accumulater: 'min',
-                  },
-                  toString(): string {
-                    return 'Show minimum';
-                  }
-                });
-                __proposeViz(col, {
-                  key: `${col} max`,
-                  type: 'bar',
-                  props: {
-                    action: 'accumulate',
-                    col: col,
-                    label: 'number',
-                    accumulater: 'max',
-                  },
-                  toString(): string {
-                    return 'Show maximum';
-                  }
-                });
-                break;
-            }
-          });
-        }
+    if (meta.visualization) {
+      Object.entries(meta.visualization).forEach(([col, vizMetas]) => {
+        vizMetas.forEach((vizMeta) => {
+          __proposeViz(col, vizMeta);
+        });
       });
-      // // let it be text filters by all cols across so far,
-      // // at least to test filtering engine
-      // meta.cols?.forEach((col) => {
-      //   __proposeFilter(col, {
-      //     type: 'search',
-      //     propose(): Filter {
-      //       return {
-      //         col: col,
-      //         predicate: {
-      //           op: 'instr',
-      //           value: this.term || '',
-      //         }
-      //       };
-      //     }
-      //   });
-      // });
+    }
+    if (meta.filtering) {
+      Object.entries(meta.filtering).forEach(([col, filterProposals]) => {
+        filterProposals.forEach((filterProposal) => {
+          switch (filterProposal.type) {
+            case 'multiselect':
+              __proposeFilter(col, {
+                ...filterProposal,
+                propose(): Filter {
+                  return {
+                    col: this.col,
+                    label: this.valuefield,
+                    predicate: {
+                      op: 'in',
+                      values: this.selected.map(v => select(this.valueselector, v) || null),
+                    }
+                  }
+                },
+              } as MultiselectFilterProposal);
+              break;
+            case 'search':
+              __proposeFilter(col, {
+                ...filterProposal,
+                propose(): Filter {
+                  return {
+                    col,
+                    predicate: {
+                      op: 'instr',
+                      value: this.term || '',
+                    }
+                  };
+                }
+              } as SearchFilterProposal);
+              break;
+          }
+        });
+      });
     }
 
     return dsInfo;
@@ -193,7 +96,7 @@ export const defaultDsInfo: DsInfo = __as<DsInfo>({
         props: {
           action: 'accumulate',
           accumulater: 'count',
-        }
+        },
       }
     };
 
@@ -327,7 +230,7 @@ export function reduceDsInfo(dsInfo: DsInfo, action: DsInfoAction): DsInfo {
         filters: dsInfo.dropFilter(action.filter),
       };
 
-    case DsInfoActionType.UPDATE_STATUS_SUCCESS:
+    case DsInfoActionType.UPDATE_META_SUCCESS:
       // dsId has changed so the meta is irrelevant
       if (dsInfo.meta.id !== action.meta.id) {
         return dsInfo;
@@ -340,7 +243,7 @@ export function reduceDsInfo(dsInfo: DsInfo, action: DsInfoAction): DsInfo {
 
       return dsInfo.init({ meta: action.meta });
 
-    case DsInfoActionType.UPDATE_STATUS_ERROR:
+    case DsInfoActionType.UPDATE_META_ERROR:
       return {
         ...dsInfo,
         err: action.err,
@@ -382,12 +285,12 @@ export enum DsInfoActionType {
   /**
    * Updated status of the selected DS
    */
-  UPDATE_STATUS_SUCCESS,
+  UPDATE_META_SUCCESS,
 
   /**
    * Error of updating status of the selected DS
    */
-  UPDATE_STATUS_ERROR,
+  UPDATE_META_ERROR,
 
   /**
    * Select/anchor a cell
@@ -396,7 +299,7 @@ export enum DsInfoActionType {
 }
 
 export type DsInfoAction = {
-  type: DsInfoActionType.SELECT_DS | DsInfoActionType.UPDATE_STATUS_SUCCESS;
+  type: DsInfoActionType.SELECT_DS | DsInfoActionType.UPDATE_META_SUCCESS;
   meta: DsMeta;
   vizMeta?: VizMeta;
   filters?: Filter[];
@@ -408,7 +311,7 @@ export type DsInfoAction = {
   type: DsInfoActionType.ADD_FILTER | DsInfoActionType.DROP_FILTER;
   filter: Filter;
 } | {
-  type: DsInfoActionType.UPDATE_STATUS_ERROR;
+  type: DsInfoActionType.UPDATE_META_ERROR;
   err?: string;
 } | {
   type: DsInfoActionType.SET_ANCHOR;

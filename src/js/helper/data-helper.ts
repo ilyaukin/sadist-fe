@@ -1,7 +1,7 @@
 import { DsMeta } from '../model/ds';
 
 export function getMeta(dsId: string): Promise<DsMeta> {
-  return fetch(`/ls?id=${dsId}`)
+  return fetch(`/ls?id=${dsId}&-f=true&-v=true`)
       .then((response) => response.json())
       .then((data) => {
         if (!data.success) {

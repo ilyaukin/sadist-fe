@@ -1,7 +1,6 @@
 import React, {
   Dispatch,
   forwardRef,
-  useEffect,
   useImperativeHandle,
   useRef,
   useState
@@ -31,22 +30,11 @@ export type VizElement = { element: HTMLDivElement | null; } & VizState;
 
 const Viz = (props: VizProps, ref: React.ForwardedRef<VizElement>) => {
   const [state, setState] = useState<VizState>({});
+  const [updateMetaCounter, setUpdateMetaCounter] = useState(0);
 
   const elementRef = useRef<HTMLDivElement | null>(null);
 
-  const timeoutHandle = useRef<NodeJS.Timeout | undefined>();
-
   useImperativeHandle(ref, () => ( { element: elementRef.current, ...state } ));
-
-  useEffect(() => {
-    if (timeoutHandle.current) {
-      clearTimeout(timeoutHandle.current);
-    }
-
-    timeoutHandle.current = scheduleUpdateStatus.call(this);
-
-    return () => clearTimeout(timeoutHandle.current);
-  }, [props.dsId, props.dsInfo, props.dispatchDsInfo]);
 
   const { dsId, dsInfo } = props;
   const pipeline = dsInfo.getPipeline();
@@ -64,44 +52,35 @@ const Viz = (props: VizProps, ref: React.ForwardedRef<VizElement>) => {
           // put vizMeta to the state to make it consistent with vizData
           setState({ ...state, vizData: data.list, vizMeta: dsInfo.vizMeta });
         } else {
-          handleError('Error: ' + ( data.error || 'Unknown error' ));
+          ErrorDialog.raise('Error: ' + ( data.error || 'Unknown error' ));
         }
       }).catch((e) => {
-        handleError('Error parsing JSON response: ' + e.toString());
+        ErrorDialog.raise('Error parsing JSON response: ' + e.toString());
       });
     }).catch((e) => {
-      handleError('Error fetching data: ' + e.toString());
+      ErrorDialog.raise('Error fetching data: ' + e.toString());
     });
-  }, [props.dsId, props.dsInfo.vizMeta]);
+  }, [dsId, dsInfo.vizMeta]);
 
-  function scheduleUpdateStatus(): NodeJS.Timeout | undefined {
-    const { dsId, dsInfo, dispatchDsInfo } = props;
-
-    if (dsInfo.isMetaFinal()) {
-      // everything finished, no need to update
-      return;
-    }
-
-    return setTimeout(() => {
+  const metaLoading = useQueuedRequest({ dsId }, ({ dsId }) =>
       getMeta(dsId)
           .then((meta) => {
             dispatchDsInfo({
-              type: DsInfoActionType.UPDATE_STATUS_SUCCESS,
+              type: DsInfoActionType.UPDATE_META_SUCCESS,
               meta,
             });
+            setTimeout(() => {
+              if (!dsInfo.isMetaFinal()) {
+                setUpdateMetaCounter(counter => counter + 1);
+              }
+            }, 1000);
           })
           .catch((err) => {
             dispatchDsInfo({
-              type: DsInfoActionType.UPDATE_STATUS_ERROR,
+              type: DsInfoActionType.UPDATE_META_ERROR,
               err: err.toString(),
             })
-          })
-    }, 1000);
-  }
-
-  function handleError(err: string) {
-    ErrorDialog.raise(err);
-  }
+          }), [dsId, updateMetaCounter], true);
 
   const { vizHeight, dispatchDsInfo } = props;
   const { vizData, vizMeta } = state;
@@ -116,7 +95,7 @@ const Viz = (props: VizProps, ref: React.ForwardedRef<VizElement>) => {
   //     graph(s).
 
   return <div ref={elementRef} className="block">
-    <Loader loading={loading}/>
+    <Loader loading={loading || metaLoading}/>
     {
       vizMeta && vizData ?
           <VizGraph
