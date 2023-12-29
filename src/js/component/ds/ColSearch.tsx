@@ -1,14 +1,14 @@
-import React, { Dispatch, useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { WiredSearchInput } from '/wired-elements/lib/wired-search-input';
-import { SearchFilterProposal } from '../../model/ds';
-import { DsInfoAction, DsInfoActionType } from '../../reducer/dsInfo-reducer';
+import { SearchFilter } from '../../model/ds';
 
 interface ColSearchProps {
-  filterProposal: SearchFilterProposal;
-  dispatchDsInfo: Dispatch<DsInfoAction>;
+  filter: SearchFilter;
+
+  onFilter(): void;
 }
 
-const ColSearch = ({ filterProposal, dispatchDsInfo }: ColSearchProps) => {
+const ColSearch = ({ filter, onFilter }: ColSearchProps) => {
   const inputRef = useRef<WiredSearchInput | null>(null);
 
   useEffect(() => {
@@ -17,20 +17,20 @@ const ColSearch = ({ filterProposal, dispatchDsInfo }: ColSearchProps) => {
 
   const onChange = () => {
     const term = inputRef.current?.value;
-    filterProposal.term = term;
-    dispatchDsInfo({
-      type: term ? DsInfoActionType.ADD_FILTER : DsInfoActionType.DROP_FILTER,
-      filter: filterProposal.propose(),
-    });
+    filter.term = term;
+    onFilter();
   }
 
-  return <wired-search-input
-      style={{ width: '100%' }}
-      ref={inputRef}
-      value={filterProposal.term}
-      onInput={onChange}
-      onclose={onChange}
-  />;
+  return <>
+    <span className="col-action-hint">Look up...</span>
+    <wired-search-input
+        style={{ width: '100%' }}
+        ref={inputRef}
+        value={filter.term}
+        onInput={onChange}
+        onclose={onChange}
+    />
+  </>;
 }
 
 export default ColSearch;

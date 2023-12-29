@@ -151,7 +151,7 @@ const DsTable = (props: DsTableProps) => {
     return <th {...thProps}>
       <div className="col-space">
         {col}
-        {( dsInfo.vizMetaProposedByCol?.[col] || dsInfo.filterProposalsByCol?.[col] ) && isReal ?
+        {( dsInfo.vizMetaProposedByCol?.[col] || dsInfo.filtersByCol?.[col] ) && isReal ?
             <ColDropdown
                 col={col}
                 dsInfo={dsInfo}

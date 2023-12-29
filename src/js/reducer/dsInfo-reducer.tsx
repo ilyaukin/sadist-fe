@@ -6,13 +6,62 @@ import {
   Filter,
   FilterProposal,
   FilterQuery,
-  MultiselectFilterProposal,
-  SearchFilterProposal,
+  FilterQueryItem,
+  MultiselectFilter,
+  SearchFilter,
   VizMeta,
   VizPipeline
 } from '../model/ds';
 import { __as } from '../helper/type-helper';
 import { select } from '../helper/json-helper';
+import ColMultiselectFilter from '../component/ds/ColMultiselectFilter';
+import ColSearch from '../component/ds/ColSearch';
+
+/**
+ * Make functional filter out of filter proposal or just serialized filter
+ * @param f Filter/filter proposal
+ * @return {Filter}
+ */
+export const filterFactory = (f: FilterProposal | Filter): Filter => {
+  switch (f.type) {
+    case 'multiselect':
+      return {
+        ...f,
+        'selected': ( f as MultiselectFilter<any> ).selected || [],
+        'q'(): FilterQueryItem | undefined {
+          if (!this.selected.length) {
+            return undefined;
+          }
+          return {
+            'col': this.col,
+            'label': this.valuefield,
+            'predicate': {
+              'op': 'in',
+              'values': this.selected.map(v => select(this.valueselector, v) || null),
+            }
+          }
+        },
+        render: ColMultiselectFilter,
+      } as MultiselectFilter<any>;
+    case 'search':
+      return {
+        ...f,
+        q(): FilterQueryItem | undefined {
+          if (!this.term) {
+            return undefined;
+          }
+          return {
+            col: '*', /* all columns */
+            predicate: {
+              op: 'instr',
+              value: this.term || '',
+            }
+          };
+        },
+        render: ColSearch,
+      } as SearchFilter;
+  }
+}
 
 /**
  * Default object containing all functions of {@link DsInfo}
@@ -35,9 +84,12 @@ export const defaultDsInfo: DsInfo = __as<DsInfo>({
       ( dsInfo.vizMetaProposed ||= [] ).push(v);
       ( ( dsInfo.vizMetaProposedByCol ||= {} )[col] ||= [] ).push(v);
     }
-    const __proposeFilter = (col: string, f: FilterProposal) => {
-      ( dsInfo.filterProposals ||= [] ).push(f);
-      ( ( dsInfo.filterProposalsByCol ||= {} )[col] ||= [] ).push(f);
+    const __proposeFilter = (col: string, f: Filter) => {
+      if (!f) {
+        return;
+      }
+      ( dsInfo.filters ||= [] ).push(f);
+      ( ( dsInfo.filtersByCol ||= {} )[col] ||= [] ).push(f);
     }
     if (meta.visualization) {
       Object.entries(meta.visualization).forEach(([col, vizMetas]) => {
@@ -49,37 +101,7 @@ export const defaultDsInfo: DsInfo = __as<DsInfo>({
     if (meta.filtering) {
       Object.entries(meta.filtering).forEach(([col, filterProposals]) => {
         filterProposals.forEach((filterProposal) => {
-          switch (filterProposal.type) {
-            case 'multiselect':
-              __proposeFilter(col, {
-                ...filterProposal,
-                propose(): Filter {
-                  return {
-                    col: this.col,
-                    label: this.valuefield,
-                    predicate: {
-                      op: 'in',
-                      values: this.selected.map(v => select(this.valueselector, v) || null),
-                    }
-                  }
-                },
-              } as MultiselectFilterProposal);
-              break;
-            case 'search':
-              __proposeFilter(col, {
-                ...filterProposal,
-                propose(): Filter {
-                  return {
-                    col,
-                    predicate: {
-                      op: 'instr',
-                      value: this.term || '',
-                    }
-                  };
-                }
-              } as SearchFilterProposal);
-              break;
-          }
+          __proposeFilter(col, filterFactory(filterProposal))
         });
       });
     }
@@ -150,18 +172,9 @@ export const defaultDsInfo: DsInfo = __as<DsInfo>({
     return pipeline;
   },
 
-  applyFilter(filter: Filter): Filter[] | undefined {
-    let ff = this.dropFilter(filter);
-    return ff ? [...ff, filter] : [filter];
-  },
-
-  dropFilter(filter: Filter): Filter[] | undefined {
-    let ff = this.filters?.filter(f => !( f.col == filter.col && f.label == filter.label ));
-    return ff?.length ? ff : undefined;
-  },
-
   getFilterQuery(): FilterQuery | undefined {
-    return this.filters;
+    let ff = this.filters?.map(f => f.q()).filter(f => f);
+    return ff?.length ? ff as FilterQueryItem[] : undefined;
   },
 
   isMetaFinal(): boolean {
@@ -218,16 +231,12 @@ export function reduceDsInfo(dsInfo: DsInfo, action: DsInfoAction): DsInfo {
         vizMeta: dsInfo.appendViz(action.vizMeta),
       };
 
-    case DsInfoActionType.ADD_FILTER:
+    case DsInfoActionType.APPLY_FILTER:
+      // apply all current filters (object fields wan't change.
+      // but since filters are mutable, we make a copy of object to
+      // trigger re-render)
       return {
         ...dsInfo,
-        filters: dsInfo.applyFilter(action.filter),
-      };
-
-    case DsInfoActionType.DROP_FILTER:
-      return {
-        ...dsInfo,
-        filters: dsInfo.dropFilter(action.filter),
       };
 
     case DsInfoActionType.UPDATE_META_SUCCESS:
@@ -273,14 +282,9 @@ export enum DsInfoActionType {
   ADD_VIZ,
 
   /**
-   * Filter by certain col was selected
+   * Filter was updated
    */
-  ADD_FILTER,
-
-  /**
-   * Filter by certain col was dropped
-   */
-  DROP_FILTER,
+  APPLY_FILTER,
 
   /**
    * Updated status of the selected DS
@@ -308,8 +312,7 @@ export type DsInfoAction = {
   type: DsInfoActionType.ADD_VIZ;
   vizMeta: VizMeta;
 } | {
-  type: DsInfoActionType.ADD_FILTER | DsInfoActionType.DROP_FILTER;
-  filter: Filter;
+  type: DsInfoActionType.APPLY_FILTER;
 } | {
   type: DsInfoActionType.UPDATE_META_ERROR;
   err?: string;

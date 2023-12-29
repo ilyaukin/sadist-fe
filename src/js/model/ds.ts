@@ -3,18 +3,18 @@
  * that will be extended while implementing
  */
 export type VizType =
-  'marker' |
-  'bar' |
-  'histogram' |
-  'globe';
+    'marker' |
+    'bar' |
+    'histogram' |
+    'globe';
 
 /**
  * Type of action of visualization data retrieving,
  * such as group or calculate percentile
  */
 export type VizAction =
-  'accumulate' |
-  'group';
+    'accumulate' |
+    'group';
 
 /**
  * Any value that can appear in the DS
@@ -56,9 +56,9 @@ export interface InStrPredicate<T> {
  * Will be extended while implementing
  */
 export type Predicate<T = ValueType> =
-  EqPredicate<T> |
-  InPredicate<T> |
-  InStrPredicate<T>;
+    EqPredicate<T> |
+    InPredicate<T> |
+    InStrPredicate<T>;
 
 /**
  * Properties specific to a table column
@@ -85,7 +85,7 @@ export interface ColSpecificProps {
 /**
  * Properties of "accumulate" action
  */
-export type AccumulateProps = (ColSpecificProps | {}) & {
+export type AccumulateProps = ( ColSpecificProps | {} ) & {
   action: 'accumulate';
   /**
    * function which reduces values to the single accumulated
@@ -100,7 +100,7 @@ export type Reducer = never;
 /**
  * Properties of "group" action
  */
-export type GroupProps = (ColSpecificProps | {}) & {
+export type GroupProps = ( ColSpecificProps | {} ) & {
   action: 'group';
   /**
    * function which reduces groups i.e. defines which value goes
@@ -165,6 +165,7 @@ export interface VizMeta {
  */
 export interface VizPipelineItem {
   action: string;
+
   [prop: string]: any;
 }
 
@@ -179,6 +180,7 @@ export type VizPipeline = VizPipelineItem[];
  */
 export interface VizDataItem {
   id: any;
+
   [k: string]: VizData;
 }
 
@@ -188,28 +190,13 @@ export interface VizDataItem {
 export type VizData = VizDataItem[] | number;
 
 /**
- * Meta information about a filter applied to DS
- */
-export type Filter = ColSpecificProps;
-
-/**
- * Filter builder/generator, which is a mutable object
- * that can produce a filter. For example, a list of values which
- * a user ticks filtered values from
- */
-export interface AbstractFilterProposal {
-  propose(): Filter;
-}
-
-/**
  * Filter by selecting one or more of multiple values
  */
-export interface MultiselectFilterProposal<T = ValueType> extends AbstractFilterProposal {
+export interface MultiselectFilterProposal<T = ValueType> {
   type: 'multiselect';
   col: string;
   label: string;
   values: T[];
-  selected: T[];
 
   /**
    * Selector for label of an item in the list, in format of
@@ -232,9 +219,8 @@ export interface MultiselectFilterProposal<T = ValueType> extends AbstractFilter
 /**
  * Filter by searching (normally text)
  */
-export interface SearchFilterProposal<T = string> extends AbstractFilterProposal {
+export interface SearchFilterProposal {
   type: 'search';
-  term?: T;
 }
 
 /**
@@ -243,17 +229,51 @@ export interface SearchFilterProposal<T = string> extends AbstractFilterProposal
 export type ComplexValueType = { id: ValueType; [p: string]: any; } | null;
 
 /**
- * Any of known {@link AbstractFilterProposal} types
+ * Any of known filter types
  */
 export type FilterProposal =
-  MultiselectFilterProposal<ValueType> |
-  MultiselectFilterProposal<ComplexValueType> |
-  SearchFilterProposal;
+    MultiselectFilterProposal<ValueType> |
+    MultiselectFilterProposal<ComplexValueType> |
+    SearchFilterProposal;
+
+/**
+ * Filter interface
+ */
+export interface BaseFilter<ThisType extends BaseFilter<ThisType>> {
+  /**
+   * Get a filter query item produced by this filter
+   */
+  q(): FilterQueryItem | undefined;
+
+  /**
+   * Render this filter in a col dropdown menu
+   */
+  render: React.FC<{ filter: ThisType; onFilter: () => any }>;
+}
+
+export type MultiselectFilter<T> =
+    BaseFilter<MultiselectFilter<T>>
+    & MultiselectFilterProposal<T>
+    & {
+  selected: T[];
+}
+
+export type SearchFilter = BaseFilter<SearchFilter> & SearchFilterProposal & {
+  term?: string;
+}
+
+/**
+ * Meta information about a filter applied to DS
+ */
+export type Filter =
+    MultiselectFilter<ValueType> |
+    MultiselectFilter<ComplexValueType> |
+    SearchFilter;
 
 /**
  * Item of {@link FilterQuery}
  */
-export type FilterQueryItem = Filter;
+export type FilterQueryItem = ColSpecificProps;
 
 /**
  * Filter query which is filter request parameter to the server
@@ -322,11 +342,10 @@ export interface DsMeta {
 
   /**
    * Proposed filtering returned by server,
-   * in the very format of filter proposal. Beside of  {@code propose()}
-   * method, it's defined in the frontend depending on filter type.
+   * in the very format of filter proposal
    */
   filtering?: {
-    [col: string]: Omit<FilterProposal, 'propose'>[];
+    [col: string]: FilterProposal[];
   }
 }
 
@@ -357,19 +376,14 @@ export interface DsInfo {
   vizMeta?: VizMeta;
 
   /**
-   * Proposed filters
-   */
-  filterProposals?: FilterProposal[];
-
-  /**
-   * Proposed filters by column
-   */
-  filterProposalsByCol?: { [col: string]: FilterProposal[]; }
-
-  /**
-   * Filters selected by a user
+   * Filters, both proposed and selected by a user
    */
   filters?: Filter[];
+
+  /**
+   * Filters by column
+   */
+  filtersByCol?: { [col: string]: Filter[]; }
 
   /**
    * Error of retrieving {@link meta}
@@ -412,18 +426,6 @@ export interface DsInfo {
    * Get visualization pipeline
    */
   getPipeline(): VizPipeline | undefined;
-
-  /**
-   * Apply a particular filter to the table
-   * @param filter
-   */
-  applyFilter(filter: Filter): Filter[] | undefined;
-
-  /**
-   * Drop a particular filter
-   * @param filter
-   */
-  dropFilter(filter: Filter): Filter[] | undefined;
 
   /**
    * Get filter query to the server

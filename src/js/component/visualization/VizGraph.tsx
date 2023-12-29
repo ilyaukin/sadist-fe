@@ -2,8 +2,8 @@ import React, { CSSProperties, Dispatch, ReactNode } from 'react';
 import equal from 'deep-equal';
 import {
   ColSpecificProps,
-  FilterProposal,
-  MultiselectFilterProposal,
+  Filter,
+  MultiselectFilter,
   VizData,
   VizDataItem,
   VizMeta
@@ -19,7 +19,7 @@ interface VizGraphProps {
   name?: string;
   label?: string;
   selected?: boolean;
-  filterProposals?: FilterProposal[];
+  filters?: Filter[];
   dispatchDsInfo?: Dispatch<DsInfoAction>;
 }
 
@@ -27,7 +27,7 @@ const VizGraph = (props: VizGraphProps) => {
 
   let {
     style, meta, data, id, name, label, selected,
-    filterProposals, dispatchDsInfo
+    filters, dispatchDsInfo
   } = props;
   name ||= meta.key;
 
@@ -38,29 +38,28 @@ const VizGraph = (props: VizGraphProps) => {
     </div>
   }
 
-  let children: ReactNode = null, filterProposal: FilterProposal | undefined,
+  let children: ReactNode = null, filter: Filter | undefined,
       isSelected: (arg0: VizDataItem) => boolean | undefined,
       onSelected: ( (e: CustomEvent) => void ) | undefined;
   if (data instanceof Array && meta.children) {
-    filterProposal = filterProposals?.find(f =>
+    filter = filters?.find(f =>
         f.type === 'multiselect'
         && f.col === ( meta.props as ColSpecificProps ).col
         && f.label === ( meta.props as ColSpecificProps ).label);
-    if (filterProposal) {
+    if (filter) {
       isSelected = (v: VizDataItem): boolean =>
-          !!( filterProposal as MultiselectFilterProposal ).selected.find(i => equal(i, v.id));
+          !!( filter as MultiselectFilter<any> ).selected.find(i => equal(i, v.id));
       onSelected = (e: CustomEvent): void => {
         e.stopPropagation();
         const id = e.detail.id;
         if (id) {
           if (e.detail.sourceEvent.shiftKey) {
-            ( filterProposal as MultiselectFilterProposal ).selected.push(id);
+            ( filter as MultiselectFilter<any> ).selected.push(id);
           } else {
-            ( filterProposal as MultiselectFilterProposal ).selected = [id];
+            ( filter as MultiselectFilter<any> ).selected = [id];
           }
           dispatchDsInfo?.({
-            type: DsInfoActionType.ADD_FILTER,
-            filter: filterProposal!.propose()
+            type: DsInfoActionType.APPLY_FILTER,
           });
         }
       }
