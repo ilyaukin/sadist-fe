@@ -3,6 +3,10 @@
     margin-bottom: 20px;
 }
 
+.token-selected {
+    background-color: yellow;
+}
+
 .labels {
     font-size: 20px;
 }

@@ -33,8 +33,15 @@ const ComponentDemo = () => {
       </>
     }(),
     'wired-combo': function () {
+
+      React.useEffect(() => {
+        setTimeout(() =>
+                document.getElementById("combo")?.focus(),
+            100);
+      });
+
       return <>
-        <wired-combo selected="banana">
+        <wired-combo id='combo' selected="banana">
           <wired-item value="banana">Banana</wired-item>
           <wired-item value="apple">Apple</wired-item>
           <wired-item value=''>Some fruit with a long name a</wired-item>

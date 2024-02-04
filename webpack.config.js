@@ -367,6 +367,8 @@ module.exports = {
       app.get('/dl/session/s1234', function (req, res) {
         res.send({
           text: 'slowo za slowo',
+          sequence: [{token: 'slowo', label: 'word'}, {token: ' ', label: 'whitespace'},
+            {token: 'za', label: 'word'}, {token: ' ', label: 'whitespace'}, {token: 'slowo', label: 'word'}],
           success: true
         })
       });
