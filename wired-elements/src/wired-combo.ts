@@ -20,30 +20,36 @@ interface ComboValue {
 
 @customElement('wired-combo')
 export class WiredCombo extends WiredBase {
-  @property({ type: String }) selected?: string;
+  @property() get value(): ComboValue | undefined {
+    return this.selectedValue;
+  }
+
+  set value(value: ComboValue | undefined) {
+    this.select(value?.value);
+    this.selectedValue = value;
+    this.requestUpdate();
+  }
+
+  @property({ type: String }) get selected(): string {
+    return this.selectedValue?.value || '';
+  }
+
+  set selected(selected: string | undefined) {
+    this.select(selected);
+    this.selectedValue = this.getComboValue(this.selectedItem) ||
+        ( selected ? { value: selected, text: '' } : undefined );
+    this.requestUpdate();
+  }
+
   @property({ type: Boolean, reflect: true }) disabled = false;
 
   @query('#card') private card?: WiredCard;
+  @query('#slot') private slotElement?: HTMLSlotElement;
 
   private cardShowing = false;
   private itemNodes: WiredItem[] = [];
   private selectedItem?: WiredItem;
-
-  @property() get value(): ComboValue | undefined {
-    if (this.selectedItem) {
-      return {
-        value: this.selectedItem.value || '',
-        text: this.selectedItem.textContent || ''
-      };
-    } else {
-      return undefined;
-    }
-  }
-
-  set value(value: ComboValue | undefined) {
-    this.select(this.getItem(value?.value));
-    this.selected = this.selectedItem?.value;
-  }
+  private selectedValue?: ComboValue;
 
   static get styles(): CSSResult {
     return css`
@@ -145,10 +151,6 @@ export class WiredCombo extends WiredBase {
     `;
   }
 
-  // protected render(): unknown {
-  //   return html`<div>1111111111111111</div>`;
-  // }
-  //
   render(): TemplateResult {
     return html`
       <input id="searchInput" @keyup="${this.onSearch}">
@@ -182,6 +184,7 @@ export class WiredCombo extends WiredBase {
 
     this.addEventListener('blur', () => {
       if (this.cardShowing) {
+        this.select(this.selected);
         this.setCardShowing(false);
       }
     });
@@ -207,7 +210,7 @@ export class WiredCombo extends WiredBase {
         case 27:
           event.preventDefault();
           if (this.cardShowing) {
-            this.select(this.getItem());
+            this.select(this.selected);
             this.setCardShowing(false);
           }
           break;
@@ -251,9 +254,8 @@ export class WiredCombo extends WiredBase {
     this.tabIndex = this.disabled ? -1 : +( this.getAttribute('tabindex') || 0 );
   }
 
-  private getItem(value: string | undefined = this.selected) {
-    const slot = this.shadowRoot!.getElementById('slot') as HTMLSlotElement;
-    const nodes = slot.assignedNodes() as WiredItem[];
+  private getItem(value: string | undefined) {
+    const nodes = this.slotElement?.assignedNodes() as WiredItem[];
 
     if (!nodes || !value) {
       return undefined;
@@ -289,10 +291,10 @@ export class WiredCombo extends WiredBase {
     if (showing) {
       setTimeout(() => {
         this.card!.requestUpdate();
-        const nodes = ( this.shadowRoot!.getElementById('slot') as HTMLSlotElement ).assignedNodes().filter((d) => {
+        const nodes = this.slotElement?.assignedNodes().filter((d) => {
           return d.nodeType === Node.ELEMENT_NODE;
         });
-        nodes.forEach((n) => {
+        nodes!.forEach((n) => {
           const e = n as WiredBase;
           if (e.requestUpdate) {
             e.requestUpdate();
@@ -303,7 +305,18 @@ export class WiredCombo extends WiredBase {
     this.setAttribute('aria-expanded', `${this.cardShowing}`);
   }
 
-  private select(item: WiredItem | undefined) {
+  private select(item: WiredItem | string | undefined) {
+    // if not itemNodes, component has not yet initialized.
+    // thus make the method safe, during @slotchange item will be selected in UI
+    if (!this.itemNodes.length) {
+      return;
+    }
+
+    // if string, find an actual item
+    if (typeof item == 'string') {
+      item = this.getItem(item);
+    }
+
     // update displaying item
     if (this.selectedItem) {
       this.selectedItem.selected = false;
@@ -339,7 +352,8 @@ export class WiredCombo extends WiredBase {
   }
 
   private fireSelected() {
-    this.selected = this.selectedItem ? this.selectedItem.value : '';
+    this.selectedValue = this.getComboValue(this.selectedItem);
+    this.requestUpdate();
     fire(this, 'selected', { selected: this.selected });
   }
 
@@ -401,7 +415,7 @@ export class WiredCombo extends WiredBase {
   private onSlotChange() {
     this.itemNodes = [];
     this.selectedItem = undefined;
-    const nodes = ( this.shadowRoot!.getElementById('slot') as HTMLSlotElement ).assignedNodes();
+    const nodes = this.slotElement?.assignedNodes();
     if (nodes && nodes.length) {
       for (let i = 0; i < nodes.length; i++) {
         const node = nodes[i] as WiredItem;
@@ -410,10 +424,15 @@ export class WiredCombo extends WiredBase {
           this.itemNodes.push(node);
           if (node.value === this.selected) {
             this.select(node);
+            this.selectedValue = this.getComboValue(node);
           }
         }
       }
     }
     this.requestUpdate();
+  }
+
+  private getComboValue(node: WiredItem | undefined) {
+    return node ? { value: node.value, text: node.textContent || '' } : undefined;
   }
 }

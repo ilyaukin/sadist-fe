@@ -14,28 +14,33 @@ interface ListboxValue {
 
 @customElement('wired-listbox')
 export class WiredListbox extends WiredBase {
-  @property({ type: String }) selected?: string;
   @property({ type: Boolean }) horizontal = false;
 
-  private itemNodes: WiredListboxItem[] = [];
-  private selectedItem?: WiredListboxItem;
-  private itemClickHandler = this.onItemClick.bind(this);
-
   @property() get value(): ListboxValue | undefined {
-    if (this.selectedItem) {
-      return {
-        value: this.selectedItem.value || '',
-        text: this.selectedItem.textContent || ''
-      };
-    } else {
-      return undefined;
-    }
+    return this.selectedValue;
   }
 
   set value(value: ListboxValue | undefined) {
-    this.select(this.getItem(value?.value));
-    this.selected = this.selectedItem?.value;
+    this.select(value?.value);
+    this.selectedValue = value;
+    this.requestUpdate();
   }
+
+  @property({ type: String }) get selected(): string {
+    return this.selectedValue?.value || '';
+  }
+
+  set selected(selected: string | undefined) {
+    this.select(selected);
+    this.selectedValue = this.getListboxValue(this.selectedItem) ||
+        ( selected ? { value: selected, text: '' } : undefined );
+    this.requestUpdate();
+  }
+
+  private itemNodes: WiredListboxItem[] = [];
+  private selectedItem?: WiredListboxItem;
+  private selectedValue?: ListboxValue;
+  private itemClickHandler = this.onItemClick.bind(this);
 
   static get styles(): CSSResultArray {
     return [
@@ -120,7 +125,12 @@ export class WiredListbox extends WiredBase {
     return undefined;
   }
 
-  private select(item?: WiredListboxItem) {
+  private select(item: WiredListboxItem | string | undefined) {
+    // if string, find an actual item
+    if (typeof item == 'string') {
+      item = this.getItem(item);
+    }
+
     if (this.selectedItem) {
       this.selectedItem.selected = false;
       this.selectedItem.removeAttribute('aria-selected');
@@ -133,7 +143,7 @@ export class WiredListbox extends WiredBase {
   }
 
   private fireSelected() {
-    this.selected = this.selectedItem?.value;
+    this.selectedValue = this.getListboxValue(this.selectedItem);
     fire(this, 'selected', { selected: this.selected });
   }
 
@@ -169,10 +179,15 @@ export class WiredListbox extends WiredBase {
           this.itemNodes.push(node);
           if (node.value === this.selected) {
             this.select(node);
+            this.selectedValue = this.getListboxValue(node);
           }
         }
       }
     }
     this.requestUpdate();
+  }
+
+  private getListboxValue(item: WiredListboxItem | undefined) {
+    return item ? { value: item.value, text: item.textContent || '' } : undefined;
   }
 }

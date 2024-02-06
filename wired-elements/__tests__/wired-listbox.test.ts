@@ -88,4 +88,19 @@ describe('wired-listbox', () => {
     await element.updateComplete;
     expect(element.items[1].getAttribute('aria-selected')).to.be.equal('true');
   });
+
+  it('should update selected from code', async function () {
+    const element = await __fixture(html`
+      <wired-listbox selected="1">
+        <wired-item value="1">Item #1</wired-item>
+        <wired-item value="2">Item #2</wired-item>
+        <wired-item value="3">Item #3</wired-item>
+      </wired-listbox>
+    `);
+
+    element.selected = '2';
+
+    await element.updateComplete;
+    expect(element.items[1].getAttribute('aria-selected')).to.be.equal('true');
+  });
 });

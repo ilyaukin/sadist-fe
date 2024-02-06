@@ -98,11 +98,30 @@ String.prototype.replaceAccent = function () {
 @customElement('wired-combo-lazy')
 export class WiredComboLazy extends WiredBase {
   @property({ type: Array }) values: ComboValue[] = [];
-  @property({ type: String }) selected?: string;
+  @property() get value(): ComboValue | undefined {
+    return this.selectedValue;
+  }
+
+  set value(value: ComboValue | undefined) {
+    this.select(value?.value);
+    this.selectedValue = value;
+    this.requestUpdate();
+  }
+
+  @property({ type: String }) get selected(): string {
+    return this.selectedValue?.value || '';
+  }
+
+  set selected(selected: string | undefined) {
+    this.select(selected);
+    this.selectedValue = this.getComboValue(this.selectedItem) ||
+        ( selected ? { value: selected, text: '' } : undefined );
+    this.requestUpdate();
+  }
+
   @property({ type: Boolean, reflect: true }) disabled = false;
 
   @query('#card') private card?: WiredCard;
-
   private cardShowing = false;
   private itemNodes: WiredItem[] = [];
   private selectedItem?: WiredItem;
@@ -110,16 +129,6 @@ export class WiredComboLazy extends WiredBase {
 
   // maximum number of items displayed at once
   private depth = 10;
-
-  @property() get value(): ComboValue | undefined {
-    return this.selectedValue;
-  }
-
-  set value(value: ComboValue | undefined) {
-    this.select(this.getItem(value?.value));
-    this.selectedValue = value;
-    this.selected = this.selectedValue?.value;
-  }
 
   static get styles(): CSSResult {
     return css`
@@ -281,7 +290,7 @@ export class WiredComboLazy extends WiredBase {
         case 27:
           event.preventDefault();
           if (this.cardShowing) {
-            this.select(this.getItem());
+            this.select(this.selected);
             this.setCardShowing(false);
           }
           break;
@@ -375,7 +384,18 @@ export class WiredComboLazy extends WiredBase {
     this.setAttribute('aria-expanded', `${this.cardShowing}`);
   }
 
-  private select(item: WiredItem | undefined) {
+  private select(item: WiredItem | string | undefined) {
+    // if not itemNodes, component has not yet initialized.
+    // thus make the method safe, during @slotchange item will be selected in UI
+    if (!this.itemNodes.length) {
+      return;
+    }
+
+    // if string, find an actual item
+    if (typeof item == 'string') {
+      item = this.getItem(item);
+    }
+
     // update displaying item
     if (this.selectedItem) {
       this.selectedItem.selected = false;
@@ -384,10 +404,6 @@ export class WiredComboLazy extends WiredBase {
     if (item) {
       item.selected = true;
       item.setAttribute('aria-selected', 'true');
-      this.selectedValue = {
-        value: item.value || '',
-        text: item.textContent || ''
-      };
 
       // scroll to the item if it's out of visible area
       const area = this.shadowRoot?.getElementById('itemContainer') as HTMLElement;
@@ -396,8 +412,6 @@ export class WiredComboLazy extends WiredBase {
         || item.offsetTop - item0Offset < area.scrollTop) {
         area.scrollTo({ top: item.offsetTop - item0Offset });
       }
-    } else {
-      this.selectedValue = undefined;
     }
 
     // update selected item for internal usage,
@@ -417,7 +431,8 @@ export class WiredComboLazy extends WiredBase {
   }
 
   private fireSelected() {
-    this.selected = this.selectedItem ? this.selectedItem.value : '';
+    this.selectedValue = this.getComboValue(this.selectedItem);
+    this.requestUpdate();
     fire(this, 'selected', { selected: this.selected });
   }
 
@@ -495,5 +510,9 @@ export class WiredComboLazy extends WiredBase {
     if (this.cardShowing) {
       (this.shadowRoot!.getElementById('card') as WiredCard).requestUpdate();
     }
+  }
+
+  private getComboValue(node: WiredItem | undefined) {
+    return node ? { value: node.value, text: node.textContent || '' } : undefined;
   }
 }

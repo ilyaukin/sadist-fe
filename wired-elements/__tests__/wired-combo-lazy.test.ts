@@ -1,5 +1,6 @@
 import { TemplateResult } from 'lit-element';
 import { expect, fixture, html } from '@open-wc/testing';
+import { sendKeys } from '@web/test-runner-commands';
 import { WiredComboLazy } from '../lib/wired-combo-lazy';
 import '../lib/wired-combo-lazy';
 import '../lib/wired-item';
@@ -14,37 +15,37 @@ interface WiredComboLazyElement extends WiredComboLazy {
 
 describe('wired-combo-lazy', () => {
 
-  let elementus: WiredComboLazyElement;
+  let element: WiredComboLazyElement;
 
   const __fixture = async (code: string | TemplateResult) => {
-    elementus = await fixture<WiredComboLazyElement>(code);
+    element = await fixture<WiredComboLazyElement>(code);
 
     // add missing attributes
-    Object.defineProperties(elementus, {
+    Object.defineProperties(element, {
       container: {
         get() {
-          return elementus.shadowRoot!.querySelector("#container");
+          return element.shadowRoot!.querySelector("#container");
         }
       },
       searchInput: {
         get() {
-          return elementus.shadowRoot!.querySelector("#searchInput");
+          return element.shadowRoot!.querySelector("#searchInput");
         }
       },
       cardElement: {
         get() {
-          return elementus.shadowRoot!.querySelector('wired-card');
+          return element.shadowRoot!.querySelector('wired-card');
         }
       },
       itemContainer: {
         get() {
-          return elementus.shadowRoot!.querySelector("#itemContainer");
+          return element.shadowRoot!.querySelector("#itemContainer");
         }
       },
       items: {
         get() {
           let result = [];
-          for (let e = elementus.itemContainer.firstElementChild; e; e = e.nextElementSibling) {
+          for (let e = element.itemContainer.firstElementChild; e; e = e.nextElementSibling) {
             result.push(e);
           }
           return result;
@@ -69,32 +70,65 @@ describe('wired-combo-lazy', () => {
   }
 
   function __click_on_combo() {
-    ( elementus.shadowRoot!.querySelector('#text') as HTMLElement ).click();
+    ( element.shadowRoot!.querySelector('#text') as HTMLElement ).click();
   }
 
   it('should show menu items on click', async () => {
     await __fixture_fruits();
 
     __click_on_combo();
-    expect(elementus.cardElement).to.be.displayed;
-    expect(elementus.items.length).to.be.equal(3);
-    expect(elementus.items[0].innerText).to.be.equal('Apple');
-    expect(elementus.items[1].innerText).to.be.equal('Banana');
-    expect(elementus.items[2].innerText).to.be.equal('Cherry');
+    expect(element.cardElement).to.be.displayed;
+    expect(element.items.length).to.be.equal(3);
+    expect(element.items[0].innerText).to.be.equal('Apple');
+    expect(element.items[1].innerText).to.be.equal('Banana');
+    expect(element.items[2].innerText).to.be.equal('Cherry');
   });
 
   it('should display selected item by default', async function () {
     await __fixture_fruits('banana');
 
-    expect(elementus.shadowRoot!.querySelector('#text')!.textContent!.trim()).to.be.equal('Banana');
+    expect(element.shadowRoot!.querySelector('#text')!.textContent!.trim()).to.be.equal('Banana');
   });
 
   it('should display selected item when value changed from code', async function () {
     await __fixture_fruits();
 
-    elementus.value = { value: 'banana', text: 'Banana' };
+    element.value = { value: 'banana', text: 'Banana' };
 
-    await elementus.updateComplete;
-    expect(elementus.shadowRoot!.querySelector('#text')!.textContent!.trim()).to.be.equal('Banana');
+    await element.updateComplete;
+    expect(element.shadowRoot!.querySelector('#text')!.textContent!.trim()).to.be.equal('Banana');
   });
-})
+
+  it('should display selected item when selected changed from code', async function () {
+    await __fixture_fruits('banana');
+
+    element.selected = 'apple';
+
+    await element.updateComplete;
+    expect(element.shadowRoot!.querySelector('#text')!.textContent!.trim()).to.be.equal('Apple');
+  });
+
+  it('should display the last selected value after pressing Esc', async function () {
+    await __fixture_fruits('banana');
+    __click_on_combo();
+
+    // arrow down
+    await sendKeys({ press: 'ArrowDown' });
+
+    // esc
+    await sendKeys({ press: 'Escape' });
+    expect(element.shadowRoot!.querySelector('#text')!.textContent!.trim()).to.be.equal('Banana');
+  });
+
+  it('should display the last selected value when the component lose the focus', async function () {
+    await __fixture_fruits('banana');
+    __click_on_combo();
+
+    // arrow down
+    await sendKeys({ press: 'ArrowDown' });
+
+    // click to another element
+    // element.blur();
+    expect(element.shadowRoot!.querySelector('#text')!.textContent!.trim()).to.be.equal('Banana');
+  });
+});
