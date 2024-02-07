@@ -19,6 +19,7 @@ type SequenceExt = SequenceItemExt[];
 interface SequenceLabellingInterfaceState extends LabellingInterfaceState {
   sequence?: SequenceExt;
   tokenI?: number;
+  error?: string;
 }
 
 class SequenceLabellingInterface extends LabellingInterface<LabellingInterfaceProps, SequenceLabellingInterfaceState> {
@@ -53,7 +54,8 @@ class SequenceLabellingInterface extends LabellingInterface<LabellingInterfacePr
     if (sequence) {
       newState.sequence = sequence.map(item => ( {
         ...item,
-        subsequence: [item]
+        subsequence: [item],
+        error: undefined
       } ));
       newState.tokenI = 0;
     }
@@ -66,7 +68,7 @@ class SequenceLabellingInterface extends LabellingInterface<LabellingInterfacePr
       return '';
     }
 
-    const { sequence, tokenI } = this.state;
+    const { sequence, tokenI, error } = this.state;
 
     if (!sequence) {
       return <div className="error">Response has to
@@ -84,6 +86,9 @@ class SequenceLabellingInterface extends LabellingInterface<LabellingInterfacePr
               </>
           ))
         }
+      </div>
+      <div>
+        <span className="field-error">{error}</span>
       </div>
       <div>
         {/*move to previous token*/}
@@ -106,7 +111,7 @@ class SequenceLabellingInterface extends LabellingInterface<LabellingInterfacePr
           ))}
         </wired-combo>
         {/*submit sequence to the server*/}
-        <wired-button style={{ color: 'blue' }} title="Ctrl+[Enter]"
+        <wired-button style={{ color: 'blue' }} title="z"
                       onClick={this.onSubmit}>Submit
         </wired-button>
       </div>
@@ -214,6 +219,13 @@ class SequenceLabellingInterface extends LabellingInterface<LabellingInterfacePr
   }
 
   onSubmit = () => {
+    let { sequence, tokenI } = this.state;
+
+    if (sequence == undefined || tokenI == undefined || tokenI != sequence.length - 1) {
+      this.setState({ error: 'Please select labels for all tokens' });
+      return;
+    }
+
     this.selectLabel(this.getLabel());
   }
 
@@ -227,8 +239,7 @@ class SequenceLabellingInterface extends LabellingInterface<LabellingInterfacePr
       this.onShrinkToken();
     } else if (event.key == '>') {
       this.onExpandToken();
-    } else if (event.key == 'Enter' && ( event.ctrlKey || event.altKey )) {
-      // both Ctrl+Enter and Alt+Enter are submit
+    } else if (event.key == 'z' || event.key == 's') {
       this.onSubmit();
     }
   }
