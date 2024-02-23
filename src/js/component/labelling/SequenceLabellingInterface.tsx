@@ -55,10 +55,10 @@ class SequenceLabellingInterface extends LabellingInterface<LabellingInterfacePr
       newState.sequence = sequence.map(item => ( {
         ...item,
         subsequence: [item],
-        error: undefined
       } ));
       newState.tokenI = 0;
     }
+    newState.error = undefined;
 
     return newState;
   }
@@ -106,7 +106,7 @@ class SequenceLabellingInterface extends LabellingInterface<LabellingInterfacePr
           this.combo = combo;
         }} style={{ top: '-7px' }} selected={sequence[tokenI!].label}
                      onselected={(event) => this.onSelectLabel(event.detail.selected, event)}>
-          {labels.map(label => (
+          {labels.filter(label => label != 'whitespace').map(label => (
               <wired-item key={label} value={label}>{label}</wired-item>
           ))}
         </wired-combo>
@@ -219,14 +219,18 @@ class SequenceLabellingInterface extends LabellingInterface<LabellingInterfacePr
   }
 
   onSubmit = () => {
-    let { sequence, tokenI } = this.state;
-
-    if (sequence == undefined || tokenI == undefined || tokenI != sequence.length - 1) {
+    if (!this.validateSubmit()) {
       this.setState({ error: 'Please select labels for all tokens' });
       return;
     }
 
     this.selectLabel(this.getLabel());
+  }
+
+  private validateSubmit() {
+    let { sequence, tokenI } = this.state;
+
+    return sequence != undefined && tokenI != undefined && tokenI == sequence.length - 1;
   }
 
   onKeyUp(event: KeyboardEvent) {
@@ -239,7 +243,7 @@ class SequenceLabellingInterface extends LabellingInterface<LabellingInterfacePr
       this.onShrinkToken();
     } else if (event.key == '>') {
       this.onExpandToken();
-    } else if (event.key == 'z' || event.key == 's') {
+    } else if (event.key == 'z' && this.validateSubmit()) {
       this.onSubmit();
     }
   }
