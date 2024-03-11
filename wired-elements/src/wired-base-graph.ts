@@ -40,7 +40,6 @@ export abstract class WiredBaseGraph extends WiredBase {
   protected pointed?: DataPoint;
 
   protected _initialScale: typeof this.scale = this.scale;
-  protected _base!: number;
 
   static get styles(): CSSResult {
     return css`
@@ -106,6 +105,8 @@ export abstract class WiredBaseGraph extends WiredBase {
     this.addEventListener('click', this.onClick);
   }
 
+  protected abstract getBase(): number;
+
   protected getScale(name: string): number | undefined {
     if (typeof this.scale == 'number') {
       return this.scale;
@@ -117,10 +118,9 @@ export abstract class WiredBaseGraph extends WiredBase {
     }
   }
 
-  protected updateScale(base: number = 0) {
+  protected updateScale() {
     this.scale = this._initialScale;
-    base = base || this._base;
-    this._base = base;
+    const base = this.getBase();
     const series: { [x: string]: number[]; } = {};
     const scales: { [x: string]: number; } = {};
     const name2key: { [x: string]: string; } = {};
@@ -137,7 +137,9 @@ export abstract class WiredBaseGraph extends WiredBase {
         key = ( ( this.scale[dp.name] || 'auto' ) === 'auto' ) ? `$${dp.name}` : this.scale[dp.name];
         name2key[dp.name] = key;
       }
-      ( series[key] ||= [] ).push(dp.value);
+      if (typeof dp.value == 'number') {
+        ( series[key] ||= [] ).push(dp.value);
+      }
     });
     Object.entries(series).forEach(([key, serie]) => {
       const min = Math.min(...serie), max = Math.max(...serie),

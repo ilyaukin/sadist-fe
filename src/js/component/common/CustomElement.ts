@@ -7,8 +7,8 @@ import "/wired-elements/lib/wired-elements";
 import {
   WiredDivider, WiredSpinner, WiredItem, WiredListbox, WiredDialog,
   WiredCard, WiredButton, WiredCombo, WiredRadio, WiredInput,
-  WiredSearchInput, WiredCheckbox, WiredComboLazy,
-  WiredBar, WiredMarker, WiredHistogram, WiredGlobe
+  WiredSearchInput, WiredSlider, WiredCheckbox, WiredComboLazy,
+  WiredBar, WiredMarker, WiredHistogram, WiredGlobe, WiredDualSlider
 } from '/wired-elements/lib/wired-elements';
 
 type CustomElement<T> = Partial<Omit<T, keyof HTMLElement> & Omit<HTMLProps<T>, keyof Omit<T, keyof HTMLElement>>>;
@@ -30,6 +30,8 @@ declare global {
       ['wired-radio']: CustomElementWithEvent<WiredRadio, 'change'>;
       ['wired-input']: CustomElementWithEvent<WiredInput, 'change' | 'input'>;
       ['wired-search-input']: CustomElementWithEvent<WiredSearchInput, 'change' | 'input' | 'close'>;
+      ['wired-slider']: CustomElementWithEvent<WiredSlider, 'change' | 'input'>;
+      ['wired-dual-slider']: CustomElementWithEvent<WiredDualSlider, 'change' | 'input'>;
       ['wired-checkbox']: CustomElementWithEvent<WiredCheckbox, 'change'>;
       ['wired-combo-lazy']: CustomElementWithEvent<WiredComboLazy, 'selected'>;
       ['wired-bar']: CustomElement<WiredBar>;

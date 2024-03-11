@@ -44,6 +44,72 @@ export interface InPredicate<T> {
 }
 
 /**
+ * {@link Predicate} that matches numeric value by range inclusion,
+ * including the lower bound and excluding the upper bound
+ */
+export interface InRangePredicate {
+  op: 'inrange';
+  range_min: number;
+  range_max: number;
+}
+
+/**
+ * {@link Predicate} that matches numeric value to be greater than
+ */
+export interface GtPredicate {
+  op: 'gt';
+  value: number;
+}
+
+/**
+ * {@link Predicate} that matches numeric value to be greater or equal than
+ */
+export interface GtePredicate {
+  op: 'gte';
+  value: number;
+}
+
+/**
+ * {@link Predicate} that matches numeric value to be lower than
+ */
+export interface LtPredicate {
+  op: 'lt';
+  value: number;
+}
+
+/**
+ * {@link Predicate} that matches numeric value to be lower or equal than
+ */
+export interface LtePredicate {
+  op: 'lte';
+  value: number;
+}
+
+/**
+ * {@link Predicate} that matches number of predicate with OR condition
+ */
+export interface OrPredicate {
+  op: 'or';
+  expression: Predicate[];
+}
+
+/**
+ * {@link Predicate} that matches number of predicate with AND condition
+ */
+export interface AndPredicate {
+  op: 'and';
+  expression: Predicate[];
+}
+
+/**
+ * {@link Predicate} that matches NOT a predicate
+ */
+export interface NotPredicate {
+  op: 'not';
+  expression: Predicate;
+}
+
+/**
  * Predicate that matches string value by inclusion
  */
 export interface InStrPredicate<T> {
@@ -58,6 +124,14 @@ export interface InStrPredicate<T> {
 export type Predicate<T = ValueType> =
     EqPredicate<T> |
     InPredicate<T> |
+    InRangePredicate |
+    GtPredicate |
+    GtePredicate |
+    LtPredicate |
+    LtePredicate |
+    OrPredicate |
+    AndPredicate |
+    NotPredicate |
     InStrPredicate<T>;
 
 /**
@@ -91,11 +165,38 @@ export type AccumulateProps = ( ColSpecificProps | {} ) & {
    * function which reduces values to the single accumulated
    * value, one of pre-defined or custom (TBD)
    */
-  accumulater?: 'count' | 'mean' | 'min' | 'max' | 'average';
+  accumulater?: 'count' | 'avg' | 'median' | 'min' | 'max';
 }
 
-//not implemented yet
-export type Reducer = never;
+/**
+ * {@link Reducer} to group values by ranges
+ */
+export interface RangeReducer {
+  type: 'range';
+
+  /**
+   * Minimum bound of the ranges. If not specified,
+   * defined automatically by data distribution
+   */
+  min?: number;
+
+  /**
+   * Maximum bound of the ranges. If not specified,
+   * defined automatically by data distribution
+   */
+  max?: number;
+
+  /**
+   * Step, i.e. width of one range. If not specified,
+   * defined automatically by data distribution
+   */
+  step?: number;
+}
+
+/**
+ * All known reducers
+ */
+export type Reducer = RangeReducer;
 
 /**
  * Properties of "group" action
@@ -157,7 +258,7 @@ export interface VizMeta {
    *  `@gizt/selector`. Applying to {@link VizDataItem}
    * If not defined, {@link VizDataItem.id} will be used
    */
-  labelselector?: string
+  labelselector?: string;
 }
 
 /**
@@ -216,6 +317,27 @@ export interface MultiselectFilterProposal<T = ValueType> {
   valuefield?: string;
 }
 
+export interface RangeFilterProposal {
+  type: 'range';
+  col: string;
+  label: string;
+
+  /**
+   * minimum limit of the range
+   */
+  min: number;
+
+  /**
+   * maximum limit of the range
+   */
+  max: number;
+
+  /**
+   * format of the label, by default 'number'
+   */
+  labelformat?: 'number' | 'datetime';
+}
+
 /**
  * Filter by searching (normally text)
  */
@@ -234,6 +356,7 @@ export type ComplexValueType = { id: ValueType; [p: string]: any; } | null;
 export type FilterProposal =
     MultiselectFilterProposal<ValueType> |
     MultiselectFilterProposal<ComplexValueType> |
+    RangeFilterProposal |
     SearchFilterProposal;
 
 /**
@@ -258,6 +381,35 @@ export type MultiselectFilter<T> =
   selected: T[];
 }
 
+export type RangeFilter = BaseFilter<RangeFilter> & RangeFilterProposal & {
+  /**
+   * lower boundary of the range, inclusive
+   */
+  range_min: number;
+
+  /**
+   * upper boundary of the range, exclusive
+   */
+  range_max: number;
+
+  /**
+   * if include all values, in this case boundaries ignored
+   */
+  all: boolean;
+
+  /**
+   * if include uncategorized (non-numeric) values, in this case
+   * boundaries ignored
+   */
+  uncategorized: boolean;
+
+  /**
+   * if include outliers (not within [min, max)) values, in this case
+   * boundaries ignored
+   */
+  outliers: boolean;
+}
+
 export type SearchFilter = BaseFilter<SearchFilter> & SearchFilterProposal & {
   term?: string;
 }
@@ -268,6 +420,7 @@ export type SearchFilter = BaseFilter<SearchFilter> & SearchFilterProposal & {
 export type Filter =
     MultiselectFilter<ValueType> |
     MultiselectFilter<ComplexValueType> |
+    RangeFilter |
     SearchFilter;
 
 /**

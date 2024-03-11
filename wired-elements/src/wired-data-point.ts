@@ -1,6 +1,6 @@
 import { css, CSSResult, html, property, PropertyValues } from 'lit-element';
 import { WiredBase } from './wired-base';
-import { Point } from './wired-lib';
+import { elementContainsPoint, formatNumber, Point } from './wired-lib';
 
 export class DataPoint {
   private wrapped: WiredDataPoint;
@@ -60,7 +60,7 @@ export class WiredDataPoint extends WiredBase {
         stroke-width: 1;
       }
 
-      :host(:hover) {
+      :host(.wired-data-point-hovered) {
         cursor: pointer;
       }
       
@@ -101,7 +101,7 @@ export class WiredDataPoint extends WiredBase {
     return html`
       <svg/>
       <div id="label" class="label">
-        ${`${this['data-label'] || this['data-id']}: ${this['data-value']}`}
+        ${`${this['data-label'] || this['data-id']}: ${this.formatValue()}`}
       </div>
     `
   }
@@ -117,8 +117,8 @@ export class WiredDataPoint extends WiredBase {
     }
   }
 
-  protected shouldUpdateWiredShapes(size: Point, _changed: PropertyValues | undefined): boolean | undefined {
-    return super.shouldUpdateWiredShapes(size, _changed) || _changed?.has('data-value') || _changed?.has('data-scale');
+  protected shouldUpdateWiredShapes(size: Point, changed: PropertyValues | undefined): boolean | undefined {
+    return super.shouldUpdateWiredShapes(size, changed) || changed?.has('data-value') || changed?.has('data-scale');
   }
 
   hover(hover: boolean) {
@@ -134,7 +134,10 @@ export class WiredDataPoint extends WiredBase {
   }
 
   containsPoint(x: number, y: number): boolean {
-    const rect = this.getBoundingClientRect();
-    return rect.left <= x && x <= rect.right && rect.top <= y && y <= rect.bottom;
+    return elementContainsPoint(this, x, y);
+  }
+
+  protected formatValue(): string {
+    return formatNumber(this['data-value']);
   }
 }

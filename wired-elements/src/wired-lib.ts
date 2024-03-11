@@ -316,3 +316,42 @@ export function debugLog(s: string) {
     console.log(s);
   }
 }
+
+/**
+ * Check if the point (x, y) is inside the element's rect
+ * @param element an element
+ * @param x x coordinate related to the viewport
+ * @param y y coordinate related to the viewport
+ */
+export function elementContainsPoint(element: Element, x: number, y: number) {
+  const rect = element.getBoundingClientRect();
+  return rect.left <= x && x <= rect.right && rect.top <= y && y <= rect.bottom;
+}
+
+/**
+ * Format number in a nice way, to avoid excessive digits after decimal point
+ * @param n
+ */
+export function formatNumber(n?: number) {
+  if (typeof n == 'number') {
+    let f =
+        (n === Math.floor(n)) ? 0 :
+            Math.max(0, -Math.floor(Math.log10(n)) + 2);
+    return n.toFixed(f);
+  }
+  return `${n}`;
+}
+
+/**
+ * Format date, given numeric timestamp
+ * @param t timestamp
+ * @param unit unit ('s' or 'ms')
+ */
+export function formatDate(t?: number, unit: 's' | 'ms' = 's') {
+  if (typeof t == 'number') {
+    const formatter = new Intl.DateTimeFormat('en');
+    const date = new Date(unit == 's' ? 1000 * t : t);
+    return formatter.format(date);
+  }
+  return `${t}`;
+}

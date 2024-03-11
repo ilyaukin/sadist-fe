@@ -86,7 +86,7 @@ const VizHint: React.FC<VizHintProps> = ({
                 status = <>
                   {
                     dsInfo.vizMetaProposedByCol?.[col]
-                        .map((vizMeta, i) => {
+                        ?.map((vizMeta, i) => {
                           const link = <a
                               key={vizMeta.key}
                               className="bare"

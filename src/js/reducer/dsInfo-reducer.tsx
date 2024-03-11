@@ -7,7 +7,7 @@ import {
   FilterProposal,
   FilterQuery,
   FilterQueryItem,
-  MultiselectFilter,
+  MultiselectFilter, RangeFilter,
   SearchFilter,
   VizMeta,
   VizPipeline
@@ -16,6 +16,7 @@ import { __as } from '../helper/type-helper';
 import { select } from '../helper/json-helper';
 import ColMultiselectFilter from '../component/ds/ColMultiselectFilter';
 import ColSearch from '../component/ds/ColSearch';
+import ColRangeFilter from '../component/ds/ColRangeFilter';
 
 /**
  * Make functional filter out of filter proposal or just serialized filter
@@ -34,7 +35,7 @@ export const filterFactory = (f: FilterProposal | Filter): Filter => {
           }
           return {
             'col': this.col,
-            'label': this.valuefield,
+            'label': this.valuefield || this.label,
             'predicate': {
               'op': 'in',
               'values': this.selected.map(v => select(this.valueselector, v) || null),
@@ -43,6 +44,54 @@ export const filterFactory = (f: FilterProposal | Filter): Filter => {
         },
         render: ColMultiselectFilter,
       } as MultiselectFilter<any>;
+    case 'range':
+      return {
+        ...f,
+        range_min: ( f as RangeFilter ).range_min != undefined ?
+            ( f as RangeFilter ).range_min : f.min,
+        range_max: ( f as RangeFilter ).range_max != undefined ?
+            ( f as RangeFilter ).range_max : f.max,
+        all: ( f as RangeFilter ).all != undefined ?
+            ( f as RangeFilter ).all : true,
+        uncategorized: ( f as RangeFilter ).uncategorized != undefined ?
+            ( f as RangeFilter ).uncategorized : false,
+        outliers: ( f as RangeFilter ).outliers != undefined ?
+            ( f as RangeFilter ).outliers : false,
+        q() {
+          if (this.all) {
+            return undefined;
+          }
+          if (this.uncategorized) {
+            return {
+              col: this.col,
+              label: this.label,
+              predicate: { op: 'eq', value: null },
+            };
+          }
+          if (this.outliers) {
+            return {
+              col: this.col,
+              label: this.label,
+              predicate: {
+                op: 'or', expression: [
+                  { op: 'lt', value: this.min },
+                  { op: 'gte', value: this.max },
+                ]
+              },
+            };
+          }
+          return {
+            col: this.col,
+            label: this.label,
+            predicate: {
+              op: 'inrange',
+              range_min: this.range_min,
+              range_max: this.range_max,
+            }
+          }
+        },
+        render: ColRangeFilter,
+      } as RangeFilter;
     case 'search':
       return {
         ...f,
@@ -114,13 +163,17 @@ export const defaultDsInfo: DsInfo = __as<DsInfo>({
     const tail: { [key: string]: VizMeta } = {
       count: {
         key: 'count',
-        type: 'marker',
+        type: vizMeta.type === 'histogram' ? 'bar' : 'marker',
         props: {
           action: 'accumulate',
           accumulater: 'count',
         },
       }
     };
+
+    // check if we should use that default one
+    const hasChildren = this.vizMeta?.children &&
+        !this.isVizSelected(tail['count'])
 
     switch (vizMeta.props.action) {
 
@@ -130,7 +183,7 @@ export const defaultDsInfo: DsInfo = __as<DsInfo>({
       case 'group':
         return {
           ...vizMeta,
-          children: this.vizMeta?.props.action === 'group' ? this.vizMeta.children : tail
+          children: hasChildren ? this.vizMeta!.children : tail
         }
         // if user selects accumulated value, add it to the group,
         // if any, or create a null-group
@@ -144,7 +197,7 @@ export const defaultDsInfo: DsInfo = __as<DsInfo>({
             }
           } ),
           children: {
-            ...( equal(this.vizMeta?.children, tail) ? {} : this.vizMeta?.children ),
+            ...( hasChildren ? this.vizMeta!.children : {} ),
             [vizMeta.key]: vizMeta
           }
         };
