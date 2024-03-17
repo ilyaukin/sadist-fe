@@ -35,6 +35,25 @@ class SequenceLabellingInterface extends LabellingInterface<LabellingInterfacePr
     setTimeout(() => this.combo?.focus(), 100);
   }
 
+  valLabel(label: any): string {
+    return JSON.stringify(label);
+  }
+
+  renderLabel(label: any): React.ReactNode {
+    if (!( label instanceof Array )) {
+      return <div className="error">Wrong label type!</div>;
+    }
+
+    return label.map(({ token, label }) => ( <>
+      <span>{token}</span>
+      <span style={{
+        fontSize: 'small',
+        verticalAlign: 'super',
+        color: 'blue'
+      }}>{label === 'whitespace' ? '' : `[${label}]`}</span>
+    </> ));
+  }
+
   /**
    * get label in the format which it is being sent to the server in
    */
