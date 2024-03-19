@@ -14,7 +14,7 @@ describe('wired-globe', () => {
 
     const addItem = (name: string, coordinates: [number, number]) => {
       const item = new WiredMarker();
-      item['data-id'] = { name, coordinates };
+      item['data-id'] = { name, loc: { type: 'Point', coordinates } };
       item['data-name'] = 'aaa';
       item['data-value'] = 1;
       element.appendChild(item);

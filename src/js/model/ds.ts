@@ -3,18 +3,18 @@
  * that will be extended while implementing
  */
 export type VizType =
-  'marker' |
-  'bar' |
-  'histogram' |
-  'globe';
+    'marker' |
+    'bar' |
+    'histogram' |
+    'globe';
 
 /**
  * Type of action of visualization data retrieving,
  * such as group or calculate percentile
  */
 export type VizAction =
-  'accumulate' |
-  'group';
+    'accumulate' |
+    'group';
 
 /**
  * Any value that can appear in the DS
@@ -44,6 +44,72 @@ export interface InPredicate<T> {
 }
 
 /**
+ * {@link Predicate} that matches numeric value by range inclusion,
+ * including the lower bound and excluding the upper bound
+ */
+export interface InRangePredicate {
+  op: 'inrange';
+  range_min: number;
+  range_max: number;
+}
+
+/**
+ * {@link Predicate} that matches numeric value to be greater than
+ */
+export interface GtPredicate {
+  op: 'gt';
+  value: number;
+}
+
+/**
+ * {@link Predicate} that matches numeric value to be greater or equal than
+ */
+export interface GtePredicate {
+  op: 'gte';
+  value: number;
+}
+
+/**
+ * {@link Predicate} that matches numeric value to be lower than
+ */
+export interface LtPredicate {
+  op: 'lt';
+  value: number;
+}
+
+/**
+ * {@link Predicate} that matches numeric value to be lower or equal than
+ */
+export interface LtePredicate {
+  op: 'lte';
+  value: number;
+}
+
+/**
+ * {@link Predicate} that matches number of predicate with OR condition
+ */
+export interface OrPredicate {
+  op: 'or';
+  expression: Predicate[];
+}
+
+/**
+ * {@link Predicate} that matches number of predicate with AND condition
+ */
+export interface AndPredicate {
+  op: 'and';
+  expression: Predicate[];
+}
+
+/**
+ * {@link Predicate} that matches NOT a predicate
+ */
+export interface NotPredicate {
+  op: 'not';
+  expression: Predicate;
+}
+
+/**
  * Predicate that matches string value by inclusion
  */
 export interface InStrPredicate<T> {
@@ -56,9 +122,17 @@ export interface InStrPredicate<T> {
  * Will be extended while implementing
  */
 export type Predicate<T = ValueType> =
-  EqPredicate<T> |
-  InPredicate<T> |
-  InStrPredicate<T>;
+    EqPredicate<T> |
+    InPredicate<T> |
+    InRangePredicate |
+    GtPredicate |
+    GtePredicate |
+    LtPredicate |
+    LtePredicate |
+    OrPredicate |
+    AndPredicate |
+    NotPredicate |
+    InStrPredicate<T>;
 
 /**
  * Properties specific to a table column
@@ -85,22 +159,49 @@ export interface ColSpecificProps {
 /**
  * Properties of "accumulate" action
  */
-export type AccumulateProps = (ColSpecificProps | {}) & {
+export type AccumulateProps = ( ColSpecificProps | {} ) & {
   action: 'accumulate';
   /**
    * function which reduces values to the single accumulated
    * value, one of pre-defined or custom (TBD)
    */
-  accumulater?: 'count' | 'mean' | 'min' | 'max' | 'average';
+  accumulater?: 'count' | 'avg' | 'median' | 'min' | 'max';
 }
 
-//not implemented yet
-export type Reducer = never;
+/**
+ * {@link Reducer} to group values by ranges
+ */
+export interface RangeReducer {
+  type: 'range';
+
+  /**
+   * Minimum bound of the ranges. If not specified,
+   * defined automatically by data distribution
+   */
+  min?: number;
+
+  /**
+   * Maximum bound of the ranges. If not specified,
+   * defined automatically by data distribution
+   */
+  max?: number;
+
+  /**
+   * Step, i.e. width of one range. If not specified,
+   * defined automatically by data distribution
+   */
+  step?: number;
+}
+
+/**
+ * All known reducers
+ */
+export type Reducer = RangeReducer;
 
 /**
  * Properties of "group" action
  */
-export type GroupProps = (ColSpecificProps | {}) & {
+export type GroupProps = ( ColSpecificProps | {} ) & {
   action: 'group';
   /**
    * function which reduces groups i.e. defines which value goes
@@ -150,14 +251,14 @@ export interface VizMeta {
   /**
    * String representation is used in UI
    */
-  toString(): string;
+  stringrepr?: string;
 
   /**
-   * Label of the visualization item in the graph.
-   * If not defind, id will be used
-   * @param i visualization data item
+   * Selector for label of a visualization item in the graph, in format of
+   *  `@gizt/selector`. Applying to {@link VizDataItem}
+   * If not defined, {@link VizDataItem.id} will be used
    */
-  getLabel?(i: VizDataItem): string;
+  labelselector?: string;
 }
 
 /**
@@ -165,6 +266,7 @@ export interface VizMeta {
  */
 export interface VizPipelineItem {
   action: string;
+
   [prop: string]: any;
 }
 
@@ -179,6 +281,7 @@ export type VizPipeline = VizPipelineItem[];
  */
 export interface VizDataItem {
   id: any;
+
   [k: string]: VizData;
 }
 
@@ -188,37 +291,58 @@ export interface VizDataItem {
 export type VizData = VizDataItem[] | number;
 
 /**
- * Meta information about a filter applied to DS
- */
-export type Filter = ColSpecificProps;
-
-/**
- * Filter builder/generator, which is a mutable object
- * that can produce a filter. For example, a list of values which
- * a user ticks filtered values from
- */
-export interface AbstractFilterProposal {
-  propose(): Filter;
-}
-
-/**
  * Filter by selecting one or more of multiple values
  */
-export interface MultiselectFilterProposal<T = ValueType> extends AbstractFilterProposal {
+export interface MultiselectFilterProposal<T = ValueType> {
   type: 'multiselect';
   col: string;
   label: string;
   values: T[];
-  selected: T[];
-  getLabel?(item: T): string;
+
+  /**
+   * Selector for label of an item in the list, in format of
+   * `@gizt/selector`. Applying to `T`
+   */
+  labelselector?: string;
+
+  /**
+   * Selector for value of an item which is filter applied to,
+   * in format of `@gizt/selector`. Applying to `T`
+   */
+  valueselector?: string;
+
+  /**
+   * Field name in the DB
+   */
+  valuefield?: string;
+}
+
+export interface RangeFilterProposal {
+  type: 'range';
+  col: string;
+  label: string;
+
+  /**
+   * minimum limit of the range
+   */
+  min: number;
+
+  /**
+   * maximum limit of the range
+   */
+  max: number;
+
+  /**
+   * format of the label, by default 'number'
+   */
+  labelformat?: 'number' | 'datetime';
 }
 
 /**
  * Filter by searching (normally text)
  */
-export interface SearchFilterProposal<T = string> extends AbstractFilterProposal {
+export interface SearchFilterProposal {
   type: 'search';
-  term?: T;
 }
 
 /**
@@ -227,17 +351,82 @@ export interface SearchFilterProposal<T = string> extends AbstractFilterProposal
 export type ComplexValueType = { id: ValueType; [p: string]: any; } | null;
 
 /**
- * Any of known {@link AbstractFilterProposal} types
+ * Any of known filter types
  */
 export type FilterProposal =
-  MultiselectFilterProposal<ValueType> |
-  MultiselectFilterProposal<ComplexValueType> |
-  SearchFilterProposal;
+    MultiselectFilterProposal<ValueType> |
+    MultiselectFilterProposal<ComplexValueType> |
+    RangeFilterProposal |
+    SearchFilterProposal;
+
+/**
+ * Filter interface
+ */
+export interface BaseFilter<ThisType extends BaseFilter<ThisType>> {
+  /**
+   * Get a filter query item produced by this filter
+   */
+  q(): FilterQueryItem | undefined;
+
+  /**
+   * Render this filter in a col dropdown menu
+   */
+  render: React.FC<{ filter: ThisType; onFilter: () => any }>;
+}
+
+export type MultiselectFilter<T> =
+    BaseFilter<MultiselectFilter<T>>
+    & MultiselectFilterProposal<T>
+    & {
+  selected: T[];
+}
+
+export type RangeFilter = BaseFilter<RangeFilter> & RangeFilterProposal & {
+  /**
+   * lower boundary of the range, inclusive
+   */
+  range_min: number;
+
+  /**
+   * upper boundary of the range, exclusive
+   */
+  range_max: number;
+
+  /**
+   * if include all values, in this case boundaries ignored
+   */
+  all: boolean;
+
+  /**
+   * if include uncategorized (non-numeric) values, in this case
+   * boundaries ignored
+   */
+  uncategorized: boolean;
+
+  /**
+   * if include outliers (not within [min, max)) values, in this case
+   * boundaries ignored
+   */
+  outliers: boolean;
+}
+
+export type SearchFilter = BaseFilter<SearchFilter> & SearchFilterProposal & {
+  term?: string;
+}
+
+/**
+ * Meta information about a filter applied to DS
+ */
+export type Filter =
+    MultiselectFilter<ValueType> |
+    MultiselectFilter<ComplexValueType> |
+    RangeFilter |
+    SearchFilter;
 
 /**
  * Item of {@link FilterQuery}
  */
-export type FilterQueryItem = Filter;
+export type FilterQueryItem = ColSpecificProps;
 
 /**
  * Filter query which is filter request parameter to the server
@@ -295,6 +484,22 @@ export interface DsMeta {
   detailization?: {
     [col: string]: { status?: string; labels?: string[]; };
   }
+
+  /**
+   * Proposed visualization returned by server,
+   * in the very format of visualization meta information
+   */
+  visualization?: {
+    [col: string]: VizMeta[];
+  }
+
+  /**
+   * Proposed filtering returned by server,
+   * in the very format of filter proposal
+   */
+  filtering?: {
+    [col: string]: FilterProposal[];
+  }
 }
 
 /**
@@ -324,19 +529,14 @@ export interface DsInfo {
   vizMeta?: VizMeta;
 
   /**
-   * Proposed filters
-   */
-  filterProposals?: FilterProposal[];
-
-  /**
-   * Proposed filters by column
-   */
-  filterProposalsByCol?: { [col: string]: FilterProposal[]; }
-
-  /**
-   * Filters selected by a user
+   * Filters, both proposed and selected by a user
    */
   filters?: Filter[];
+
+  /**
+   * Filters by column
+   */
+  filtersByCol?: { [col: string]: Filter[]; }
 
   /**
    * Error of retrieving {@link meta}
@@ -352,9 +552,8 @@ export interface DsInfo {
    * Initialize the {@link DsInfo} object given new {@link meta},
    * when a user selects the other DS or DS processing on the server updates.
    *
-   * ***WARNING*** it can use some intellectual algorithm to map meta
-   * to the available visualization and filters, better to invent some
-   * meta-language to describe it in a declarative manner.
+   * Visualization and filter proposals are filled by thus returned from
+   * the server
    * @param info can contain {@link meta} returned by the server,
    * pre-set visualization and filters
    * @return new copy of the object
@@ -380,18 +579,6 @@ export interface DsInfo {
    * Get visualization pipeline
    */
   getPipeline(): VizPipeline | undefined;
-
-  /**
-   * Apply a particular filter to the table
-   * @param filter
-   */
-  applyFilter(filter: Filter): Filter[] | undefined;
-
-  /**
-   * Drop a particular filter
-   * @param filter
-   */
-  dropFilter(filter: Filter): Filter[] | undefined;
 
   /**
    * Get filter query to the server

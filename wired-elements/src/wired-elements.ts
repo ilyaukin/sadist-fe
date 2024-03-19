@@ -15,4 +15,6 @@ export * from './wired-listbox';
 export * from './wired-marker';
 export * from './wired-radio';
 export * from './wired-search-input';
-export * from './wired-spinner'
+export * from './wired-spinner';
+export * from './wired-slider';
+export * from './wired-dual-slider';

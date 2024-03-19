@@ -32,9 +32,31 @@ const ComponentDemo = () => {
         </wired-combo-lazy>
       </>
     }(),
-    'wired-combo': function () {
+    'wired-slider': function () {
       return <>
-        <wired-combo selected="banana">
+        <wired-slider min={0} max={100000} onchange={e => console.log(e.detail)}/>
+      </>
+    }(),
+    'wired-dual-slider': function () {
+      return <>
+        <wired-dual-slider
+            style={{ '--wired-slider-left-knob-color': 'rgb(0, 0, 0)' }}
+            min={0} max={100000}
+            label-enabled={true}
+            onchange={e => console.log(e.detail)}/>
+        <div>this text mustn't overlap the slider</div>
+      </>
+    }(),
+    'wired-combo': function () {
+
+      React.useEffect(() => {
+        setTimeout(() =>
+                document.getElementById("combo")?.focus(),
+            100);
+      });
+
+      return <>
+        <wired-combo id='combo' selected="banana">
           <wired-item value="banana">Banana</wired-item>
           <wired-item value="apple">Apple</wired-item>
           <wired-item value=''>Some fruit with a long name a</wired-item>
@@ -154,19 +176,19 @@ const ComponentDemo = () => {
             style={{ width: '600px' }}
         >
           <wired-marker
-            data-id={{ id: 1, name: 'Moscow', coordinates: [ 37.61556, 55.75222 ]}}
+            data-id={{ id: 1, name: 'Moscow', loc: { type: 'Point', coordinates: [ 37.61556, 55.75222 ] }}}
             data-name="count"
             data-value={2}
             data-label='Moscow'
           />
           <wired-marker
-            data-id={{ id: 2, name: 'Paris', coordinates: [ 2.3488, 48.85341 ]}}
+            data-id={{ id: 2, name: 'Paris', loc: { type: 'Point', coordinates: [ 2.3488, 48.85341 ] }}}
             data-name="count"
             data-value={1}
             data-label='Paris'
           />
           <wired-marker
-            data-id={{ id: 3, name: 'New York', coordinates: [ -74.00597, 40.71427 ]}}
+            data-id={{ id: 3, name: 'New York', loc: { type: 'Point', coordinates: [ -74.00597, 40.71427 ] }}}
             data-name="count"
             data-value={1}
             data-label='New York'
@@ -176,7 +198,7 @@ const ComponentDemo = () => {
     }(),
   }
 
-  const [demoKey, setDemoKey] = useState<keyof JSX.IntrinsicElements | undefined>('wired-globe');
+  const [demoKey, setDemoKey] = useState<keyof JSX.IntrinsicElements | undefined>('wired-dual-slider');
 
   return <>
     {Object.keys(demo).map(

@@ -8,6 +8,7 @@ import {
 import { debugLog, line, svgNode } from './wired-lib';
 import { WiredBaseGraph } from './wired-base-graph';
 import { DataPoint, WiredDataPoint } from './wired-data-point';
+import { WiredBar } from './wired-bar';
 
 type SvgClassName =
     'net' |
@@ -126,21 +127,25 @@ export class WiredGlobe extends WiredBaseGraph {
     debugLog(`coastline: ${Date.now() - t}`);
 
     if (changedProperties?.has('data-point-r')) {
-      let tag = '', base = this['data-point-r'];
-
-      // before we refactored scales, consider scale linear/quadratic
-      // depending on the data points' tag
-      this.datapoints?.forEach((dp) => {
-        tag = dp.element.tagName.toUpperCase();
-      });
-      if (tag === 'WIRED-MARKER') {
-        base = this['data-point-r'] * this['data-point-r'];
-      }
-
-      this.updateScale(base);
+      this.updateScale();
     }
 
     this.poseData();
+  }
+
+  protected getBase(): number {
+    let tag = '', base = this['data-point-r'];
+
+    // before we refactored scales, consider scale linear/quadratic
+    // depending on the data points' tag
+    this.datapoints?.forEach((dp) => {
+      tag = dp.element.tagName.toUpperCase();
+    });
+    if (tag === 'WIRED-MARKER') {
+      base = this['data-point-r'] * this['data-point-r'];
+    }
+
+    return base;
   }
 
   protected removeWiredShapesByClass(className: SvgClassName): void {
@@ -391,9 +396,12 @@ export class WiredGlobe extends WiredBaseGraph {
   }
 
   protected isGeoDataPoint(dp: DataPoint): boolean {
-    return dp.id && typeof dp.id.coordinates == 'object'
-        && typeof dp.id.coordinates[0] == 'number'
-        && typeof dp.id.coordinates[1] == 'number';
+    // TODO consider other types of geo data points, e.g. rectangles
+    return dp.id && typeof dp.id.loc == 'object'
+        && dp.id.loc.type == 'Point'
+        && dp.id.loc.coordinates
+        && typeof dp.id.loc.coordinates[0] == 'number'
+        && typeof dp.id.loc.coordinates[1] == 'number';
   }
 
   get datapoints(): DataPoint[] | undefined {
@@ -412,16 +420,28 @@ export class WiredGlobe extends WiredBaseGraph {
     });
 
     this.groups.forEach(({ id, nodes }) => {
-      const [x, y, z] = this.xyz([id.coordinates[0], id.coordinates[1]]);
-      const w = Math.floor(2 * this['data-point-r'] / this.legend.length);
+      let [x, y, z] = this.xyz([id.loc.coordinates[0], id.loc.coordinates[1]]);
+      let w = Math.floor(2 * this['data-point-r'] / this.legend.length);
+      let margin0 = 0;
+      if (this.groups[0]?.nodes[0]?.tagName == 'WIRED-BAR' && w > .1 * 2 * this['data-point-r']) {
+        // make a bar not wider than .1 of its possible maximum height
+        w = Math.floor(.1 * 2 * this['data-point-r']);
+        margin0 = Math.ceil((2 * this['data-point-r'] - this.legend.length * w) / 2);
+        // make a bar "grow" from the center of the location
+        y -= this['data-point-r'];
+      }
       this.legend.forEach(({}, j) => {
         const display = nodes[j].style.display;
         nodes[j].style.position = 'absolute';
         nodes[j].style.display = ( z >= 0 && 0 <= x && x <= rect.width && 0 <= y && y <= rect.height ) ? 'block' : 'none';
-        nodes[j].style.left = `${x - this['data-point-r'] + j * w}px`;
+        nodes[j].style.left = `${x - this['data-point-r'] + margin0 + j * w}px`;
         nodes[j].style.top = `${y - this['data-point-r']}px`;
         nodes[j].style.width = `${w}px`;
         nodes[j].style.height = `${2 * this['data-point-r']}px`;
+        if (nodes[j].tagName == 'WIRED-BAR') {
+          // make a bar selectable on visible area only
+          ( nodes[j] as WiredBar )['selectable-area'] = 'filled';
+        }
         if (( display === 'none' ) && ( nodes[j].style.display !== 'none' )) {
           ( nodes[j] as WiredDataPoint ).requestUpdate();
         }

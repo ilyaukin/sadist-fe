@@ -1,18 +1,116 @@
 import equal from 'deep-equal'
 import {
   CellType,
-  ComplexValueType,
   DsInfo,
   DsMeta,
   Filter,
   FilterProposal,
   FilterQuery,
-  MultiselectFilterProposal,
-  VizDataItem,
+  FilterQueryItem,
+  MultiselectFilter, RangeFilter,
+  SearchFilter,
   VizMeta,
   VizPipeline
 } from '../model/ds';
 import { __as } from '../helper/type-helper';
+import { select } from '../helper/json-helper';
+import ColMultiselectFilter from '../component/ds/ColMultiselectFilter';
+import ColSearch from '../component/ds/ColSearch';
+import ColRangeFilter from '../component/ds/ColRangeFilter';
+
+/**
+ * Make functional filter out of filter proposal or just serialized filter
+ * @param f Filter/filter proposal
+ * @return {Filter}
+ */
+export const filterFactory = (f: FilterProposal | Filter): Filter => {
+  switch (f.type) {
+    case 'multiselect':
+      return {
+        ...f,
+        'selected': ( f as MultiselectFilter<any> ).selected || [],
+        'q'(): FilterQueryItem | undefined {
+          if (!this.selected.length) {
+            return undefined;
+          }
+          return {
+            'col': this.col,
+            'label': this.valuefield || this.label,
+            'predicate': {
+              'op': 'in',
+              'values': this.selected.map(v => select(this.valueselector, v) || null),
+            }
+          }
+        },
+        render: ColMultiselectFilter,
+      } as MultiselectFilter<any>;
+    case 'range':
+      return {
+        ...f,
+        range_min: ( f as RangeFilter ).range_min != undefined ?
+            ( f as RangeFilter ).range_min : f.min,
+        range_max: ( f as RangeFilter ).range_max != undefined ?
+            ( f as RangeFilter ).range_max : f.max,
+        all: ( f as RangeFilter ).all != undefined ?
+            ( f as RangeFilter ).all : true,
+        uncategorized: ( f as RangeFilter ).uncategorized != undefined ?
+            ( f as RangeFilter ).uncategorized : false,
+        outliers: ( f as RangeFilter ).outliers != undefined ?
+            ( f as RangeFilter ).outliers : false,
+        q() {
+          if (this.all) {
+            return undefined;
+          }
+          if (this.uncategorized) {
+            return {
+              col: this.col,
+              label: this.label,
+              predicate: { op: 'eq', value: null },
+            };
+          }
+          if (this.outliers) {
+            return {
+              col: this.col,
+              label: this.label,
+              predicate: {
+                op: 'or', expression: [
+                  { op: 'lt', value: this.min },
+                  { op: 'gte', value: this.max },
+                ]
+              },
+            };
+          }
+          return {
+            col: this.col,
+            label: this.label,
+            predicate: {
+              op: 'inrange',
+              range_min: this.range_min,
+              range_max: this.range_max,
+            }
+          }
+        },
+        render: ColRangeFilter,
+      } as RangeFilter;
+    case 'search':
+      return {
+        ...f,
+        q(): FilterQueryItem | undefined {
+          if (!this.term) {
+            return undefined;
+          }
+          return {
+            col: '*', /* all columns */
+            predicate: {
+              op: 'instr',
+              value: this.term || '',
+            }
+          };
+        },
+        render: ColSearch,
+      } as SearchFilter;
+  }
+}
 
 /**
  * Default object containing all functions of {@link DsInfo}
@@ -35,150 +133,26 @@ export const defaultDsInfo: DsInfo = __as<DsInfo>({
       ( dsInfo.vizMetaProposed ||= [] ).push(v);
       ( ( dsInfo.vizMetaProposedByCol ||= {} )[col] ||= [] ).push(v);
     }
-    const __proposeFilter = (col: string, f: FilterProposal) => {
-      ( dsInfo.filterProposals ||= [] ).push(f);
-      ( ( dsInfo.filterProposalsByCol ||= {} )[col] ||= [] ).push(f);
+    const __proposeFilter = (col: string, f: Filter) => {
+      if (!f) {
+        return;
+      }
+      ( dsInfo.filters ||= [] ).push(f);
+      ( ( dsInfo.filtersByCol ||= {} )[col] ||= [] ).push(f);
     }
-    if (meta.detailization) {
-      Object.entries(meta.detailization).forEach(([col, details]) => {
-        if (details.status === 'finished' && details.labels) {
-          details.labels.forEach((label) => {
-            switch (label) {
-              case 'city':
-                __proposeViz(col, {
-                  key: `${col} city`,
-                  type: 'globe',
-                  props: {
-                    action: 'group',
-                    col: col,
-                    label: 'city',
-                  },
-                  toString() {
-                    return 'Show cities';
-                  },
-                  getLabel(i: VizDataItem): string {
-                    return `${i.id?.name}`;
-                  }
-                });
-                __proposeFilter(col, {
-                  type: 'multiselect',
-                  col,
-                  label,
-                  values: [],
-                  selected: [],
-                  propose(): Filter {
-                    return {
-                      col,
-                      label: `${label}.id`,
-                      predicate: {
-                        op: 'in',
-                        values: ( this as MultiselectFilterProposal<ComplexValueType> ).selected.map(v => v?.id || null),
-                      }
-                    }
-                  },
-                  getLabel(item: ComplexValueType): string {
-                    return `${item?.name}`;
-                  }
-                });
-                break;
-              case 'country':
-                __proposeViz(col, {
-                  key: `${col} country`,
-                  type: 'globe',
-                  props: {
-                    action: 'group',
-                    col: col,
-                    label: 'country',
-                  },
-                  toString(): string {
-                    return 'Show counties';
-                  },
-                  getLabel(i: VizDataItem): string {
-                    return `${i.id?.name}`;
-                  }
-                });
-                __proposeFilter(col, {
-                  type: 'multiselect',
-                  col,
-                  label,
-                  values: [],
-                  selected: [],
-                  propose(): Filter {
-                    return {
-                      col,
-                      label: `${label}.id`,
-                      predicate: {
-                        op: 'in',
-                        values: ( this as MultiselectFilterProposal<ComplexValueType> ).selected.map(v => v?.id || null),
-                      }
-                    }
-                  },
-                  getLabel(item: ComplexValueType): string {
-                    return `${item?.name}`;
-                  }
-                });
-                break;
-              case 'number':
-                __proposeViz(col, {
-                  key: `${col} average`,
-                  type: 'bar',
-                  props: {
-                    action: 'accumulate',
-                    col: col,
-                    label: 'number',
-                    accumulater: 'average',
-                  },
-                  toString(): string {
-                    return 'Show average';
-                  }
-                });
-                __proposeViz(col, {
-                  key: `${col} min`,
-                  type: 'bar',
-                  props: {
-                    action: 'accumulate',
-                    col: col,
-                    label: 'number',
-                    accumulater: 'min',
-                  },
-                  toString(): string {
-                    return 'Show minimum';
-                  }
-                });
-                __proposeViz(col, {
-                  key: `${col} max`,
-                  type: 'bar',
-                  props: {
-                    action: 'accumulate',
-                    col: col,
-                    label: 'number',
-                    accumulater: 'max',
-                  },
-                  toString(): string {
-                    return 'Show maximum';
-                  }
-                });
-                break;
-            }
-          });
-        }
+    if (meta.visualization) {
+      Object.entries(meta.visualization).forEach(([col, vizMetas]) => {
+        vizMetas.forEach((vizMeta) => {
+          __proposeViz(col, vizMeta);
+        });
       });
-      // // let it be text filters by all cols across so far,
-      // // at least to test filtering engine
-      // meta.cols?.forEach((col) => {
-      //   __proposeFilter(col, {
-      //     type: 'search',
-      //     propose(): Filter {
-      //       return {
-      //         col: col,
-      //         predicate: {
-      //           op: 'instr',
-      //           value: this.term || '',
-      //         }
-      //       };
-      //     }
-      //   });
-      // });
+    }
+    if (meta.filtering) {
+      Object.entries(meta.filtering).forEach(([col, filterProposals]) => {
+        filterProposals.forEach((filterProposal) => {
+          __proposeFilter(col, filterFactory(filterProposal))
+        });
+      });
     }
 
     return dsInfo;
@@ -189,13 +163,17 @@ export const defaultDsInfo: DsInfo = __as<DsInfo>({
     const tail: { [key: string]: VizMeta } = {
       count: {
         key: 'count',
-        type: 'marker',
+        type: vizMeta.type === 'histogram' ? 'bar' : 'marker',
         props: {
           action: 'accumulate',
           accumulater: 'count',
-        }
+        },
       }
     };
+
+    // check if we should use that default one
+    const hasChildren = this.vizMeta?.children &&
+        !this.isVizSelected(tail['count'])
 
     switch (vizMeta.props.action) {
 
@@ -205,7 +183,7 @@ export const defaultDsInfo: DsInfo = __as<DsInfo>({
       case 'group':
         return {
           ...vizMeta,
-          children: this.vizMeta?.props.action === 'group' ? this.vizMeta.children : tail
+          children: hasChildren ? this.vizMeta!.children : tail
         }
         // if user selects accumulated value, add it to the group,
         // if any, or create a null-group
@@ -219,7 +197,7 @@ export const defaultDsInfo: DsInfo = __as<DsInfo>({
             }
           } ),
           children: {
-            ...( equal(this.vizMeta?.children, tail) ? {} : this.vizMeta?.children ),
+            ...( hasChildren ? this.vizMeta!.children : {} ),
             [vizMeta.key]: vizMeta
           }
         };
@@ -247,18 +225,9 @@ export const defaultDsInfo: DsInfo = __as<DsInfo>({
     return pipeline;
   },
 
-  applyFilter(filter: Filter): Filter[] | undefined {
-    let ff = this.dropFilter(filter);
-    return ff ? [...ff, filter] : [filter];
-  },
-
-  dropFilter(filter: Filter): Filter[] | undefined {
-    let ff = this.filters?.filter(f => !( f.col == filter.col && f.label == filter.label ));
-    return ff?.length ? ff : undefined;
-  },
-
   getFilterQuery(): FilterQuery | undefined {
-    return this.filters;
+    let ff = this.filters?.map(f => f.q()).filter(f => f);
+    return ff?.length ? ff as FilterQueryItem[] : undefined;
   },
 
   isMetaFinal(): boolean {
@@ -315,19 +284,15 @@ export function reduceDsInfo(dsInfo: DsInfo, action: DsInfoAction): DsInfo {
         vizMeta: dsInfo.appendViz(action.vizMeta),
       };
 
-    case DsInfoActionType.ADD_FILTER:
+    case DsInfoActionType.APPLY_FILTER:
+      // apply all current filters (object fields wan't change.
+      // but since filters are mutable, we make a copy of object to
+      // trigger re-render)
       return {
         ...dsInfo,
-        filters: dsInfo.applyFilter(action.filter),
       };
 
-    case DsInfoActionType.DROP_FILTER:
-      return {
-        ...dsInfo,
-        filters: dsInfo.dropFilter(action.filter),
-      };
-
-    case DsInfoActionType.UPDATE_STATUS_SUCCESS:
+    case DsInfoActionType.UPDATE_META_SUCCESS:
       // dsId has changed so the meta is irrelevant
       if (dsInfo.meta.id !== action.meta.id) {
         return dsInfo;
@@ -340,7 +305,7 @@ export function reduceDsInfo(dsInfo: DsInfo, action: DsInfoAction): DsInfo {
 
       return dsInfo.init({ meta: action.meta });
 
-    case DsInfoActionType.UPDATE_STATUS_ERROR:
+    case DsInfoActionType.UPDATE_META_ERROR:
       return {
         ...dsInfo,
         err: action.err,
@@ -370,24 +335,19 @@ export enum DsInfoActionType {
   ADD_VIZ,
 
   /**
-   * Filter by certain col was selected
+   * Filter was updated
    */
-  ADD_FILTER,
-
-  /**
-   * Filter by certain col was dropped
-   */
-  DROP_FILTER,
+  APPLY_FILTER,
 
   /**
    * Updated status of the selected DS
    */
-  UPDATE_STATUS_SUCCESS,
+  UPDATE_META_SUCCESS,
 
   /**
    * Error of updating status of the selected DS
    */
-  UPDATE_STATUS_ERROR,
+  UPDATE_META_ERROR,
 
   /**
    * Select/anchor a cell
@@ -396,7 +356,7 @@ export enum DsInfoActionType {
 }
 
 export type DsInfoAction = {
-  type: DsInfoActionType.SELECT_DS | DsInfoActionType.UPDATE_STATUS_SUCCESS;
+  type: DsInfoActionType.SELECT_DS | DsInfoActionType.UPDATE_META_SUCCESS;
   meta: DsMeta;
   vizMeta?: VizMeta;
   filters?: Filter[];
@@ -405,10 +365,9 @@ export type DsInfoAction = {
   type: DsInfoActionType.ADD_VIZ;
   vizMeta: VizMeta;
 } | {
-  type: DsInfoActionType.ADD_FILTER | DsInfoActionType.DROP_FILTER;
-  filter: Filter;
+  type: DsInfoActionType.APPLY_FILTER;
 } | {
-  type: DsInfoActionType.UPDATE_STATUS_ERROR;
+  type: DsInfoActionType.UPDATE_META_ERROR;
   err?: string;
 } | {
   type: DsInfoActionType.SET_ANCHOR;

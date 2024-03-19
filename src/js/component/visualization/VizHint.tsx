@@ -86,14 +86,14 @@ const VizHint: React.FC<VizHintProps> = ({
                 status = <>
                   {
                     dsInfo.vizMetaProposedByCol?.[col]
-                        .map((vizMeta, i) => {
+                        ?.map((vizMeta, i) => {
                           const link = <a
                               key={vizMeta.key}
                               className="bare"
                               onClick={() => dispatchDsInfo({
                                 type: DsInfoActionType.ADD_VIZ,
                                 vizMeta
-                              })}>{vizMeta.toString()}
+                              })}>{vizMeta.stringrepr}
                           </a>
                           return i == 0 ? link : <>, {link}</>;
                         })

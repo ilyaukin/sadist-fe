@@ -2,13 +2,15 @@ import React, { CSSProperties, Dispatch, ReactNode } from 'react';
 import equal from 'deep-equal';
 import {
   ColSpecificProps,
-  FilterProposal,
-  MultiselectFilterProposal,
+  Filter,
+  MultiselectFilter,
+  RangeFilter,
   VizData,
   VizDataItem,
   VizMeta
 } from '../../model/ds';
 import { DsInfoAction, DsInfoActionType } from '../../reducer/dsInfo-reducer';
+import { select } from '../../helper/json-helper';
 
 interface VizGraphProps {
   style?: CSSProperties;
@@ -18,7 +20,7 @@ interface VizGraphProps {
   name?: string;
   label?: string;
   selected?: boolean;
-  filterProposals?: FilterProposal[];
+  filters?: Filter[];
   dispatchDsInfo?: Dispatch<DsInfoAction>;
 }
 
@@ -26,7 +28,7 @@ const VizGraph = (props: VizGraphProps) => {
 
   let {
     style, meta, data, id, name, label, selected,
-    filterProposals, dispatchDsInfo
+    filters, dispatchDsInfo
   } = props;
   name ||= meta.key;
 
@@ -37,29 +39,62 @@ const VizGraph = (props: VizGraphProps) => {
     </div>
   }
 
-  let children: ReactNode = null, filterProposal: FilterProposal | undefined,
+  let children: ReactNode = null, filter: Filter | undefined,
       isSelected: (arg0: VizDataItem) => boolean | undefined,
       onSelected: ( (e: CustomEvent) => void ) | undefined;
   if (data instanceof Array && meta.children) {
-    filterProposal = filterProposals?.find(f =>
-        f.type === 'multiselect'
+    filter = filters?.find(f =>
+        ( f.type === 'multiselect' || f.type === 'range' )
         && f.col === ( meta.props as ColSpecificProps ).col
         && f.label === ( meta.props as ColSpecificProps ).label);
-    if (filterProposal) {
+    if (filter && filter.type === 'multiselect') {
       isSelected = (v: VizDataItem): boolean =>
-          !!( filterProposal as MultiselectFilterProposal ).selected.find(i => equal(i, v.id));
+          !!( filter as MultiselectFilter<any> ).selected.find(i => equal(i, v.id));
       onSelected = (e: CustomEvent): void => {
         e.stopPropagation();
         const id = e.detail.id;
         if (id) {
           if (e.detail.sourceEvent.shiftKey) {
-            ( filterProposal as MultiselectFilterProposal ).selected.push(id);
+            ( filter as MultiselectFilter<any> ).selected.push(id);
           } else {
-            ( filterProposal as MultiselectFilterProposal ).selected = [id];
+            ( filter as MultiselectFilter<any> ).selected = [id];
           }
           dispatchDsInfo?.({
-            type: DsInfoActionType.ADD_FILTER,
-            filter: filterProposal!.propose()
+            type: DsInfoActionType.APPLY_FILTER,
+          });
+        }
+      }
+    }
+
+    if (filter && filter.type === 'range') {
+      isSelected = (v) => {
+        const range = v.id.range;
+        return range && range[0] != undefined && range[1] != undefined &&
+            typeof range[0] == 'number' && typeof range[1] == 'number' &&
+            !( filter as RangeFilter ).all &&
+            !( filter as RangeFilter ).uncategorized &&
+            !( filter as RangeFilter ).outliers &&
+            ( filter as RangeFilter ).range_min <= range[0] &&
+            range[1] <= ( filter as RangeFilter ).range_max;
+      };
+      onSelected = (e: CustomEvent): void => {
+        e.stopPropagation();
+        const id = e.detail.id;
+        const range = id.range;
+        if (range && range[0] != undefined && range[1] != undefined &&
+            typeof range[0] == 'number' && typeof range[1] == 'number') {
+          if (e.detail.sourceEvent.shiftKey) {
+            ( filter as RangeFilter ).range_min = Math.min(( filter as RangeFilter ).range_min, range[0]);
+            ( filter as RangeFilter ).range_max = Math.max(( filter as RangeFilter ).range_max, range[1]);
+          } else {
+            ( filter as RangeFilter ).range_min = range[0];
+            ( filter as RangeFilter ).range_max = range[1];
+          }
+          ( filter as RangeFilter ).all = false;
+          ( filter as RangeFilter ).uncategorized = false;
+          ( filter as RangeFilter ).outliers = false;
+          dispatchDsInfo?.({
+            type: DsInfoActionType.APPLY_FILTER,
           });
         }
       }
@@ -74,7 +109,7 @@ const VizGraph = (props: VizGraphProps) => {
               data={item[k]}
               id={item.id}
               name={k}
-              label={meta.getLabel?.(item)}
+              label={select(meta.labelselector, item) || item.id}
               selected={isSelected?.(item)}
           />
         </>
@@ -100,7 +135,7 @@ const VizGraph = (props: VizGraphProps) => {
       </>;
 
     case 'bar':
-      if (typeof data !== 'number') {
+      if (data !== undefined && typeof data !== 'number') {
         return error('Data for "bar" must be a number');
       }
 

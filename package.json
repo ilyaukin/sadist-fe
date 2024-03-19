@@ -50,6 +50,7 @@
     "webpack-dev-server": "^3.10.3"
   },
   "dependencies": {
+    "@gizt/selector": "^1.0.11",
     "deep-equal": "^2.0.2",
     "diff-match-patch": "^1.0.5",
     "gapi-script": "^1.2.0",

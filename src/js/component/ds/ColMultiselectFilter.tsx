@@ -1,44 +1,27 @@
-import React, { Dispatch, useEffect, useState } from 'react';
+import React from 'react';
 import equal from 'deep-equal';
 import Uniselector from '../common/Uniselector';
-import {
-  ComplexValueType,
-  MultiselectFilterProposal,
-  ValueType
-} from '../../model/ds';
-import { DsInfoAction, DsInfoActionType } from '../../reducer/dsInfo-reducer';
-import { isVal } from '../../helper/wired-helper';
+import { ComplexValueType, MultiselectFilter, ValueType } from '../../model/ds';
+import { select } from '../../helper/json-helper';
 
 interface ColMultiselectFilterProps<T> {
-  dsId: string;
-  filterProposal: MultiselectFilterProposal<T>;
-  dispatchDsInfo: Dispatch<DsInfoAction>;
+  filter: MultiselectFilter<T>;
+
+  onFilter(): any;
 }
 
-const ColMultiselectFilter = <T extends ValueType | ComplexValueType>({
-                                                                        dsId,
-                                                                        filterProposal,
-                                                                        dispatchDsInfo
-                                                                      }: ColMultiselectFilterProps<T>) => {
-
-  const [loading, setLoading] = useState(false);
-
+const ColMultiselectFilter = <T extends ValueType | ComplexValueType>(
+    {
+      filter,
+      onFilter
+    }: ColMultiselectFilterProps<T>
+) => {
   const ALL = '<all>';
   const UNCATEGORIZED = '<uncategorized>';
 
-  useEffect(() => {
-    if (filterProposal.values.length === 0) {
-      setLoading(true);
-      fetch(`/ds/${dsId}/label-values?col=${encodeURIComponent(filterProposal.col)}&label=${encodeURIComponent(filterProposal.label)}`)
-          .then((result) => result.json())
-          .then(data => {
-            if (data.success && data.list) {
-              filterProposal.values = data.list;
-              setLoading(false);
-            }
-          });
-    }
-  }, []);
+  if (filter.values.length === 0) {
+    return <span className="error">No values</span>
+  }
 
   const index: { [id: string]: T } = {};
 
@@ -46,7 +29,7 @@ const ColMultiselectFilter = <T extends ValueType | ComplexValueType>({
     { value: ALL, text: ALL },
     { value: UNCATEGORIZED, text: UNCATEGORIZED }
   ].concat(
-      filterProposal.values.map((value) => {
+      filter.values.map((value) => {
         let combovalue = getCanonicalValue(value);
         index[combovalue.value] = value;
         return combovalue;
@@ -64,28 +47,21 @@ const ColMultiselectFilter = <T extends ValueType | ComplexValueType>({
       id = `${value.id}`;
       return {
         value: id,
-        text: filterProposal.getLabel?.(value) || id
+        text: select(filter.labelselector, value) || id
       };
     }
   }
 
   function selectValue(v: T) {
-    filterProposal.selected.push(v);
+    filter.selected.push(v);
   }
 
   function removeValue(v: T) {
-    filterProposal.selected = filterProposal.selected.filter(v1 => !equal(v, v1));
+    filter.selected = filter.selected.filter(v1 => !equal(v, v1));
   }
 
   function removeAll() {
-    filterProposal.selected = [];
-  }
-
-  function dispatchFilter() {
-    dispatchDsInfo({
-      type: filterProposal.selected.length === 0 ? DsInfoActionType.DROP_FILTER : DsInfoActionType.ADD_FILTER,
-      filter: filterProposal.propose(),
-    });
+    filter.selected = [];
   }
 
   const onValueSelected = (e: CustomEvent) => {
@@ -101,30 +77,30 @@ const ColMultiselectFilter = <T extends ValueType | ComplexValueType>({
       selectValue(index[id]);
     }
 
-    dispatchFilter();
+    onFilter();
   }
 
   return <>
+    <span className="col-action-hint">Filter by {filter.label}</span>
     <wired-combo-lazy
         style={{ width: '100%' }}
-        disabled={isVal(loading)}
         values={values}
         selected={
-          !filterProposal.selected.length ?
+          !filter.selected.length ?
               ALL :
-              getCanonicalValue(filterProposal.selected[filterProposal.selected.length - 1]).value
+              getCanonicalValue(filter.selected[filter.selected.length - 1]).value
         }
         onselected={onValueSelected}
     />
     <div>
-      {filterProposal.selected.map((value) => {
+      {filter.selected.map((value) => {
         let text = getCanonicalValue(value).text;
         return <>
           <Uniselector
               selected={false}
               onClick={() => {
                 removeValue(value);
-                dispatchFilter();
+                onFilter();
               }}
           >{text}❌</Uniselector>
         </>

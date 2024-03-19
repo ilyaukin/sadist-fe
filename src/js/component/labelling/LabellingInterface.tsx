@@ -29,12 +29,20 @@ export const defaultLabellingInterfaceProps: LabellingInterfaceProps = (window a
  * how it's being chosen, so the OOP model suites better than
  * composition or higher order components.
  */
-class LabellingInterface extends Component<LabellingInterfaceProps, LabellingInterfaceState> {
+class LabellingInterface<
+    P extends LabellingInterfaceProps = LabellingInterfaceProps,
+    S extends LabellingInterfaceState = LabellingInterfaceState
+> extends Component<P, S> {
   private diffCheckboxes: { [text: string]: { [label: string]: WiredCheckbox | null; }; } | undefined;
   private shadowCheckboxes: { [text: string]: { [label: string]: WiredCheckbox | null; }; } | undefined;
 
   constructor(props = defaultLabellingInterfaceProps) {
+    // here we imply that P and S add only optional fields,
+    // (not sure how to strictly demand it in TypeScript)
+    // so that partial values can be safely set here.
+    // @ts-ignore
     super(props);
+    // @ts-ignore
     this.state = {
       text: undefined,
       loading: false,
@@ -105,11 +113,22 @@ class LabellingInterface extends Component<LabellingInterfaceProps, LabellingInt
     return label;
   }
 
+  /**
+   * New state by the quiz data returned by server,
+   * which contains `text` and maybe some extra fields
+   * @param data
+   * @private
+   */
+  getState(data: any): S {
+    // @ts-ignore  some dumb unrelated error here
+    return { text: data.text, label: undefined };
+  }
+
   nextQuiz(response: Response) {
     response.json().then((data) => {
       if (data.success) {
         if (data.text) {
-          this.setState({ text: data.text, label: undefined, loading: false }, () => {
+          this.setState({ ...this.getState(data), loading: false }, () => {
             this.clearLabel();
           });
         } else {
