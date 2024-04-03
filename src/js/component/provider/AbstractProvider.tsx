@@ -71,7 +71,7 @@ class AbstractProvider {
   }
 
   /**
-   * validate screen number {@code i}
+   * validate screen number `i`
    * @param _i {number} screen positional number
    * @returns {Promise<*>} promise that resolves if screen is OK
    * and rejects if it is not OK

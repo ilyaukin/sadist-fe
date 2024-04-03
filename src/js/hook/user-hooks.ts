@@ -1,6 +1,7 @@
 import { signIn, signOut } from "../helper/gapi-helper";
 import { UserAction, UserActionType } from '../reducer/userContextValue-reducer';
 import { User, UserContextData, UserContextValue, UserType } from "../model/user";
+import { API } from '../helper/api-helper';
 
 
 /**
@@ -8,11 +9,11 @@ import { User, UserContextData, UserContextValue, UserType } from "../model/user
  * This object methods will be aware of consistence of the application
  * state by dispatching needed actions
  * How to use:
- * - call {@code useReducer} to generate current user context value
+ * - call {@link useReducer} to generate current user context value
  * state and dispatcher function
  * - pass current state and the dispatcher to this hook
  * - pass resulting value to the context
- * - use {@code useContext} and call user methods when needed
+ * - use {@link useContext} and call user methods when needed
  * @param userContextData {UserContextData} returned by useReducer
  * @param dispatchUserContextValue {function(UserAction):void} returned by useReducer
  */
@@ -88,14 +89,7 @@ export function useUserContextValue(userContextData: UserContextData, dispatchUs
  */
 const useWhoami = () => {
   return function (): Promise<User> {
-    return fetch('/user/whoami')
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          return data.user;
-        }
-        throw data.error || 'Unknown error';
-      });
+    return API.get('/user/whoami').then(data => data.user);
   };
 }
 
@@ -105,18 +99,7 @@ const useWhoami = () => {
  */
 const useLoginInternal = () => {
   return function (user: User): Promise<User> {
-    return fetch('/user/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ user })
-    }).then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          return data.user;
-        } else {
-          throw `Error login to the app: ${data.error || 'Unknown error'}`;
-        }
-      });
+    return API.post('/user/login', { user }).then(data => data.user);
   };
 }
 
@@ -126,15 +109,7 @@ const useLoginInternal = () => {
  */
 const useLogoutInternal = () => {
   return function (): Promise<User> {
-    return fetch('/user/logout', { method: 'POST' })
-      .then((response) => response.json())
-      .then(data => {
-        if (data.success) {
-          return data.user;
-        } else {
-          throw 'Error logging out from the app: ' + data.error || 'Unknown error';
-        }
-      })
+    return API.post('/user/logout').then(data => data.user);
   };
 }
 
