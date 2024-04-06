@@ -1,7 +1,8 @@
 import React, {
   CSSProperties,
   Dispatch,
-  HTMLProps, ReactNode,
+  HTMLProps,
+  ReactNode,
   useEffect,
   useRef,
   useState
@@ -15,10 +16,7 @@ import { useQueuedRequest } from '../../hook/queued-hook';
 import { scrollToVisible } from '../../helper/scroll-helper';
 
 interface DsTableProps {
-  /**
-   height of the table's content
-   */
-  tableContentHeight: number;
+  style?: React.CSSProperties;
   dsId?: string;
   dsInfo: DsInfo;
   dispatchDsInfo: Dispatch<DsInfoAction>;
@@ -32,6 +30,11 @@ interface DsTableState {
   table?: JSX.Element;
 }
 
+/**
+ * show top from selected ds
+ * @param props
+ * @constructor
+ */
 const DsTable = (props: DsTableProps) => {
   const [state, setState] = useState<DsTableState>({
     loading: false
@@ -39,21 +42,21 @@ const DsTable = (props: DsTableProps) => {
 
   const colRefs = useRef<( HTMLTableDataCellElement | null )[] | undefined>();
 
+  const rootElementRef = useRef<HTMLDivElement | null>(null);
   const tableRef = useRef<HTMLDivElement | null>(null);
 
   const tableContentRef = useRef<HTMLDivElement | null>(null);
 
   const selectedCellRef = useRef<Element | null>(null);
 
-  const { tableContentHeight, dsId, dsInfo, onLoadDs, ds, onSelectCell } = props;
+  const { style, dsId, dsInfo, onLoadDs, ds, onSelectCell } = props;
 
   useEffect(() => {
     // console.log(colRefs.current?.map(colRef => colRef?.offsetWidth))
     if (colRefs.current) {
-      const table = renderTable(tableContentHeight);
-      setState({ ...state, table, loading: false });
+      setState({ ...state, table: renderTable(), loading: false });
     }
-  }, [tableContentHeight, dsInfo, ds]);
+  }, [dsInfo, ds, style?.height]);
 
   useEffect(() => {
     if (state.table && dsInfo.anchor) {
@@ -230,7 +233,7 @@ const DsTable = (props: DsTableProps) => {
     </div>
   }
 
-  function renderTable(height = tableContentHeight) {
+  function renderTable() {
     const headHeight = colRefs.current![0]!.offsetHeight;
     const outerDivStyle: CSSProperties = {
       position: 'relative',
@@ -243,7 +246,7 @@ const DsTable = (props: DsTableProps) => {
     const innerDivStyle: CSSProperties = {
       overflowY: 'auto',
       overflowX: 'hidden',
-      height: `${height}px`,
+      height: style?.height,
       // border: '1px blue solid'
     };
     const tableStyle: CSSProperties = {
@@ -286,7 +289,7 @@ const DsTable = (props: DsTableProps) => {
     return <br/>;
   }
 
-  return <div className="block">
+  return <div ref={rootElementRef} className="block">
     {[
       <Loader loading={state.loading}/>,
 
@@ -302,9 +305,5 @@ const DsTable = (props: DsTableProps) => {
     ]}
   </div>
 }
-
-DsTable.defaultProps = {
-  tableContentHeight: 200
-};
 
 export default DsTable;

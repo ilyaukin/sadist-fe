@@ -22,6 +22,11 @@ interface DsListState {
   newItem?: DsMeta;
 }
 
+/**
+ * list existing data source using /ls api
+ * @param props
+ * @constructor
+ */
 const DsList = (props: DsListProps) => {
   const [state, setState] = useState<DsListState>({
     list: [],

@@ -1,13 +1,14 @@
 import React, { ReactNode } from 'react';
+import Block from '../common/Block';
 
 interface GoogleSheetLIstBlockProps {
   children: ReactNode;
 }
 
 const GoogleSheetListBlock = ({ children }: GoogleSheetLIstBlockProps) => {
-  return <div className="google-sheet-list-block">
+  return <Block className="block google-sheet-list-block">
     {children}
-  </div>
+  </Block>
 }
 
 export default GoogleSheetListBlock;

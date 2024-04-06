@@ -1,11 +1,9 @@
-import * as React from "react";
-
 export type UserType = 'anon' | 'google';
 
 export interface User {
     type: UserType;
     name?: string;
-    avatar?: string | React.CSSProperties;
+    avatar?: string;
     extra?: any;
 }
 

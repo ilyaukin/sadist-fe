@@ -6,11 +6,7 @@ import AbstractProvider, {
   ProviderProps
 } from './AbstractProvider';
 import WebCrawlerSetupScreen from './WebCrawlerSetupScreen';
-import { WebCrawlerResultRef } from './WebCrawlerReviewScreen';
-// import WebCrawlerConstructorScreen from './WebCrawlerConstructorScreen';
-// import WebCrawlerReviewScreen, {
-//   WebCrawlerResultRef
-// } from './WebCrawlerReviewScreen';
+import { WebCrawlerResultRef } from './WebCrawlerScreen';
 import { ScriptEditorLib } from '../common/ScriptEditor';
 import { WebCrawlerScriptTemplate } from '../../model/webcrawler';
 import ValidationError from './ValidationError';
@@ -64,8 +60,7 @@ class WebCrawlerProvider extends AbstractProvider {
   }
 
   renderScreens(): JSX.Element[] {
-    let WebCrawlerConstructorScreen = lazy(() => import("./WebCrawlerConstructorScreen")),
-        WebCrawlerReviewScreen = lazy(() => import("./WebCrawlerReviewScreen"));
+    const WebCrawlerConstructorScreen = lazy(() => import("./WebCrawlerScreen"));
 
     return [
       <WebCrawlerSetupScreen
@@ -89,12 +84,6 @@ class WebCrawlerProvider extends AbstractProvider {
       <Suspense fallback="loading...">
         <WebCrawlerConstructorScreen
             url={this.url}
-            template={this.template}
-            libs={this.libs}
-        />
-      </Suspense>,
-      <Suspense fallback="loading...">
-        <WebCrawlerReviewScreen
             template={this.template}
             libs={this.libs}
             setRef={(ref) => {

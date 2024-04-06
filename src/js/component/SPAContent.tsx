@@ -1,13 +1,13 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import '../../css/index.scss';
 import './common/CustomElement';
 import ErrorDialog from './common/ErrorDialog';
 import UserDropdown from './user/UserDropdown';
+import Block from './common/Block';
 import DsList from './ds/DsList';
 import DsTable from './ds/DsTable';
-import Viz, { VizElement } from './visualization/Viz';
-import Splitter from './common/Splitter';
+import Viz from './visualization/Viz';
 import Footer from './common/Footer';
 import {
   defaultDsInfo,
@@ -22,19 +22,17 @@ const SPAContent = () => {
   const [err, setErr] = React.useState<string>();
   const [ds, setDs] = React.useState<any[]>([]);
   const [dsInfo, dispatchDsInfo] = React.useReducer(reduceDsInfo, defaultDsInfo);
-  const [tableContentHeight, setTableContentHeight] = React.useState(
-      Math.min(300, Math.max(100, Math.floor(window.innerHeight / 3))));
-  const [vizHeight, setVizHeight] = React.useState<number | undefined>();
 
   function propagateDsInfoToURL(dsInfo: DsInfo) {
+    const params: { [p: string]: string; } = {};
     if (dsInfo.meta.id) {
-      const params: { [p: string]: string; } = { id: dsInfo.meta.id };
+      params.id = dsInfo.meta.id;
       const anchor = searchParams.get('anchor');
       if (anchor && dsInfo.meta.id === searchParams.get('id')) {
         params.anchor = anchor;
       }
-      setSearchParams(params);
     }
+    setSearchParams(params);
   }
 
   function propagateAnchorToURL(anchor: CellType) {
@@ -56,8 +54,6 @@ const SPAContent = () => {
   ErrorDialog.raise = setErr;
   ErrorDialog.close = () => setErr(undefined);
 
-  const vizRef = useRef<VizElement | null>(null);
-
   const titles = [
     'My handicapped pet project....',
     'Let steal the beggars!',
@@ -65,6 +61,9 @@ const SPAContent = () => {
   const choose = Math.floor(Math.random() * titles.length);
   const title = titles[choose];
 
+  const b1HeightInit = Math.min(300, Math.max(200, Math.floor(window.innerHeight / 3)));
+  const [b1Height, setB1Height] = React.useState(b1HeightInit);
+  const [b2Height, setB2Height] = React.useState<number | 'auto'>('auto');
   return React.useMemo(() => <div className="content">
     <ErrorDialog err={err}/>
 
@@ -74,61 +73,59 @@ const SPAContent = () => {
     </h1>
     <wired-divider/>
 
-    <h2>1. Get the data</h2>
-    {/*list existing data source using /ls api*/}
-    <DsList
-        dsId={dsInfo.meta.id}
-        onLoadList={(list: DsMeta[]) => {
-          const dsId = searchParams.get('id');
-          if (dsId) {
-            const meta = list.find(item => item.id === dsId);
-            if (meta) {
-              const anchor = searchParams.get('anchor');
+    <div className="block-container-vertical">
+      <Block style={{ minHeight: '200px', overflow: 'visible' }}
+             size={`${b1HeightInit}px`} splitter="horizontal"
+             allowCollapse={false}
+             onSizeChanged={setB1Height}>
+        <h2>1. Get the data</h2>
+        <DsList
+            dsId={dsInfo.meta.id}
+            onLoadList={(list: DsMeta[]) => {
+              const dsId = searchParams.get('id');
+              if (dsId) {
+                const meta = list.find(item => item.id === dsId);
+                if (meta) {
+                  const anchor = searchParams.get('anchor');
+                  dispatchDsInfo({
+                    type: DsInfoActionType.SELECT_DS,
+                    meta,
+                    anchor: anchor && JSON.parse(anchor),
+                  });
+                }
+              }
+            }}
+            onDsSelected={(meta: DsMeta) => {
               dispatchDsInfo({
                 type: DsInfoActionType.SELECT_DS,
-                meta,
-                anchor: anchor && JSON.parse(anchor),
+                meta
               });
-            }
-          }
-        }}
-        onDsSelected={(meta: DsMeta) => {
-          dispatchDsInfo({
-            type: DsInfoActionType.SELECT_DS,
-            meta
-          });
-        }}
-    />
-    {/*show top from selected ds*/}
-    <DsTable
-        tableContentHeight={tableContentHeight}
-        dsId={dsInfo.meta.id}
-        dsInfo={dsInfo}
-        dispatchDsInfo={dispatchDsInfo}
-        onLoadDs={setDs}
-        ds={ds}
-        onSelectCell={propagateAnchorToURL}
-    />
+            }}
+        />
+        <DsTable
+            style={{ height: `${Math.max(b1Height, 200) - 148}px` }}
+            dsId={dsInfo.meta.id}
+            dsInfo={dsInfo}
+            dispatchDsInfo={dispatchDsInfo}
+            onLoadDs={setDs}
+            ds={ds}
+            onSelectCell={propagateAnchorToURL}
+        />
+      </Block>
 
-    {dsInfo.meta.id && <>
-      <Splitter
-          onSplit={(delta: number) => setTableContentHeight(tableContentHeight + delta)}/>
-
-      <h2>2. Visualize</h2>
-      <Viz
-          ref={vizRef}
-          vizHeight={vizHeight}
-          dsId={dsInfo.meta.id}
-          dsInfo={dsInfo}
-          dispatchDsInfo={dispatchDsInfo}
-      />
-      <Splitter onSplit={(delta: number) => {
-        const h = vizHeight || vizRef.current?.element?.getBoundingClientRect().height || 0;
-        setVizHeight(h + delta);
-      }}/>
-    </>}
+      {dsInfo.meta.id && <Block size="auto" splitter="horizontal"
+                                onSizeChanged={setB2Height}>
+        <h2>2. Visualize</h2>
+        <Viz
+            style={{ height: typeof b2Height == 'number' ? `${b2Height - 68}px` : 'auto' }}
+            dsId={dsInfo.meta.id}
+            dsInfo={dsInfo}
+            dispatchDsInfo={dispatchDsInfo}
+        />
+      </Block>}
+    </div>
     <Footer/>
-  </div>, [err, ds, dsInfo, tableContentHeight, vizHeight]);
+  </div>, [err, ds, dsInfo, b1Height, b2Height]);
 };
 
 export default SPAContent;

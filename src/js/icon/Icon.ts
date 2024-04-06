@@ -10,6 +10,8 @@ import filter from '~/img/filter-unselected.png';
 import filterSelected from '~/img/filter-selected.png';
 import run from '~/img/run.png';
 import gear from '~/img/gear.png';
+import lockOn from '~/img/lock.png';
+import lockOff from '~/img/lock-open.png';
 
 export default {
   google,
@@ -24,4 +26,6 @@ export default {
   filterSelected,
   run,
   gear,
+  lockOn,
+  lockOff,
 };

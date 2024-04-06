@@ -1,10 +1,4 @@
-import React, {
-  Dispatch,
-  forwardRef,
-  useImperativeHandle,
-  useRef,
-  useState
-} from 'react';
+import React, { Dispatch, useRef, useState } from 'react';
 import ErrorDialog from '../common/ErrorDialog';
 import Loader from '../common/Loader';
 import VizHint from './VizHint';
@@ -15,7 +9,7 @@ import { useQueuedRequest } from '../../hook/queued-hook';
 import { getMeta } from '../../helper/data-helper';
 
 interface VizProps {
-  vizHeight?: number;
+  style?: React.CSSProperties;
   dsId: string;
   dsInfo: DsInfo;
   dispatchDsInfo: Dispatch<DsInfoAction>;
@@ -26,16 +20,11 @@ interface VizState {
   vizMeta?: VizMeta;
 }
 
-export type VizElement = { element: HTMLDivElement | null; } & VizState;
-
-const Viz = (props: VizProps, ref: React.ForwardedRef<VizElement>) => {
+const Viz = (props: VizProps) => {
   const [state, setState] = useState<VizState>({});
   const [updateMetaCounter, setUpdateMetaCounter] = useState(0);
 
-  const elementRef = useRef<HTMLDivElement | null>(null);
-
-  useImperativeHandle(ref, () => ( { element: elementRef.current, ...state } ));
-
+  const rootElementRef = useRef<HTMLDivElement | null>(null);
   const { dsId, dsInfo } = props;
   const pipeline = dsInfo.getPipeline();
 
@@ -82,7 +71,7 @@ const Viz = (props: VizProps, ref: React.ForwardedRef<VizElement>) => {
             })
           }), [dsId, updateMetaCounter], true);
 
-  const { vizHeight, dispatchDsInfo } = props;
+  const { style, dispatchDsInfo } = props;
   const { vizData, vizMeta } = state;
 
   // here can be several situations.
@@ -94,12 +83,12 @@ const Viz = (props: VizProps, ref: React.ForwardedRef<VizElement>) => {
   // (3) data is ready. display corresponding
   //     graph(s).
 
-  return <div ref={elementRef} className="block">
+  return <div ref={rootElementRef} className="block">
     <Loader loading={loading || metaLoading}/>
     {
       vizMeta && vizData ?
           <VizGraph
-              style={{ height: typeof vizHeight === 'number' ? `${vizHeight}px` : 'auto' }}
+              style={{ height: style?.height }}
               meta={vizMeta}
               data={vizData}
               id="root"
@@ -114,4 +103,4 @@ const Viz = (props: VizProps, ref: React.ForwardedRef<VizElement>) => {
   </div>;
 }
 
-export default forwardRef(Viz);
+export default Viz;
