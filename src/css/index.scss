@@ -384,6 +384,14 @@ div.radio-group wired-radio {
     background-color: rgba(128, 128, 128, .7);
 }
 
+.site-view .toolbox {
+    display: none;
+}
+
+.site-view:hover .toolbox {
+    display: flex;
+}
+
 .script-block .toolbox {
     display: none;
 }

@@ -10,14 +10,17 @@ import ScriptEditor, {
 } from '../common/ScriptEditor';
 import Uniselector from '../common/Uniselector';
 import Block, { BlockElement } from '../common/Block';
+import Toolbox from '../common/Toolbox';
 import WebCrawlerScriptToolbox, {
   ScriptToolboxState
 } from './WebCrawlerScriptToolbox';
+import Icon from '../../icon/Icon';
 import { WebCrawlerScriptTemplate } from '../../model/webcrawler';
 import { ValueType } from '../../model/ds';
 import { Page } from '../../model/page';
 import ValidationError from './ValidationError';
 import { LocalPageRunner } from '../../model/page-impl';
+import { API } from '../../helper/api-helper';
 
 interface WebCrawlerProps {
   url?: URL;
@@ -32,6 +35,8 @@ interface WebCrawlerProps {
 interface WebCrawlerState {
   loading: boolean;
   contentDocument?: Document;
+  proxySessionId?: string;
+  proxyUrl?: string;
 }
 
 /**
@@ -515,8 +520,22 @@ export default function WebCrawlerScreen(props: WebCrawlerProps) {
     return Promise.resolve();
   }
 
+  function reloadProxy() {
+    setState({ ...state, loading: true });
+    ( proxySessionId ? API.del(`/proxy/${proxySessionId}`) : Promise.resolve() )
+        .then(() => API.get(`/proxy/session`))
+        .then(data => data.id)
+        .then(id => {
+          setState({
+            ...state,
+            proxySessionId: id,
+            proxyUrl: `/proxy/${id}/goto/${encodeURIComponent(url!.toString())}`,
+          });
+        });
+  }
+
   const { url, template, libs, saveTemplate, setRef } = props;
-  const { loading, contentDocument } = state;
+  const { loading, contentDocument, proxySessionId, proxyUrl } = state;
 
   setRef({
     getResult(): Promise<ValueType[][]> {
@@ -543,7 +562,7 @@ export default function WebCrawlerScreen(props: WebCrawlerProps) {
 
   useEffect(() => {
     if (url) {
-      setState({ ...state, loading: true });
+      reloadProxy();
     }
   }, [url?.toString()]);
 
@@ -592,10 +611,21 @@ export default function WebCrawlerScreen(props: WebCrawlerProps) {
   return <div className="block-container-horizontal">
     <Block key="view" className="block new-dialog-screen-stretch site-view"
            size="50%" splitter="vertical" allowChangeSize={false}>
+      <Toolbox>
+        <Toolbox.Button key="back" src={Icon.back} alt="Go back" onClick={() => {
+          setState({ ...state, loading: true, proxyUrl: `/proxy/${proxySessionId}/go-back` });
+        }}/>
+        <Toolbox.Button key="refresh" src={Icon.refresh} alt="Refresh" onClick={() => {
+          reloadProxy();
+        }}/>
+        <Toolbox.Button key="forward" src={Icon.forward} alt="Go forward" onClick={() => {
+          setState({ ...state, loading: true, proxyUrl: `/proxy/${proxySessionId}/go-forward` });
+        }}/>
+      </Toolbox>
       <Loader loading={loading}/>
       <iframe
           ref={iframeRef}
-          src={url ? `/proxy?url=${encodeURIComponent(url.toString())}` : undefined}
+          src={proxyUrl}
           onLoad={() => {
             setState({
               ...state,
