@@ -103,7 +103,7 @@ const SPAContent = () => {
             }}
         />
         <DsTable
-            style={{ height: `${Math.max(b1Height, 200) - 148}px` }}
+            style={{ height: `${Math.max(b1Height, 200) - 122}px` }}
             dsId={dsInfo.meta.id}
             dsInfo={dsInfo}
             dispatchDsInfo={dispatchDsInfo}

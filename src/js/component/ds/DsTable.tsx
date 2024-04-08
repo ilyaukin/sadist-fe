@@ -42,7 +42,6 @@ const DsTable = (props: DsTableProps) => {
 
   const colRefs = useRef<( HTMLTableDataCellElement | null )[] | undefined>();
 
-  const rootElementRef = useRef<HTMLDivElement | null>(null);
   const tableRef = useRef<HTMLDivElement | null>(null);
 
   const tableContentRef = useRef<HTMLDivElement | null>(null);
@@ -235,6 +234,7 @@ const DsTable = (props: DsTableProps) => {
 
   function renderTable() {
     const headHeight = colRefs.current![0]!.offsetHeight;
+    const contentHeight = `calc(${style?.height} - ${headHeight}px)`;
     const outerDivStyle: CSSProperties = {
       position: 'relative',
       overflowX: 'auto',
@@ -246,7 +246,7 @@ const DsTable = (props: DsTableProps) => {
     const innerDivStyle: CSSProperties = {
       overflowY: 'auto',
       overflowX: 'hidden',
-      height: style?.height,
+      height: contentHeight,
       // border: '1px blue solid'
     };
     const tableStyle: CSSProperties = {
@@ -289,7 +289,7 @@ const DsTable = (props: DsTableProps) => {
     return <br/>;
   }
 
-  return <div ref={rootElementRef} className="block">
+  return <div>
     {[
       <Loader loading={state.loading}/>,
 

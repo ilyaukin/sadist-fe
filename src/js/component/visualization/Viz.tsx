@@ -1,4 +1,4 @@
-import React, { Dispatch, useRef, useState } from 'react';
+import React, { Dispatch, useState } from 'react';
 import ErrorDialog from '../common/ErrorDialog';
 import Loader from '../common/Loader';
 import VizHint from './VizHint';
@@ -24,7 +24,6 @@ const Viz = (props: VizProps) => {
   const [state, setState] = useState<VizState>({});
   const [updateMetaCounter, setUpdateMetaCounter] = useState(0);
 
-  const rootElementRef = useRef<HTMLDivElement | null>(null);
   const { dsId, dsInfo } = props;
   const pipeline = dsInfo.getPipeline();
 
@@ -83,7 +82,7 @@ const Viz = (props: VizProps) => {
   // (3) data is ready. display corresponding
   //     graph(s).
 
-  return <div ref={rootElementRef} className="block">
+  return <div>
     <Loader loading={loading || metaLoading}/>
     {
       vizMeta && vizData ?
