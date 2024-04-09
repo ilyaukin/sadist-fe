@@ -12,6 +12,7 @@ import { BaseCSS, WiredBase } from './wired-base';
 @customElement('wired-divider')
 export class WiredDivider extends WiredBase {
   @property({ type: Number }) elevation = 1;
+  @property({ type: String }) orientation: 'horizontal' | 'vertical' = 'horizontal';
 
   static get styles(): CSSResultArray {
     return [
@@ -32,15 +33,25 @@ export class WiredDivider extends WiredBase {
   protected getSize(): Point {
     const rect = this.getBoundingClientRect();
     const elev = this.getElev();
-    return [rect.width, elev * 6];
+    if (this.orientation == 'vertical') {
+      return [elev * 6, rect.height];
+    } else {
+      return [rect.width, elev * 6];
+    }
   }
 
   protected renderWiredShapes() {
     super.renderWiredShapes();
     const rect = this.getBoundingClientRect();
     const elev = this.getElev();
-    for (let i = 0; i < elev; i++) {
-      line(this.svg!, 0, (i * 6) + 3, rect.width, (i * 6) + 3);
+    if (this.orientation == 'vertical') {
+      for (let i = 0; i < elev; i++) {
+        line(this.svg!, (i * 6) + 3, 0, (i * 6) + 3, rect.height);
+      }
+    } else {
+      for (let i = 0; i < elev; i++) {
+        line(this.svg!, 0, (i * 6) + 3, rect.width, (i * 6) + 3);
+      }
     }
   }
 

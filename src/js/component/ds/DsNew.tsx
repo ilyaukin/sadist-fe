@@ -6,6 +6,7 @@ import GoogleSheetProvider from '../provider/GoogleSheetProvider';
 import WebCrawlerProvider from '../provider/WebCrawlerProvider';
 import ErrorDialog from "../common/ErrorDialog";
 import Loader from "../common/Loader";
+import Block from '../common/Block';
 import DelayedRender from '../common/DelayedRender';
 import { isVal } from "../../helper/wired-helper";
 import { DsMeta } from '../../model/ds';
@@ -43,15 +44,16 @@ class DsNew extends Component<DsNewProps, DsNewState> {
   onProviderSelected(value: string, _event: CustomEvent) {
     this.setState({
       provider:
-        this.providers.find((p) => p.type === value) || this._nullProvider
+          this.providers.find((p) => p.type === value) || this._nullProvider
     });
   }
 
   onNextScreen = () => {
     const { screenNo } = this.state;
     this.state.provider.validate(screenNo)
-      .then(() => this.setState({ screenNo: screenNo + 1 }))
-      .catch(() => {/* ignore. provider will display errors itself */});
+        .then(() => this.setState({ screenNo: screenNo + 1 }))
+        .catch(() => {/* ignore. provider will display errors itself */
+        });
   }
 
   onPrevScreen = () => {
@@ -81,15 +83,15 @@ class DsNew extends Component<DsNewProps, DsNewState> {
           body: data
         }).then((response) => {
           response.json()
-            .then((data) => {
-              if (data.success && data.item) {
-                const { onDsCreated } = this.props;
-                onDsCreated(data.item);
-              } else {
-                ErrorDialog.raise('Error saving data: ' + (data.error || 'Unknown error'));
-              }
-              this.setState({ loading: false });
-            }).catch((e) => {
+              .then((data) => {
+                if (data.success && data.item) {
+                  const { onDsCreated } = this.props;
+                  onDsCreated(data.item);
+                } else {
+                  ErrorDialog.raise('Error saving data: ' + ( data.error || 'Unknown error' ));
+                }
+                this.setState({ loading: false });
+              }).catch((e) => {
             ErrorDialog.raise('Error parsing json: ' + e.toString());
             this.setState({ loading: false });
           })
@@ -112,14 +114,15 @@ class DsNew extends Component<DsNewProps, DsNewState> {
     return <DelayedRender>
       Source Type:<br/>
       <wired-combo
-        style={{ width: '100%' }}
-        onselected={(event) => this.onProviderSelected(event.detail.selected, event)}
+          style={{ width: '100%' }}
+          onselected={(event) => this.onProviderSelected(event.detail.selected, event)}
       >
         {
           this.providers.map((provider) =>
-            <wired-item value={provider.type} key={provider.type}>
-              <img className="item" src={provider.icon} alt={provider.type}/>{provider.text}
-            </wired-item>
+              <wired-item value={provider.type} key={provider.type}>
+                <img className="item" src={provider.icon}
+                     alt={provider.type}/>{provider.text}
+              </wired-item>
           )
         }
       </wired-combo>
@@ -129,43 +132,43 @@ class DsNew extends Component<DsNewProps, DsNewState> {
   visibilityProps = (b: boolean) => b ? {} : { style: { display: 'none' } };
 
   renderProviderSelector = (screenNo: number) => {
-    return <div
-      key="selector"
-      className="left-pane"
-      {...this.visibilityProps(screenNo === 0)}
+    return <Block
+        key="selector"
+        size="50%"
+        {...this.visibilityProps(screenNo === 0)}
     >
       {this.renderTypeCombo()}
-      <br/>
-      {this.state.provider.renderDescription()}
-    </div>;
+        <br/>
+        {this.state.provider.renderDescription()}
+    </Block>;
   };
 
   renderProviderScreen = (screen: JSX.Element, i: number) => {
     const { screenNo } = this.state;
-    return <div
-      key={`screen${i}`}
-      className={i === 0 ? 'right-pane' : 'full-pane'}
-      {...this.visibilityProps(screenNo === i)}
+    return <Block
+        key={`screen${i}`}
+        className="block new-dialog-screen-limit"
+        {...this.visibilityProps(screenNo === i)}
     >
       {screen}
-    </div>;
+    </Block>;
   };
 
   renderButtons = (screenNo: number, screenCount: number) => {
     const createButton = <wired-button
-      disabled={isVal(!this.state.provider.type || this.state.loading)}
-      onClick={this.onCreate}>Create
+        disabled={isVal(!this.state.provider.type || this.state.loading)}
+        onClick={this.onCreate}>Create
     </wired-button>;
     const nextButton = <wired-button
-      onClick={this.onNextScreen}>Next
+        onClick={this.onNextScreen}>Next
     </wired-button>;
     const prevButton = <wired-button
-      onClick={this.onPrevScreen}>Back
+        onClick={this.onPrevScreen}>Back
     </wired-button>;
-    return <div className="button-pane">
+    return <Block>
       {screenNo === screenCount - 1 ? createButton : nextButton}
       {screenNo > 0 ? prevButton : null}
-    </div>;
+    </Block>;
   };
 
   render() {
@@ -175,9 +178,13 @@ class DsNew extends Component<DsNewProps, DsNewState> {
     return <>
       <Loader loading={this.state.loading}/>
       <form>
-        {this.renderProviderSelector(screenNo)}
-        {screens.map(this.renderProviderScreen)}
-        {this.renderButtons(screenNo, screens.length)}
+        <div className="block-container-vertical">
+          <Block className="block block-container-horizontal">
+            {this.renderProviderSelector(screenNo)}
+            {screens.map(this.renderProviderScreen)}
+          </Block>
+          {this.renderButtons(screenNo, screens.length)}
+        </div>
       </form>
     </>
   }

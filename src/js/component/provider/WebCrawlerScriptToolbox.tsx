@@ -1,0 +1,92 @@
+import React, { useImperativeHandle, useRef, useState } from 'react';
+import { WiredInput } from '/wired-elements/src/wired-input';
+import Toolbox from '../common/Toolbox';
+import Icon from '../../icon/Icon';
+import { WebCrawlerScriptTemplate } from '../../model/webcrawler';
+
+export interface ScriptToolboxProps {
+  template?: WebCrawlerScriptTemplate;
+
+  executeScript(): any;
+
+  lockScript(): any;
+
+  unlockScript(): any;
+}
+
+export interface ScriptToolboxState {
+  executor: 'local' | 'proxy';
+  isSaveTemplate: boolean;
+  isLocked: boolean;
+}
+
+export function ScriptToolbox(props: ScriptToolboxProps,
+                              ref: React.Ref<ScriptToolboxState>) {
+  const { template, executeScript, lockScript, unlockScript } = props;
+
+  const [state, setState] = useState<ScriptToolboxState>({
+    executor: 'local',
+    isSaveTemplate: true,
+    isLocked: true,
+  });
+
+  useImperativeHandle(ref, () => state);
+
+  const templateNameInputRef = useRef<WiredInput | null>(null);
+
+  return <Toolbox>
+    <Toolbox.Item>
+      <wired-combo
+          selected={state.executor}
+          onselected={(e) => {
+            setState({ ...state, executor: e.detail.selected });
+          }}
+      >
+        <wired-item value="local">in Browser</wired-item>
+        <wired-item value="proxy">on Proxy Server</wired-item>
+      </wired-combo>
+    </Toolbox.Item>
+    <Toolbox.Button src={Icon.run} alt=">" onClick={executeScript}/>
+    <Toolbox.Dropdown src={Icon.gear} alt="Settings">
+      <wired-checkbox
+          checked={state.isSaveTemplate}
+          onchange={(event) => {
+            setState({ ...state, isSaveTemplate: event.detail.checked });
+          }}
+      ><span className="comment">Also save template as</span>
+      </wired-checkbox>
+      <wired-input
+          ref={(input) => {
+            if (input) {
+              templateNameInputRef.current = input;
+              setTimeout(() => {
+                input.value = template!.name;
+                input.focus();
+              }, 100);
+            }
+          }}
+          style={{ width: '200px' }}
+          onchange={() => {
+            if (template)
+              template.name = templateNameInputRef.current!.value;
+          }}
+      ></wired-input>
+    </Toolbox.Dropdown>
+    <Toolbox.Switch
+        src={state.isLocked ? Icon.lockOn : Icon.lockOff}
+        alt={state.isLocked ? 'Edit script' : 'Lock script'}
+        state={state.isLocked ? 'on' : 'off'}
+        onClick={() => {
+          if (state.isLocked) {
+            unlockScript();
+            setState({ ...state, isLocked: false });
+          } else {
+            lockScript();
+            setState({ ...state, isLocked: true });
+          }
+        }}
+    />
+  </Toolbox>;
+}
+
+export default React.forwardRef(ScriptToolbox);

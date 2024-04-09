@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { diff_match_patch } from 'diff-match-patch';
 import { WiredSearchInput } from '/wired-elements/lib/wired-search-input';
 import Loader from '../common/Loader';
 import HTMLTree from '../common/HTMLTree';
@@ -8,17 +9,34 @@ import ScriptEditor, {
   ScriptEditorLib
 } from '../common/ScriptEditor';
 import Uniselector from '../common/Uniselector';
+import Block, { BlockElement } from '../common/Block';
+import Toolbox from '../common/Toolbox';
+import WebCrawlerScriptToolbox, {
+  ScriptToolboxState
+} from './WebCrawlerScriptToolbox';
+import Icon from '../../icon/Icon';
 import { WebCrawlerScriptTemplate } from '../../model/webcrawler';
+import { ValueType } from '../../model/ds';
+import { Page } from '../../model/page';
+import ValidationError from './ValidationError';
+import { LocalPageRunner } from '../../model/page-impl';
+import { API } from '../../helper/api-helper';
 
-interface WebCrawlerConstructorProps {
+interface WebCrawlerProps {
   url?: URL;
   template?: WebCrawlerScriptTemplate;
   libs?: ScriptEditorLib[];
+
+  setRef(ref: WebCrawlerResultRef): void;
+
+  saveTemplate(template: WebCrawlerScriptTemplate): Promise<void>;
 }
 
-interface WebCrawlerConstructorState {
+interface WebCrawlerState {
   loading: boolean;
   contentDocument?: Document;
+  proxySessionId?: string;
+  proxyUrl?: string;
 }
 
 /**
@@ -26,14 +44,25 @@ interface WebCrawlerConstructorState {
  */
 type ElementSource = 'view' | 'tree' | 'search';
 
-export default function WebCrawlerConstructorScreen(props: WebCrawlerConstructorProps) {
-  const [state, setState] = useState<WebCrawlerConstructorState>({
+/**
+ * Improvised reference
+ */
+export interface WebCrawlerResultRef {
+  getResult(): Promise<ValueType[][]>;
+
+  getTitle(): string | undefined;
+
+  isSaveTemplate(): boolean;
+}
+
+export default function WebCrawlerScreen(props: WebCrawlerProps) {
+  const [state, setState] = useState<WebCrawlerState>({
     loading: false,
   });
 
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const treeRef = useRef<HTMLTree | null>(null);
-  const treeContainerRef = useRef<HTMLDivElement | null>(null);
+  const treeContainerRef = useRef<BlockElement | null>(null);
   const highlightRef = useRef<HTMLDivElement | null>(null);
   const selectedElementRef = useRef<Element | null>(null);
   const searchRef = useRef<WiredSearchInput | null>(null);
@@ -49,6 +78,11 @@ export default function WebCrawlerConstructorScreen(props: WebCrawlerConstructor
   const transformerArgRangeRef = useRef<Range | undefined>();
   const onChangeCallbackRef = useRef<( (event: ChangeEvent) => void ) | undefined>();
   const onBlurCallbackRef = useRef<( (event: Event) => void ) | undefined>();
+  const resultElementRef = useRef<BlockElement | null>(null);
+  const resultRef = useRef<ValueType[][] | undefined>();
+  const promiseRef = useRef<Promise<ValueType[][]> | undefined>();
+  const titleRef = useRef<string | undefined>();
+  const scriptToolboxStateRef = useRef<ScriptToolboxState>(null);
 
   function highlightElement(element: Element) {
     if (contentDocument) {
@@ -379,12 +413,156 @@ export default function WebCrawlerConstructorScreen(props: WebCrawlerConstructor
     }
   }
 
-  const { url, template, libs } = props;
-  const { loading, contentDocument } = state;
+  function appendResult(message: string, type: 'message' | 'error' | 'warning' = 'message') {
+    // append result in console-log style, will do it
+    // in pure JS to skip react's re-rendering
+    const messageElement = document.createElement('span');
+    if (type === 'error') {
+      messageElement.style.color = 'maroon';
+    } else if (type === 'warning') {
+      messageElement.style.color = 'orange';
+    }
+    messageElement.append(document.createTextNode(message));
+    messageElement.append(document.createElement('br'));
+    resultElementRef.current?.underlying.appendChild(messageElement);
+  }
+
+  function clearResult() {
+    while (resultElementRef.current?.underlying.hasChildNodes()) {
+      resultElementRef.current!.underlying.removeChild(resultElementRef.current!.underlying.lastChild!);
+    }
+  }
+
+  function executeScript(): Promise<ValueType[][]> | undefined {
+    // make result visible
+    if (resultElementRef.current!.getActualSize() < 100) {
+      resultElementRef.current!.setActualSize(100);
+    }
+
+    // save template asynchronously
+    saveTemplate(template!)
+        .then(() => appendResult(`Script template saved as ${template!.name}`))
+        .catch((e) => appendResult(`Error saving script template: ${e.toString()}`, 'error'));
+
+    return wrap(() => {
+      clearResult();
+      pushbackChanges();
+
+      let executor = scriptToolboxStateRef.current!.executor;
+      appendResult(`Executing script at ${executor}...`);
+      let page: Page;
+      return promiseRef.current = initPage()
+          .then(page1 => {
+            page = page1;
+            return template!.getScript().execute(page);
+          })
+          .then(result => {
+            resultRef.current = result;
+            titleRef.current = page.document?.title;
+
+            clearResult();
+            appendResult(JSON.stringify(result));
+            return result;
+          })
+          .catch((e) => {
+            clearResult();
+            appendResult(e.toString(), 'error');
+            console.log(e);
+            throw new ValidationError(e.toString());
+          })
+          .finally(() => {
+            promiseRef.current = undefined;
+            finPage(page);
+          });
+    });
+  }
+
+  function pushbackChanges() {
+    // we want to make script template operational after
+    // we made changes to the resulting script, so trying to push back
+    // changes from the script to the template
+    const d = new diff_match_patch();
+    const scriptText = editorRef.current!.getText();
+    const patch = d.patch_make(template!.getScriptText(), scriptText);
+    const [t2, result] = d.patch_apply(patch, template!.text);
+
+    if (result.reduce((b1, b2) => b1 && b2, true)) {
+      template!.text = t2;
+    } else {
+      // if we can't push back changes, we have following options:
+      // - drop template and use script as is;
+      // - ask a user to edit template itself;
+      // - rollback to the previous editable template;
+      // for now let stick with the most easy option - replace template text
+      // with script text
+      appendResult('Failed to merge changes back to the template, ' +
+          'replacing template...', 'warning');
+      template!.text = scriptText;
+    }
+  }
+
+  function initPage(): Promise<Page> {
+    let page: LocalPageRunner;
+    let executor = scriptToolboxStateRef.current!.executor;
+    switch (executor) {
+      case 'local':
+        page = new LocalPageRunner();
+        return page.init().then(() => page);
+      default:
+        return Promise.reject(`Executor ${executor} not implemented`);
+    }
+  }
+
+  function finPage(page: Page): Promise<void> {
+    if (page instanceof LocalPageRunner) {
+      return page.fin();
+    }
+    return Promise.resolve();
+  }
+
+  function reloadProxy() {
+    setState({ ...state, loading: true });
+    ( proxySessionId ? API.del(`/proxy/${proxySessionId}`) : Promise.resolve() )
+        .then(() => API.get(`/proxy/session`))
+        .then(data => data.id)
+        .then(id => {
+          setState({
+            ...state,
+            proxySessionId: id,
+            proxyUrl: `/proxy/${id}/goto/${encodeURIComponent(url!.toString())}`,
+          });
+        });
+  }
+
+  const { url, template, libs, saveTemplate, setRef } = props;
+  const { loading, contentDocument, proxySessionId, proxyUrl } = state;
+
+  setRef({
+    getResult(): Promise<ValueType[][]> {
+      if (resultRef.current) {
+        return Promise.resolve(resultRef.current);
+      }
+
+      if (promiseRef.current) {
+        return promiseRef.current;
+      }
+
+      return executeScript() ||
+          Promise.reject(new ValidationError('Failed to execute script'));
+    },
+
+    getTitle(): string | undefined {
+      return titleRef.current;
+    },
+
+    isSaveTemplate(): boolean {
+      return true;
+    },
+  });
 
   useEffect(() => {
     if (url) {
-      setState({ ...state, loading: true });
+      reloadProxy();
     }
   }, [url?.toString()]);
 
@@ -422,12 +600,32 @@ export default function WebCrawlerConstructorScreen(props: WebCrawlerConstructor
     }
   }, [url, template]);
 
-  return <>
-    <div key="view" className="left-pane site-view">
+  useEffect(() => {
+    if (template) {
+      editorRef.current?.on('blur', pushbackChanges)
+      return () => editorRef.current?.off('blur', pushbackChanges);
+    }
+    return undefined;
+  }, [template]);
+
+  return <div className="block-container-horizontal">
+    <Block key="view" className="block new-dialog-screen-stretch site-view"
+           size="50%" splitter="vertical" allowChangeSize={false}>
+      <Toolbox>
+        <Toolbox.Button key="back" src={Icon.back} alt="Go back" onClick={() => {
+          setState({ ...state, loading: true, proxyUrl: `/proxy/${proxySessionId}/go-back` });
+        }}/>
+        <Toolbox.Button key="refresh" src={Icon.refresh} alt="Refresh" onClick={() => {
+          reloadProxy();
+        }}/>
+        <Toolbox.Button key="forward" src={Icon.forward} alt="Go forward" onClick={() => {
+          setState({ ...state, loading: true, proxyUrl: `/proxy/${proxySessionId}/go-forward` });
+        }}/>
+      </Toolbox>
       <Loader loading={loading}/>
       <iframe
           ref={iframeRef}
-          src={url ? `/proxy?url=${encodeURIComponent(url.toString())}` : undefined}
+          src={proxyUrl}
           onLoad={() => {
             setState({
               ...state,
@@ -436,75 +634,95 @@ export default function WebCrawlerConstructorScreen(props: WebCrawlerConstructor
             });
           }}
       />
-    </div>
-    <div key="elements" className="right-pane">
+    </Block>
+    <Block key="combine"
+           className="block new-dialog-screen-stretch block-container-vertical">
       {
-        contentDocument && template ?
-            <>
-              <div ref={treeContainerRef} key="tree"
-                   className="site-html-tree-block">
-                <HTMLTree
-                    ref={treeRef}
-                    className="site-html-tree"
-                    node={contentDocument.documentElement}
-                    container={treeContainerRef.current || undefined}
-                    highlightElement={highlightElement}
-                    blurElement={blurElement}
-                    selectElement={(element) => {
-                      selectElement(element, 'tree');
+          contentDocument && template && <>
+            <Block ref={treeContainerRef} key="tree"
+                   className="block site-html-tree-block"
+                   size="50%" splitter="horizontal"
+            >
+              <HTMLTree
+                  ref={treeRef}
+                  className="site-html-tree"
+                  node={contentDocument.documentElement}
+                  container={treeContainerRef.current?.underlying || undefined}
+                  highlightElement={highlightElement}
+                  blurElement={blurElement}
+                  selectElement={(element) => {
+                    selectElement(element, 'tree');
+                  }}
+              />
+            </Block>
+            <Block key="search" size="content" splitter="horizontal">
+              <wired-search-input
+                  ref={searchRef}
+                  style={{ width: '100%' }}
+                  placeholder="css selector"
+                  onchange={() => {
+                    findElements();
+                  }}
+                  onclose={() => {
+                    searchElements([]);
+                  }}
+                  onKeyUp={(event) => {
+                    // on Enter we move to the next found element
+                    // (better to do navigation with arrows up and down,
+                    // but our search component does not support it so far)
+                    if (event.key === 'Enter') {
+                      findNext();
+                    }
+                  }}
+              />
+              <span ref={searchCommentRef} className="comment"></span>
+              {
+                Object.entries(template)
+                    .filter(([key]) => key.startsWith('$'))
+                    .map(([key, value]) => (
+                        <Uniselector
+                            selected={false}
+                            onClick={() => transformScript(value)}>
+                          {key.substring(1)}
+                        </Uniselector>
+                    ))
+              }
+            </Block>
+            <Block key="script"
+                   className="block script-block block-container-vertical"
+                   style={{ overflow: 'visible' }}>
+              <Block key="script" style={{ overflow: 'visible' }}>
+                <WebCrawlerScriptToolbox
+                    ref={scriptToolboxStateRef}
+                    template={template}
+                    executeScript={executeScript}
+                    lockScript={() => {
+                      editorRef.current!.setReadOnly(true);
+                    }}
+                    unlockScript={() => {
+                      editorRef.current!.setReadOnly(false);
+                      editorRef.current!.focus();
                     }}
                 />
-              </div>
-              <div key="search" className="site-html-search-block">
-                <wired-search-input
-                    ref={searchRef}
-                    style={{ width: '100%' }}
-                    placeholder="css selector"
-                    onchange={() => {
-                      findElements();
-                    }}
-                    onclose={() => {
-                      searchElements([]);
-                    }}
-                    onKeyUp={(event) => {
-                      // on Enter we move to the next found element
-                      // (better to do navigation with arrows up and down,
-                      // but our search component does not support it so far)
-                      if (event.key === 'Enter') {
-                        findNext();
-                      }
-                    }}
-                />
-                <span ref={searchCommentRef} className="comment"></span>
-              </div>
-              <div key="transform" className="script-transform-block">
-                {
-                  Object.entries(template)
-                      .filter(([key]) => key.startsWith('$'))
-                      .map(([key, value]) => (
-                          <Uniselector
-                              selected={false}
-                              onClick={() => transformScript(value)}>
-                            {key.substring(1)}
-                          </Uniselector>
-                      ))
-                }
-              </div>
-              <div key="script" className="script-constructor-block">
                 <ScriptEditor
                     ref={editorRef}
-                    id="script-constructor"
-                    className="script-constructor"
+                    id="script"
+                    className="script"
                     text={getScriptText() || ''}
                     readonly={true}
                     libs={libs}
                 />
+              </Block>
+              <Block key="comment" style={{ overflow: 'visible' }} size="content">
                 <span ref={editorCommentRef} className="comment"></span>
                 <span ref={editorErrorRef} className="field-error"></span>
-              </div>
-            </> :
-            null
+              </Block>
+            </Block>
+            <Block key="result" ref={resultElementRef} splitter="up"
+                   className="block script-result-block">
+            </Block>
+          </>
       }
-    </div>
-  </>
+    </Block>
+  </div>;
 }

@@ -208,6 +208,10 @@ class ScriptEditor extends Component<ScriptEditorProps, ScriptEditorState> {
     }
   }
 
+  focus() {
+    this.editor.focus();
+  }
+
   __pos(point: monaco.IPosition): Position {
     return [point.lineNumber - 1, point.column - 1];
   }

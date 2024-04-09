@@ -53,59 +53,39 @@ img.item {
 
 :root {
     --block-margin: 5px;
-    --button-pane--h: 67px;
+    --button-pane--h: 80px;
+}
+
+.block-container-vertical {
+    display: flex;
+    flex-flow: column;
+    gap: var(--block-margin);
+}
+
+.block-container-horizontal {
+    display: flex;
+    flex-flow: row;
+    gap: var(--block-margin);
 }
 
 .block {
-    display: block;
     position: relative;
-}
-
-.inline-block {
-    display: inline-block;
-    position: relative;
-    margin: var(--block-margin);
+    min-height: 0;
+    overflow: hidden;
 }
 
 .new-dialog .dialog-content {
     min-height: 100px;
     width: 600px;
-    // todo do proper adaptive height via display: flex
-    height: calc(max(100vh, 100px));
 }
 
-.new-dialog .dialog-content form {
-    display: inline-block;
-    width: 100%;
-    height: 100%;
+.new-dialog-screen-limit {
+    max-height: calc(100vh - var(--button-pane--h));
+    overflow: scroll;
 }
 
-.new-dialog .left-pane {
-    @extend .inline-block;
-    float: left;
-    width: calc(50% - 2 * var(--block-margin));
-    height: calc(100% - 2 * var(--block-margin));
-    max-height: calc(100vh - 4 * var(--block-margin) - var(--button-pane--h));
-}
-
-.new-dialog .right-pane {
-    @extend .inline-block;
-    float: right;
-    width: calc(50% - 2 * var(--block-margin));
-    height: calc(100% - 2 * var(--block-margin));
-    max-height: calc(100vh - 4 * var(--block-margin) - var(--button-pane--h));
-}
-
-.new-dialog .full-pane {
-    @extend .inline-block;
-    width: calc(100% - 2 * var(--block-margin));
-    height: calc(100% - 2 * var(--block-margin));
-    max-height: calc(100vh - 4 * var(--block-margin) - var(--button-pane--h));
-}
-
-.new-dialog .button-pane {
-    @extend .inline-block;
-    width: calc(100% - 2 * var(--block-margin));
+.new-dialog-screen-stretch {
+    height: calc(100vh - var(--button-pane--h));
 }
 
 .new-dialog wired-button {
@@ -194,21 +174,15 @@ wired-dialog#error-dialog {
 }
 
 .google-login-button {
-    @extend .inline-block;
-    width: 100%;
     cursor: pointer;
     text-align: center;
 }
 
 .or-divider {
-    @extend .inline-block;
-    width: 100%;
     text-align: center;
 }
 
 .google-sheet-list-block {
-    @extend .inline-block;
-    width: 100%;
     min-height: 70px;
     background-color: #888888;
     box-shadow: 2px 2px #292929;
@@ -314,19 +288,16 @@ div.radio-group wired-radio {
 }
 
 .site-view iframe {
-    width: 100%;
-    height: 100%;
+    width: calc(100% - 2px);
+    height: calc(100% - 2px);
     border: 1px solid;
 }
 
 .site-html-tree-block {
-    @extend .inline-block;
-    width: calc(100% - 2 * var(--block-margin));
-    height: calc(50% - 2 * var(--block-margin));
     overflow-x: scroll;
     overflow-y: scroll;
     background-color: #cfcfcf;
-    border: snow;
+    border: 1px solid #888888;
 }
 
 .site-html-tree {
@@ -357,32 +328,11 @@ div.radio-group wired-radio {
     cursor: pointer;
 }
 
-.site-html-search-block {
-    @extend .inline-block;
-    width: calc(100% - 2 * var(--block-margin));
-}
-
-.script-transform-block {
-    @extend .inline-block;
-    width: calc(100% - 2 * var(--block-margin));
-}
-
-.script-constructor-block {
-    @extend .inline-block;
-    width: calc(100% - 2 * var(--block-margin));
-    height: calc(50% - 57px - 2 * var(--block-margin));
-}
-
-.script-review-block {
-    @extend .inline-block;
-    width: calc(100% - 2 * var(--block-margin));
-    height: calc(60% - 2 * var(--block-margin));
+.script-block {
+    border: 1px solid #888888;
 }
 
 .script-result-block {
-    @extend .inline-block;
-    width: calc(100% - 2 * var(--block-margin));
-    height: calc(40% - 2 * var(--block-margin));
     overflow-x: scroll;
     overflow-y: scroll;
     word-break: break-word;
@@ -390,61 +340,62 @@ div.radio-group wired-radio {
     font-size: 14px;
 }
 
-.script-constructor, .script-review {
+.script {
     width: 100%;
     height: 100%;
     font-family: inherit;
     font-size: 14px;
 }
 
-.script-action-pane {
+.toolbox {
     position: absolute;
     display: flex;
     flex-flow: row;
-    top: 5px;
-    right: 42px;
-    margin: 3px;
+    top: 10px;
+    right: 10px;
+    z-index: 100;
+    padding: 3px;
+    background-color: rgba(128, 128, 128, .7);
 }
 
-.script-action-pane-item {
-    display: flex;
-    flex-flow: column;
-    margin: 3px;
+.toolbox-item {
+    flex: 0 0 auto;
 }
 
-.script-action-pane-item wired-button {
+.toolbox-item wired-button {
     margin: 0;
     --wired-button-padding: 0;
 }
 
-.script-action-pane-item wired-button img {
+.toolbox-item wired-button img {
     width: 32px;
     height: 32px;
 }
 
-.script-setting-dropdown {
-    @extend .dropdown;
-    top: 5px;
-    right: 5px;
-    margin: 6px;
-}
-
-.script-setting-dropdown wired-button {
-    margin: 0;
-    --wired-button-padding: 0;
-}
-
-.script-setting-dropdown wired-button img {
-    width: 32px;
-    height: 32px;
-}
-
-.script-setting-dropdown .pane {
+.toolbox-item .dropdown {
     position: relative;
+}
+
+.toolbox-item .dropdown .pane {
+    position: absolute;
+    top: 36px;
+    right: 2px;
+    min-width: 200px;
+    background-color: rgba(128, 128, 128, .7);
+}
+
+.site-view .toolbox {
+    display: none;
+}
+
+.site-view:hover .toolbox {
     display: flex;
-    flex-flow: column;
-    top: 37px;
-    right: -35px;
-    min-width: 150px;
-    background-color: #cccccc;
+}
+
+.script-block .toolbox {
+    display: none;
+}
+
+.script-block:hover .toolbox {
+    display: flex;
 }

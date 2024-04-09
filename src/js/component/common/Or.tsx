@@ -1,5 +1,6 @@
 import React from 'react';
+import Block from './Block';
 
-const Or = () => <div className="or-divider">------------- OR ------------ <br/></div>;
+const Or = () => <Block className="block or-divider">------------- OR ------------ <br/></Block>;
 
 export default Or;
