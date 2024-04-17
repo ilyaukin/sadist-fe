@@ -129,17 +129,17 @@ class DsNew extends Component<DsNewProps, DsNewState> {
     </DelayedRender>
   }
 
-  visibilityProps = (b: boolean) => b ? {} : { style: { display: 'none' } };
+  visibilityStyle = (b: boolean) => b ? {} : { display: 'none' };
 
   renderProviderSelector = (screenNo: number) => {
     return <Block
         key="selector"
         size="50%"
-        {...this.visibilityProps(screenNo === 0)}
+        style={{ ...this.visibilityStyle(screenNo === 0), overflow: 'visible' }}
     >
       {this.renderTypeCombo()}
-        <br/>
-        {this.state.provider.renderDescription()}
+      <br/>
+      {this.state.provider.renderDescription()}
     </Block>;
   };
 
@@ -148,7 +148,7 @@ class DsNew extends Component<DsNewProps, DsNewState> {
     return <Block
         key={`screen${i}`}
         className="block new-dialog-screen-limit"
-        {...this.visibilityProps(screenNo === i)}
+        style={{ ...this.visibilityStyle(screenNo === i), overflow: 'visible' }}
     >
       {screen}
     </Block>;
@@ -178,8 +178,10 @@ class DsNew extends Component<DsNewProps, DsNewState> {
     return <>
       <Loader loading={this.state.loading}/>
       <form>
-        <div className="block-container-vertical">
-          <Block className="block block-container-horizontal">
+        <div className="block-container-vertical"
+             style={{ overflow: 'visible' }}>
+          <Block className="block block-container-horizontal"
+                 style={{ overflow: 'visible' }}>
             {this.renderProviderSelector(screenNo)}
             {screens.map(this.renderProviderScreen)}
           </Block>
