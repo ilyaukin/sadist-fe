@@ -8,9 +8,9 @@ import AbstractProvider, {
 import WebCrawlerSetupScreen from './WebCrawlerSetupScreen';
 import { WebCrawlerResultRef } from './WebCrawlerScreen';
 import { ScriptEditorLib } from '../common/ScriptEditor';
-import { WebCrawlerScriptTemplate } from '../../model/webcrawler';
+import { WebCrawlerScriptTemplate } from '../../webcrawler-model/webcrawler';
 import ValidationError from './ValidationError';
-import pageDef from '!raw-loader!../../model/page';
+import pageDef from '!raw-loader!../../webcrawler-model/page';
 
 class WebCrawlerProvider extends AbstractProvider {
   type = 'Web';
@@ -53,7 +53,7 @@ class WebCrawlerProvider extends AbstractProvider {
         </li>
         <li>Edit script to add custom logic if necessary</li>
         <li>Execute script directly in your browser
-          or at our proxy server<span className="comment">coming soon</span>
+          or at our proxy server
         </li>
       </ul>
     </>

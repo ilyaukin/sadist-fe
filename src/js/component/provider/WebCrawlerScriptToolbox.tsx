@@ -2,7 +2,7 @@ import React, { useImperativeHandle, useRef, useState } from 'react';
 import { WiredInput } from '/wired-elements/src/wired-input';
 import Toolbox from '../common/Toolbox';
 import Icon from '../../icon/Icon';
-import { WebCrawlerScriptTemplate } from '../../model/webcrawler';
+import { WebCrawlerScriptTemplate } from '../../webcrawler-model/webcrawler';
 
 export interface ScriptToolboxProps {
   template?: WebCrawlerScriptTemplate;

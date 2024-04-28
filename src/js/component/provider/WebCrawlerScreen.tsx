@@ -15,12 +15,11 @@ import WebCrawlerScriptToolbox, {
   ScriptToolboxState
 } from './WebCrawlerScriptToolbox';
 import Icon from '../../icon/Icon';
-import { WebCrawlerScriptTemplate } from '../../model/webcrawler';
+import { WebCrawlerScriptTemplate } from '../../webcrawler-model/webcrawler';
 import { ValueType } from '../../model/ds';
-import { Page } from '../../model/page';
 import ValidationError from './ValidationError';
-import { LocalPageRunner } from '../../model/page-impl';
 import { API } from '../../helper/api-helper';
+import { Webcrawler } from '../../webcrawler-client/webcrawler';
 
 interface WebCrawlerProps {
   url?: URL;
@@ -450,15 +449,19 @@ export default function WebCrawlerScreen(props: WebCrawlerProps) {
 
       let executor = scriptToolboxStateRef.current!.executor;
       appendResult(`Executing script at ${executor}...`);
-      let page: Page;
-      return promiseRef.current = initPage()
-          .then(page1 => {
-            page = page1;
-            return template!.getScript().execute(page);
+      return promiseRef.current = Webcrawler.start()
+          .then(() => Webcrawler.run(template!.getScriptText()))
+          .then((result) => {
+            // get the title of the page **after** script had been
+            // executed, as a default name of the DS
+            return Webcrawler.callPageMethod('title')
+                .then((title) => {
+                  return { result, title };
+                });
           })
-          .then(result => {
+          .then(({ result, title }) => {
             resultRef.current = result;
-            titleRef.current = page.document?.title;
+            titleRef.current = title;
 
             clearResult();
             appendResult(JSON.stringify(result));
@@ -472,7 +475,7 @@ export default function WebCrawlerScreen(props: WebCrawlerProps) {
           })
           .finally(() => {
             promiseRef.current = undefined;
-            finPage(page);
+            Webcrawler.stop();
           });
     });
   }
@@ -501,35 +504,16 @@ export default function WebCrawlerScreen(props: WebCrawlerProps) {
     }
   }
 
-  function initPage(): Promise<Page> {
-    let page: LocalPageRunner;
-    let executor = scriptToolboxStateRef.current!.executor;
-    switch (executor) {
-      case 'local':
-        page = new LocalPageRunner();
-        return page.init().then(() => page);
-      default:
-        return Promise.reject(`Executor ${executor} not implemented`);
-    }
-  }
-
-  function finPage(page: Page): Promise<void> {
-    if (page instanceof LocalPageRunner) {
-      return page.fin();
-    }
-    return Promise.resolve();
-  }
-
   function reloadProxy() {
     setState({ ...state, loading: true });
     ( proxySessionId ? API.del(`/proxy/${proxySessionId}`) : Promise.resolve() )
         .then(() => API.get(`/proxy/session`))
-        .then(data => data.id)
-        .then(id => {
+        .then(data => data.session)
+        .then(proxySessionId => {
           setState({
             ...state,
-            proxySessionId: id,
-            proxyUrl: `/proxy/${id}/goto/${encodeURIComponent(url!.toString())}`,
+            proxySessionId,
+            proxyUrl: `/proxy/${proxySessionId}/visit/${encodeURIComponent(url!.toString())}`,
           });
         });
   }

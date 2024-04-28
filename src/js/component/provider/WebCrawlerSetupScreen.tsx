@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { WiredInput } from '/wired-elements/lib/wired-input';
-import { WebCrawlerScriptTemplate } from '../../model/webcrawler';
+import { WebCrawlerScriptTemplate } from '../../webcrawler-model/webcrawler';
 
 interface WebCrawlerSetupScreenProps {
   url?: string;
