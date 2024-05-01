@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { diff_match_patch } from 'diff-match-patch';
 import { WiredSearchInput } from '/wired-elements/lib/wired-search-input';
 import Loader from '../common/Loader';
 import HTMLTree from '../common/HTMLTree';
@@ -77,6 +76,7 @@ export default function WebCrawlerScreen(props: WebCrawlerProps) {
   const transformerArgRangeRef = useRef<Range | undefined>();
   const onChangeCallbackRef = useRef<( (event: ChangeEvent) => void ) | undefined>();
   const onBlurCallbackRef = useRef<( (event: Event) => void ) | undefined>();
+  const isTemplateTrueRef = useRef<boolean>();
   const resultElementRef = useRef<BlockElement | null>(null);
   const resultRef = useRef<ValueType[][] | undefined>();
   const promiseRef = useRef<Promise<ValueType[][]> | undefined>();
@@ -432,75 +432,63 @@ export default function WebCrawlerScreen(props: WebCrawlerProps) {
     }
   }
 
-  function executeScript(): Promise<ValueType[][]> | undefined {
+  function executeScript(): Promise<ValueType[][]> {
     // make result visible
     if (resultElementRef.current!.getActualSize() < 100) {
       resultElementRef.current!.setActualSize(100);
     }
+
+    clearResult();
+    propagateChangesToTemplate();
 
     // save template asynchronously
     saveTemplate(template!)
         .then(() => appendResult(`Script template saved as ${template!.name}`))
         .catch((e) => appendResult(`Error saving script template: ${e.toString()}`, 'error'));
 
-    return wrap(() => {
-      clearResult();
-      pushbackChanges();
+    // currently we can only execute a script at proxy
+    appendResult(`Executing script at proxy...`);
+    return promiseRef.current = Webcrawler.start()
+        .then(() => Webcrawler.run(template!.getScriptText()))
+        .then((result) => {
+          // get the title of the page **after** script had been
+          // executed, as a default name of the DS
+          return Webcrawler.callPageMethod('title')
+              .then((title) => {
+                return { result, title };
+              });
+        })
+        .then(({ result, title }) => {
+          resultRef.current = result;
+          titleRef.current = title;
 
-      let executor = scriptToolboxStateRef.current!.executor;
-      appendResult(`Executing script at ${executor}...`);
-      return promiseRef.current = Webcrawler.start()
-          .then(() => Webcrawler.run(template!.getScriptText()))
-          .then((result) => {
-            // get the title of the page **after** script had been
-            // executed, as a default name of the DS
-            return Webcrawler.callPageMethod('title')
-                .then((title) => {
-                  return { result, title };
-                });
-          })
-          .then(({ result, title }) => {
-            resultRef.current = result;
-            titleRef.current = title;
-
-            clearResult();
-            appendResult(JSON.stringify(result));
-            return result;
-          })
-          .catch((e) => {
-            clearResult();
-            appendResult(e.toString(), 'error');
-            console.log(e);
-            throw new ValidationError(e.toString());
-          })
-          .finally(() => {
-            promiseRef.current = undefined;
-            Webcrawler.stop();
-          });
-    });
+          clearResult();
+          appendResult(JSON.stringify(result));
+          return result;
+        })
+        .catch((e) => {
+          clearResult();
+          appendResult(e.toString(), 'error');
+          console.log(e);
+          throw new ValidationError(e.toString());
+        })
+        .finally(() => {
+          promiseRef.current = undefined;
+          Webcrawler.stop();
+        });
   }
 
-  function pushbackChanges() {
-    // we want to make script template operational after
-    // we made changes to the resulting script, so trying to push back
-    // changes from the script to the template
-    const d = new diff_match_patch();
-    const scriptText = editorRef.current!.getText();
-    const patch = d.patch_make(template!.getScriptText(), scriptText);
-    const [t2, result] = d.patch_apply(patch, template!.text);
+  function propagateChangesToTemplate() {
+    if (!isTemplateTrueRef.current && editorRef.current && template) {
+      // template is no longer the source of truth, since we have edited script
+      // in the editor box. we should replace template content with the
+      // editor box content
+      template.text = editorRef.current!.getText();
 
-    if (result.reduce((b1, b2) => b1 && b2, true)) {
-      template!.text = t2;
-    } else {
-      // if we can't push back changes, we have following options:
-      // - drop template and use script as is;
-      // - ask a user to edit template itself;
-      // - rollback to the previous editable template;
-      // for now let stick with the most easy option - replace template text
-      // with script text
-      appendResult('Failed to merge changes back to the template, ' +
-          'replacing template...', 'warning');
-      template!.text = scriptText;
+      // remove all transformer methods since they are no longer relevant
+      Object.keys(template).filter((k) => k.startsWith('$')).forEach((k) => {
+        delete ( template as any )[k];
+      });
     }
   }
 
@@ -531,8 +519,7 @@ export default function WebCrawlerScreen(props: WebCrawlerProps) {
         return promiseRef.current;
       }
 
-      return executeScript() ||
-          Promise.reject(new ValidationError('Failed to execute script'));
+      return executeScript();
     },
 
     getTitle(): string | undefined {
@@ -585,26 +572,35 @@ export default function WebCrawlerScreen(props: WebCrawlerProps) {
   }, [url, template]);
 
   useEffect(() => {
-    if (template) {
-      editorRef.current?.on('blur', pushbackChanges)
-      return () => editorRef.current?.off('blur', pushbackChanges);
-    }
-    return undefined;
+    isTemplateTrueRef.current = true;
+    editorRef.current?.on('blur', propagateChangesToTemplate);
+    return () => editorRef.current?.off('blur', propagateChangesToTemplate);
   }, [template]);
 
   return <div className="block-container-horizontal">
     <Block key="view" className="block new-dialog-screen-stretch site-view"
            size="50%" splitter="vertical" allowChangeSize={false}>
       <Toolbox>
-        <Toolbox.Button key="back" src={Icon.back} alt="Go back" onClick={() => {
-          setState({ ...state, loading: true, proxyUrl: `/proxy/${proxySessionId}/go-back` });
-        }}/>
-        <Toolbox.Button key="refresh" src={Icon.refresh} alt="Refresh" onClick={() => {
-          reloadProxy();
-        }}/>
-        <Toolbox.Button key="forward" src={Icon.forward} alt="Go forward" onClick={() => {
-          setState({ ...state, loading: true, proxyUrl: `/proxy/${proxySessionId}/go-forward` });
-        }}/>
+        <Toolbox.Button key="back" src={Icon.back} alt="Go back"
+                        onClick={() => {
+                          setState({
+                            ...state,
+                            loading: true,
+                            proxyUrl: `/proxy/${proxySessionId}/go-back`
+                          });
+                        }}/>
+        <Toolbox.Button key="refresh" src={Icon.refresh} alt="Refresh"
+                        onClick={() => {
+                          reloadProxy();
+                        }}/>
+        <Toolbox.Button key="forward" src={Icon.forward} alt="Go forward"
+                        onClick={() => {
+                          setState({
+                            ...state,
+                            loading: true,
+                            proxyUrl: `/proxy/${proxySessionId}/go-forward`
+                          });
+                        }}/>
       </Toolbox>
       <Loader loading={loading}/>
       <iframe
@@ -686,6 +682,7 @@ export default function WebCrawlerScreen(props: WebCrawlerProps) {
                     unlockScript={() => {
                       editorRef.current!.setReadOnly(false);
                       editorRef.current!.focus();
+                      isTemplateTrueRef.current = false;
                     }}
                 />
                 <ScriptEditor
