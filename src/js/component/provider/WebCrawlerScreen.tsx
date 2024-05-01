@@ -636,37 +636,41 @@ export default function WebCrawlerScreen(props: WebCrawlerProps) {
               />
             </Block>
             <Block key="search" size="content" splitter="horizontal">
-              <wired-search-input
-                  ref={searchRef}
-                  style={{ width: '100%' }}
-                  placeholder="css selector"
-                  onchange={() => {
-                    findElements();
-                  }}
-                  onclose={() => {
-                    searchElements([]);
-                  }}
-                  onKeyUp={(event) => {
-                    // on Enter we move to the next found element
-                    // (better to do navigation with arrows up and down,
-                    // but our search component does not support it so far)
-                    if (event.key === 'Enter') {
-                      findNext();
-                    }
-                  }}
-              />
-              <span ref={searchCommentRef} className="comment"></span>
-              {
-                Object.entries(template)
-                    .filter(([key]) => key.startsWith('$'))
-                    .map(([key, value]) => (
-                        <Uniselector
-                            selected={false}
-                            onClick={() => transformScript(value)}>
-                          {key.substring(1)}
-                        </Uniselector>
-                    ))
-              }
+              <Block key="search">
+                <wired-search-input
+                    ref={searchRef}
+                    style={{ width: '100%' }}
+                    placeholder="css selector"
+                    onchange={() => {
+                      findElements();
+                    }}
+                    onclose={() => {
+                      searchElements([]);
+                    }}
+                    onKeyUp={(event) => {
+                      // on Enter we move to the next found element
+                      // (better to do navigation with arrows up and down,
+                      // but our search component does not support it so far)
+                      if (event.key === 'Enter') {
+                        findNext();
+                      }
+                    }}
+                />
+                <span ref={searchCommentRef} className="comment"></span>
+              </Block>
+              <Block key="transform">
+                {
+                  Object.entries(template)
+                      .filter(([key]) => key.startsWith('$'))
+                      .map(([key, value]) => (
+                          <Uniselector
+                              selected={false}
+                              onClick={() => transformScript(value)}>
+                            {key.substring(1)}
+                          </Uniselector>
+                      ))
+                }
+              </Block>
             </Block>
             <Block key="script"
                    className="block script-block block-container-vertical"
