@@ -18,7 +18,11 @@ import { WebCrawlerScriptTemplate } from '../../webcrawler-model/webcrawler';
 import { ValueType } from '../../model/ds';
 import ValidationError from './ValidationError';
 import { API } from '../../helper/api-helper';
-import { Webcrawler } from '../../webcrawler-client/webcrawler';
+import {
+  Webcrawler,
+  WebcrawlerRequest, WebcrawlerResponse
+} from '../../webcrawler-client/webcrawler';
+import { scrollToVisible } from '../../helper/scroll-helper';
 
 interface WebCrawlerProps {
   url?: URL;
@@ -424,6 +428,47 @@ export default function WebCrawlerScreen(props: WebCrawlerProps) {
     messageElement.append(document.createTextNode(message));
     messageElement.append(document.createElement('br'));
     resultElementRef.current?.underlying.appendChild(messageElement);
+    scrollToVisible(messageElement, resultElementRef.current?.underlying);
+  }
+
+  function appendRequest(request: WebcrawlerRequest) {
+    let messageElement: HTMLSpanElement | null | undefined;
+    // check if already had a request with this URL
+    messageElement = resultElementRef.current?.underlying.querySelector(`[data-url="${request.url}"]`);
+    if (messageElement) {
+      const multiplierElement = messageElement.querySelector('.multiplier')!;
+      const x = parseInt(multiplierElement.textContent?.substring(1) || "1") + 1;
+      multiplierElement.textContent = `×${x}`;
+    } else {
+      messageElement = document.createElement('span');
+      messageElement.setAttribute('data-url', request.url);
+      const statusElement = document.createElement('span');
+      statusElement.classList.add('status', 'pending');
+      statusElement.append(document.createTextNode('...'));
+      messageElement.append(statusElement);
+      const multiplierElement = document.createElement('span');
+      multiplierElement.classList.add('multiplier');
+      messageElement.append(multiplierElement);
+      const urlElement = document.createElement('a');
+      urlElement.href = request.url;
+      urlElement.target = '_blank';
+      urlElement.append(document.createTextNode(request.url));
+      messageElement.append(urlElement);
+      messageElement.append(document.createElement('br'));
+      resultElementRef.current?.underlying.appendChild(messageElement);
+    }
+    scrollToVisible(messageElement, resultElementRef.current?.underlying);
+  }
+
+  function appendResponse(response: WebcrawlerResponse) {
+    const messageElement = resultElementRef.current?.underlying.querySelector(`[data-url="${response.url}"]`);
+    if (messageElement) {
+      const statusElement = messageElement.querySelector('.status')!;
+      statusElement.classList.remove('pending');
+      statusElement.classList.add(`code${Math.floor(response.status / 100)}xx`);
+      statusElement.textContent = `${response.status}`;
+      scrollToVisible(messageElement, resultElementRef.current?.underlying);
+    }
   }
 
   function clearResult() {
@@ -449,7 +494,10 @@ export default function WebCrawlerScreen(props: WebCrawlerProps) {
     // currently we can only execute a script at proxy
     appendResult(`Executing script at proxy...`);
     return promiseRef.current = Webcrawler.start()
-        .then(() => Webcrawler.run(template!.getScriptText()))
+        .then(() => Webcrawler.run(template!.getScriptText(), {
+          onRequest: appendRequest,
+          onResponse: appendResponse,
+        }))
         .then((result) => {
           // get the title of the page **after** script had been
           // executed, as a default name of the DS

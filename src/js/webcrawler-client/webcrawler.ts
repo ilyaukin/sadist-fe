@@ -4,12 +4,34 @@ import { API } from '../helper/api-helper';
 import { getRandomId } from '../helper/random-helper';
 import { Promised } from '../helper/type-helper';
 
-interface WebcrawlerRunOptions {
+export interface WebcrawlerRequest {
+  url: string;
+  headers: Record<string, string>;
 }
+
+export interface WebcrawlerResponse {
+  url: string;
+  status: number;
+  headers: Record<string, string>;
+}
+
+export interface WebcrawlerRunOptions {
+  onRequest?(request: WebcrawlerRequest): any;
+
+  onResponse?(response: WebcrawlerResponse): any;
+}
+
+interface WebcrawlerEvents {
+  request: WebcrawlerRequest;
+  response: WebcrawlerResponse;
+}
+
+type Handler<key extends keyof WebcrawlerEvents> = (event: WebcrawlerEvents[key]) => any;
 
 export namespace Webcrawler {
   let proxySessionId: string | undefined;
   let ws: WebSocket;
+  let eventHandlers: { [key in keyof WebcrawlerEvents]?: ( Handler<key> )[] };
 
   /**
    * Start crawler, i.e. session. There can be only one crawler running
@@ -25,6 +47,7 @@ export namespace Webcrawler {
       ws.addEventListener('open', () => {
         resolve();
       });
+      ws.addEventListener('message', __handleMessage);
     });
   }
 
@@ -67,7 +90,20 @@ export namespace Webcrawler {
    * @returns data returned by the script
    */
   export function run(script: string, options?: WebcrawlerRunOptions): Promise<ValueType[][]> {
-    return __call({ script });
+    if (options?.onRequest) {
+      on('request', options.onRequest);
+    }
+    if (options?.onResponse) {
+      on('response', options.onResponse);
+    }
+    return __call<any, ValueType[][]>({ script }).finally(() => {
+      if (options?.onRequest) {
+        off('request', options.onRequest);
+      }
+      if (options?.onResponse) {
+        off('response', options.onResponse);
+      }
+    });
   }
 
   /**
@@ -93,6 +129,20 @@ export namespace Webcrawler {
     return __call<any, Promised<ReturnType<Browser[M]>>>({ method, target: 'browser', payload: args });
   }
 
+  export function on<Key extends keyof WebcrawlerEvents>(type: Key, handler: Handler<Key>) {
+    eventHandlers ||= {};
+    eventHandlers[type] ||= [];
+    // @ts-ignore
+    eventHandlers[type].push(handler);
+  }
+
+  export function off<Key extends keyof WebcrawlerEvents>(type: Key, handler: (event: WebcrawlerEvents[Key]) => any) {
+    eventHandlers ||= {};
+    eventHandlers[type] ||= [];
+    // @ts-ignore
+    eventHandlers[type] = eventHandlers[type].filter(h => h !== handler);
+  }
+
   function __call<Request, Response>(command: Request): Promise<Response> {
     const commandId = getRandomId();
     ws.send(JSON.stringify({ ...command, session: proxySessionId, id: commandId }));
@@ -111,5 +161,17 @@ export namespace Webcrawler {
       };
       ws.addEventListener('message', listener);
     });
+  }
+
+  function __handleMessage(event: MessageEvent) {
+    const message = JSON.parse(event.data);
+    if (message.session === proxySessionId) {
+      if (message.type in eventHandlers) {
+        // @ts-ignore
+        for (const handler of eventHandlers[message.type]) {
+          handler(message[message.type]);
+        }
+      }
+    }
   }
 }
