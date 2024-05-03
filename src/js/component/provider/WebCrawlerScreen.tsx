@@ -96,8 +96,8 @@ export default function WebCrawlerScreen(props: WebCrawlerProps) {
       const overlay = contentDocument.createElement('div');
       overlay.style.backgroundColor = 'rgb(0, 116, 204, .5)';
       overlay.style.position = 'absolute';
-      overlay.style.top = `${rect.top + contentDocument.documentElement.scrollTop}px`;
-      overlay.style.left = `${rect.left + contentDocument.documentElement.scrollLeft}px`;
+      overlay.style.top = `${rect.top + contentDocument.body.scrollTop}px`;
+      overlay.style.left = `${rect.left + contentDocument.body.scrollLeft}px`;
       overlay.style.height = `${rect.height}px`;
       overlay.style.width = `${rect.width}px`;
       overlay.style.pointerEvents = 'none';
