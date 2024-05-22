@@ -142,6 +142,38 @@ wired-dialog#error-dialog {
     font-size: small;
 }
 
+.status {
+    font-weight: bold;
+}
+
+.pending {
+    background-color: #888888;
+}
+
+.code1xx {
+    background-color: #444444;
+}
+
+.code2xx {
+    background-color: #00b800;
+}
+
+.code3xx {
+    background-color: #0000ff;
+}
+
+.code4xx {
+    background-color: #dc143c;
+}
+
+.code5xx {
+    background-color: #ff0000;
+}
+
+.multiplier {
+    font-weight: bold;
+}
+
 .dropdown {
     position: absolute;
     right: 1px;

@@ -1,4 +1,4 @@
-import { ValueType } from './ds';
+import { ValueType } from '../model/ds';
 import { Page } from './page';
 
 /**

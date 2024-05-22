@@ -434,7 +434,7 @@ module.exports = {
         })
       });
       app.get('/wc/template', function (req, res) {
-        res.send(`[{"name":"simple single-page scrapper","text":"return (function scratch(page) {\\n  return page.goto(\u003C%url\\"http:\u002F\u002Flj.rossia.org\u002Fusers\u002Fdodjer\u002F18590.html\\"%\u003E)\\n      .then(() =\u003E {\\n        const r = [[\u003C%title%\u003E]];\\n        page.querySelectorAll(\u003C%row%\u003E)\\n            .forEach((row, i) =\u003E {\u003C%fields%\u003E\\n              r.push([\u003C%values%\u003E]);\\n            });\\n        return r;\\n      });\\n})(page)","$Use as row":function $UseAsRow(s) {
+        res.send(`[{"name":"simple single-page scrapper","text":"function scratch(page) {\\n  return page.goto(\u003C%url\\"http:\u002F\u002Flj.rossia.org\u002Fusers\u002Fdodjer\u002F18590.html\\"%\u003E)\\n      .then(async () =\u003E {\\n        const r = [[\u003C%title%\u003E]];\\n        await page.$$(\u003C%row%\u003E)\\n            .forEach((row, i) =\u003E {\u003C%fields%\u003E\\n              r.push([\u003C%values%\u003E]);\\n            });\\n        return r;\\n      });\\n}","$Use as row":function $UseAsRow(s) {
         this.__replace('row', JSON.stringify(s));
       },"$Use as field":function $UseAsField(s, name) {
         var varName = name.replace(/[^a-zA-Z0-9$]+/g, '_');
@@ -488,7 +488,7 @@ module.exports = {
     proxy: {
       '/proxy': {
         target: 'http://localhost:8080',
-        router: () => 'http://localhost:8000',
+        router: () => 'http://localhost:8090',
       }
     }
   }

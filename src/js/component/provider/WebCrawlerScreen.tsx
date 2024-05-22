@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { diff_match_patch } from 'diff-match-patch';
 import { WiredSearchInput } from '/wired-elements/lib/wired-search-input';
 import Loader from '../common/Loader';
 import HTMLTree from '../common/HTMLTree';
@@ -15,12 +14,15 @@ import WebCrawlerScriptToolbox, {
   ScriptToolboxState
 } from './WebCrawlerScriptToolbox';
 import Icon from '../../icon/Icon';
-import { WebCrawlerScriptTemplate } from '../../model/webcrawler';
+import { WebCrawlerScriptTemplate } from '../../webcrawler-model/webcrawler';
 import { ValueType } from '../../model/ds';
-import { Page } from '../../model/page';
 import ValidationError from './ValidationError';
-import { LocalPageRunner } from '../../model/page-impl';
 import { API } from '../../helper/api-helper';
+import {
+  Webcrawler,
+  WebcrawlerRequest, WebcrawlerResponse
+} from '../../webcrawler-client/webcrawler';
+import { scrollToVisible } from '../../helper/scroll-helper';
 
 interface WebCrawlerProps {
   url?: URL;
@@ -78,6 +80,7 @@ export default function WebCrawlerScreen(props: WebCrawlerProps) {
   const transformerArgRangeRef = useRef<Range | undefined>();
   const onChangeCallbackRef = useRef<( (event: ChangeEvent) => void ) | undefined>();
   const onBlurCallbackRef = useRef<( (event: Event) => void ) | undefined>();
+  const isTemplateTrueRef = useRef<boolean>();
   const resultElementRef = useRef<BlockElement | null>(null);
   const resultRef = useRef<ValueType[][] | undefined>();
   const promiseRef = useRef<Promise<ValueType[][]> | undefined>();
@@ -93,8 +96,8 @@ export default function WebCrawlerScreen(props: WebCrawlerProps) {
       const overlay = contentDocument.createElement('div');
       overlay.style.backgroundColor = 'rgb(0, 116, 204, .5)';
       overlay.style.position = 'absolute';
-      overlay.style.top = `${rect.top + contentDocument.documentElement.scrollTop}px`;
-      overlay.style.left = `${rect.left + contentDocument.documentElement.scrollLeft}px`;
+      overlay.style.top = `${rect.top + contentDocument.body.scrollTop}px`;
+      overlay.style.left = `${rect.left + contentDocument.body.scrollLeft}px`;
       overlay.style.height = `${rect.height}px`;
       overlay.style.width = `${rect.width}px`;
       overlay.style.pointerEvents = 'none';
@@ -425,6 +428,47 @@ export default function WebCrawlerScreen(props: WebCrawlerProps) {
     messageElement.append(document.createTextNode(message));
     messageElement.append(document.createElement('br'));
     resultElementRef.current?.underlying.appendChild(messageElement);
+    scrollToVisible(messageElement, resultElementRef.current?.underlying);
+  }
+
+  function appendRequest(request: WebcrawlerRequest) {
+    let messageElement: HTMLSpanElement | null | undefined;
+    // check if already had a request with this URL
+    messageElement = resultElementRef.current?.underlying.querySelector(`[data-url="${request.url}"]`);
+    if (messageElement) {
+      const multiplierElement = messageElement.querySelector('.multiplier')!;
+      const x = parseInt(multiplierElement.textContent?.substring(1) || "1") + 1;
+      multiplierElement.textContent = `×${x}`;
+    } else {
+      messageElement = document.createElement('span');
+      messageElement.setAttribute('data-url', request.url);
+      const statusElement = document.createElement('span');
+      statusElement.classList.add('status', 'pending');
+      statusElement.append(document.createTextNode('...'));
+      messageElement.append(statusElement);
+      const multiplierElement = document.createElement('span');
+      multiplierElement.classList.add('multiplier');
+      messageElement.append(multiplierElement);
+      const urlElement = document.createElement('a');
+      urlElement.href = request.url;
+      urlElement.target = '_blank';
+      urlElement.append(document.createTextNode(request.url));
+      messageElement.append(urlElement);
+      messageElement.append(document.createElement('br'));
+      resultElementRef.current?.underlying.appendChild(messageElement);
+    }
+    scrollToVisible(messageElement, resultElementRef.current?.underlying);
+  }
+
+  function appendResponse(response: WebcrawlerResponse) {
+    const messageElement = resultElementRef.current?.underlying.querySelector(`[data-url="${response.url}"]`);
+    if (messageElement) {
+      const statusElement = messageElement.querySelector('.status')!;
+      statusElement.classList.remove('pending');
+      statusElement.classList.add(`code${Math.floor(response.status / 100)}xx`);
+      statusElement.textContent = `${response.status}`;
+      scrollToVisible(messageElement, resultElementRef.current?.underlying);
+    }
   }
 
   function clearResult() {
@@ -433,103 +477,79 @@ export default function WebCrawlerScreen(props: WebCrawlerProps) {
     }
   }
 
-  function executeScript(): Promise<ValueType[][]> | undefined {
+  function executeScript(): Promise<ValueType[][]> {
     // make result visible
     if (resultElementRef.current!.getActualSize() < 100) {
       resultElementRef.current!.setActualSize(100);
     }
+
+    clearResult();
+    propagateChangesToTemplate();
 
     // save template asynchronously
     saveTemplate(template!)
         .then(() => appendResult(`Script template saved as ${template!.name}`))
         .catch((e) => appendResult(`Error saving script template: ${e.toString()}`, 'error'));
 
-    return wrap(() => {
-      clearResult();
-      pushbackChanges();
+    // currently we can only execute a script at proxy
+    appendResult(`Executing script at proxy...`);
+    return promiseRef.current = Webcrawler.start()
+        .then(() => Webcrawler.run(template!.getScriptText(), {
+          onRequest: appendRequest,
+          onResponse: appendResponse,
+        }))
+        .then((result) => {
+          // get the title of the page **after** script had been
+          // executed, as a default name of the DS
+          return Webcrawler.callPageMethod('title')
+              .then((title) => {
+                return { result, title };
+              });
+        })
+        .then(({ result, title }) => {
+          resultRef.current = result;
+          titleRef.current = title;
 
-      let executor = scriptToolboxStateRef.current!.executor;
-      appendResult(`Executing script at ${executor}...`);
-      let page: Page;
-      return promiseRef.current = initPage()
-          .then(page1 => {
-            page = page1;
-            return template!.getScript().execute(page);
-          })
-          .then(result => {
-            resultRef.current = result;
-            titleRef.current = page.document?.title;
-
-            clearResult();
-            appendResult(JSON.stringify(result));
-            return result;
-          })
-          .catch((e) => {
-            clearResult();
-            appendResult(e.toString(), 'error');
-            console.log(e);
-            throw new ValidationError(e.toString());
-          })
-          .finally(() => {
-            promiseRef.current = undefined;
-            finPage(page);
-          });
-    });
+          clearResult();
+          appendResult(JSON.stringify(result));
+          return result;
+        })
+        .catch((e) => {
+          clearResult();
+          appendResult(e.toString(), 'error');
+          console.log(e);
+          throw new ValidationError(e.toString());
+        })
+        .finally(() => {
+          promiseRef.current = undefined;
+          Webcrawler.stop();
+        });
   }
 
-  function pushbackChanges() {
-    // we want to make script template operational after
-    // we made changes to the resulting script, so trying to push back
-    // changes from the script to the template
-    const d = new diff_match_patch();
-    const scriptText = editorRef.current!.getText();
-    const patch = d.patch_make(template!.getScriptText(), scriptText);
-    const [t2, result] = d.patch_apply(patch, template!.text);
+  function propagateChangesToTemplate() {
+    if (!isTemplateTrueRef.current && editorRef.current && template) {
+      // template is no longer the source of truth, since we have edited script
+      // in the editor box. we should replace template content with the
+      // editor box content
+      template.text = editorRef.current!.getText();
 
-    if (result.reduce((b1, b2) => b1 && b2, true)) {
-      template!.text = t2;
-    } else {
-      // if we can't push back changes, we have following options:
-      // - drop template and use script as is;
-      // - ask a user to edit template itself;
-      // - rollback to the previous editable template;
-      // for now let stick with the most easy option - replace template text
-      // with script text
-      appendResult('Failed to merge changes back to the template, ' +
-          'replacing template...', 'warning');
-      template!.text = scriptText;
+      // remove all transformer methods since they are no longer relevant
+      Object.keys(template).filter((k) => k.startsWith('$')).forEach((k) => {
+        delete ( template as any )[k];
+      });
     }
-  }
-
-  function initPage(): Promise<Page> {
-    let page: LocalPageRunner;
-    let executor = scriptToolboxStateRef.current!.executor;
-    switch (executor) {
-      case 'local':
-        page = new LocalPageRunner();
-        return page.init().then(() => page);
-      default:
-        return Promise.reject(`Executor ${executor} not implemented`);
-    }
-  }
-
-  function finPage(page: Page): Promise<void> {
-    if (page instanceof LocalPageRunner) {
-      return page.fin();
-    }
-    return Promise.resolve();
   }
 
   function reloadProxy() {
     setState({ ...state, loading: true });
     ( proxySessionId ? API.del(`/proxy/${proxySessionId}`) : Promise.resolve() )
         .then(() => API.get(`/proxy/session`))
-        .then(data => data.id)
-        .then(id => {
+        .then(data => data.session)
+        .then(proxySessionId => {
           setState({
             ...state,
-            proxySessionId: id,
-            proxyUrl: `/proxy/${id}/goto/${encodeURIComponent(url!.toString())}`,
+            proxySessionId,
+            proxyUrl: `/proxy/${proxySessionId}/visit/${encodeURIComponent(url!.toString())}`,
           });
         });
   }
@@ -547,8 +567,7 @@ export default function WebCrawlerScreen(props: WebCrawlerProps) {
         return promiseRef.current;
       }
 
-      return executeScript() ||
-          Promise.reject(new ValidationError('Failed to execute script'));
+      return executeScript();
     },
 
     getTitle(): string | undefined {
@@ -601,26 +620,35 @@ export default function WebCrawlerScreen(props: WebCrawlerProps) {
   }, [url, template]);
 
   useEffect(() => {
-    if (template) {
-      editorRef.current?.on('blur', pushbackChanges)
-      return () => editorRef.current?.off('blur', pushbackChanges);
-    }
-    return undefined;
+    isTemplateTrueRef.current = true;
+    editorRef.current?.on('blur', propagateChangesToTemplate);
+    return () => editorRef.current?.off('blur', propagateChangesToTemplate);
   }, [template]);
 
   return <div className="block-container-horizontal">
     <Block key="view" className="block new-dialog-screen-stretch site-view"
            size="50%" splitter="vertical" allowChangeSize={false}>
       <Toolbox>
-        <Toolbox.Button key="back" src={Icon.back} alt="Go back" onClick={() => {
-          setState({ ...state, loading: true, proxyUrl: `/proxy/${proxySessionId}/go-back` });
-        }}/>
-        <Toolbox.Button key="refresh" src={Icon.refresh} alt="Refresh" onClick={() => {
-          reloadProxy();
-        }}/>
-        <Toolbox.Button key="forward" src={Icon.forward} alt="Go forward" onClick={() => {
-          setState({ ...state, loading: true, proxyUrl: `/proxy/${proxySessionId}/go-forward` });
-        }}/>
+        <Toolbox.Button key="back" src={Icon.back} alt="Go back"
+                        onClick={() => {
+                          setState({
+                            ...state,
+                            loading: true,
+                            proxyUrl: `/proxy/${proxySessionId}/go-back`
+                          });
+                        }}/>
+        <Toolbox.Button key="refresh" src={Icon.refresh} alt="Refresh"
+                        onClick={() => {
+                          reloadProxy();
+                        }}/>
+        <Toolbox.Button key="forward" src={Icon.forward} alt="Go forward"
+                        onClick={() => {
+                          setState({
+                            ...state,
+                            loading: true,
+                            proxyUrl: `/proxy/${proxySessionId}/go-forward`
+                          });
+                        }}/>
       </Toolbox>
       <Loader loading={loading}/>
       <iframe
@@ -656,37 +684,41 @@ export default function WebCrawlerScreen(props: WebCrawlerProps) {
               />
             </Block>
             <Block key="search" size="content" splitter="horizontal">
-              <wired-search-input
-                  ref={searchRef}
-                  style={{ width: '100%' }}
-                  placeholder="css selector"
-                  onchange={() => {
-                    findElements();
-                  }}
-                  onclose={() => {
-                    searchElements([]);
-                  }}
-                  onKeyUp={(event) => {
-                    // on Enter we move to the next found element
-                    // (better to do navigation with arrows up and down,
-                    // but our search component does not support it so far)
-                    if (event.key === 'Enter') {
-                      findNext();
-                    }
-                  }}
-              />
-              <span ref={searchCommentRef} className="comment"></span>
-              {
-                Object.entries(template)
-                    .filter(([key]) => key.startsWith('$'))
-                    .map(([key, value]) => (
-                        <Uniselector
-                            selected={false}
-                            onClick={() => transformScript(value)}>
-                          {key.substring(1)}
-                        </Uniselector>
-                    ))
-              }
+              <Block key="search">
+                <wired-search-input
+                    ref={searchRef}
+                    style={{ width: '100%' }}
+                    placeholder="css selector"
+                    onchange={() => {
+                      findElements();
+                    }}
+                    onclose={() => {
+                      searchElements([]);
+                    }}
+                    onKeyUp={(event) => {
+                      // on Enter we move to the next found element
+                      // (better to do navigation with arrows up and down,
+                      // but our search component does not support it so far)
+                      if (event.key === 'Enter') {
+                        findNext();
+                      }
+                    }}
+                />
+                <span ref={searchCommentRef} className="comment"></span>
+              </Block>
+              <Block key="transform">
+                {
+                  Object.entries(template)
+                      .filter(([key]) => key.startsWith('$'))
+                      .map(([key, value]) => (
+                          <Uniselector
+                              selected={false}
+                              onClick={() => transformScript(value)}>
+                            {key.substring(1)}
+                          </Uniselector>
+                      ))
+                }
+              </Block>
             </Block>
             <Block key="script"
                    className="block script-block block-container-vertical"
@@ -702,6 +734,7 @@ export default function WebCrawlerScreen(props: WebCrawlerProps) {
                     unlockScript={() => {
                       editorRef.current!.setReadOnly(false);
                       editorRef.current!.focus();
+                      isTemplateTrueRef.current = false;
                     }}
                 />
                 <ScriptEditor
