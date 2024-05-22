@@ -742,7 +742,7 @@ export default function WebCrawlerScreen(props: WebCrawlerProps) {
                     id="script"
                     className="script"
                     text={getScriptText() || ''}
-                    readonly={true}
+                    readonly={scriptToolboxStateRef.current ? scriptToolboxStateRef.current.isLocked : true}
                     libs={libs}
                 />
               </Block>
