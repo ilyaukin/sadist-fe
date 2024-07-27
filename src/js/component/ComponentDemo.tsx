@@ -63,13 +63,33 @@ const ComponentDemo = () => {
         </wired-combo>
       </>
     }(),
+    'wired-listbox': function () {
+      return <>
+        <p>Single-select listbox</p>
+        <wired-listbox>
+          <wired-item value="dog">Dog</wired-item>
+          <wired-item value="cat">Cat</wired-item>
+          <wired-item value="hamster">Hamster</wired-item>
+          <wired-item value="parrot">Parrot</wired-item>
+          <wired-item value="spider">Spider</wired-item>
+        </wired-listbox>
+        <p>Multi-select listbox</p>
+        <wired-listbox multiple={true}>
+          <wired-item value="dog">Dog</wired-item>
+          <wired-item value="cat">Cat</wired-item>
+          <wired-item value="hamster">Hamster</wired-item>
+          <wired-item value="parrot">Parrot</wired-item>
+          <wired-item value="spider">Spider</wired-item>
+        </wired-listbox>
+      </>
+    }(),
     'wired-histogram': function () {
 
       const [selected, setSelected] = React.useState<string | null>(null);
       const isSelected = (str: string): boolean => selected === str;
 
       return <>
-        <div style={{ width: '300px', display: 'inline-block' }}>
+      <div style={{ width: '300px', display: 'inline-block' }}>
           <p>Single-parameter histogram</p>
           <br/>
           <wired-histogram>
@@ -198,7 +218,7 @@ const ComponentDemo = () => {
     }(),
   }
 
-  const [demoKey, setDemoKey] = useState<keyof JSX.IntrinsicElements | undefined>('wired-dual-slider');
+  const [demoKey, setDemoKey] = useState<keyof JSX.IntrinsicElements | undefined>('wired-listbox');
 
   return <>
     {Object.keys(demo).map(
