@@ -6,7 +6,7 @@ import VizGraph from './VizGraph';
 import { DsInfo, VizData, VizMeta } from '../../model/ds';
 import { DsInfoAction, DsInfoActionType } from '../../reducer/dsInfo-reducer';
 import { useQueuedRequest } from '../../hook/queued-hook';
-import { getMeta } from '../../helper/data-helper';
+import { getMeta, getVizData } from '../../helper/data-helper';
 
 interface VizProps {
   style?: React.CSSProperties;
@@ -33,20 +33,11 @@ const Viz = (props: VizProps) => {
       return Promise.resolve();
     }
 
-    return fetch(`/ds/${dsId}/visualize?` +
-        `pipeline=${encodeURIComponent(JSON.stringify(pipeline))}`).then((response) => {
-      response.json().then((data) => {
-        if (data.success) {
-          // put vizMeta to the state to make it consistent with vizData
-          setState({ ...state, vizData: data.list, vizMeta: dsInfo.vizMeta });
-        } else {
-          ErrorDialog.raise('Error: ' + ( data.error || 'Unknown error' ));
-        }
-      }).catch((e) => {
-        ErrorDialog.raise('Error parsing JSON response: ' + e.toString());
-      });
+    return getVizData(dsId, pipeline).then((list) => {
+      // put vizMeta to the state to make it consistent with vizData
+      setState({ ...state, vizData: list, vizMeta: dsInfo.vizMeta });
     }).catch((e) => {
-      ErrorDialog.raise('Error fetching data: ' + e.toString());
+      ErrorDialog.raise(e.toString());
     });
   }, [dsId, dsInfo.vizMeta]);
 

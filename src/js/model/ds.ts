@@ -453,6 +453,11 @@ export interface DsMeta {
   type?: string;
 
   /**
+   * Extra DS information. May include access, source, etc.
+   */
+  extra?: { [k: string]: any };
+
+  /**
    * Columns' name in the specific order
    */
   cols?: string[];

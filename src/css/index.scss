@@ -431,3 +431,12 @@ div.radio-group wired-radio {
 .script-block:hover .toolbox {
     display: flex;
 }
+
+.quick-file-upload {
+    display: flex;
+    flex-flow: column;
+    align-items: center;
+    justify-content: center;
+    border: 1px dashed black;
+    margin: 2px;
+}

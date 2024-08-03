@@ -4,7 +4,9 @@ import ErrorDialog from "../common/ErrorDialog";
 import Icon from "../../icon/Icon";
 import DsNew from "./DsNew";
 import Dialog, { DialogButton } from "../common/Dialog";
+import QuickFileUpload from './QuickFileUpload';
 import { isVal } from "../../helper/wired-helper";
+import { listMeta } from '../../helper/data-helper';
 import { DsMeta } from '../../model/ds';
 import UserContext from '../../context/UserContext';
 
@@ -42,28 +44,23 @@ const DsList = (props: DsListProps) => {
 
   useEffect(() => {
     if (userContextValue.loaded) {
-      fetch('/ls')
-          .then((response) => response.json())
-          .then((data) => {
-            if (data.success && data.list) {
-              let index: { [dsId: string]: DsMeta } = {}
-              data.list.forEach((v: DsMeta) => {
-                index[v.id!] = v;
-              });
+      listMeta()
+          .then((list) => {
+            let index: { [dsId: string]: DsMeta } = {}
+            list.forEach((v: DsMeta) => {
+              index[v.id!] = v;
+            });
 
-              setState({
-                ...state,
-                list: data.list,
-                loading: false,
-                index
-              });
-              onLoadList(data.list);
-            } else {
-              ErrorDialog.raise('Error: ' + ( data.error || 'Unknown error' ))
-            }
+            setState({
+              ...state,
+              list,
+              index,
+              loading: false
+            });
+            onLoadList(list);
           }).catch((err) => {
-        ErrorDialog.raise('Error fetching data: ' + err.toString())
-      })
+        ErrorDialog.raise(err.toString());
+      });
     }
   }, [userContextValue.user, userContextValue.loaded]);
 
@@ -117,28 +114,28 @@ const DsList = (props: DsListProps) => {
   }
 
   function renderItem(item: DsMeta) {
-    let pic;
-    switch (item.type) {
-      case 'GoogleSheet':
-        pic = Icon.google;
-        break;
-      case 'New':
-        pic = Icon.plus;
-        break;
-      default:
-        pic = Icon.question;
+    let pic, alt;
+    if (item.type === 'New') {
+      pic = Icon.plus;
+      alt = '[+]';
+    } else if (item.extra?.access?.type === 'public') {
+      pic = Icon.file;
+      alt = '[📄]';
+    } else {
+      pic = Icon.filePrivate;
+      alt = '[🔒]';
     }
     return <wired-item
         key={item.id}
         value={item.id}>
-      <img className="item" src={pic} alt={item.type || '?'}/>
+      <img className="item" src={pic} alt={alt}/>
       {item.name}
     </wired-item>;
   }
 
   const { loading, list, creatingNew } = state;
 
-  return <div style={{ margin: '10px' }}>
+  return <>
     <Dialog className="new-dialog"
             open={creatingNew} buttons={[DialogButton.FULL, DialogButton.CLOSE]}
             onClose={onCancelDsCreate}>
@@ -146,6 +143,8 @@ const DsList = (props: DsListProps) => {
     </Dialog>
     <wired-combo
         ref={comboRef}
+        style={{ width: '200px', maxWidth: '100%', marginLeft: '10px' }}
+        placeholder="Choose data source..."
         disabled={isVal(loading)}
         selected={dsId}
         onselected={(e: CustomEvent) => onComboValueSelected(e.detail?.selected, e)}
@@ -153,7 +152,10 @@ const DsList = (props: DsListProps) => {
       {renderItem({ id: 'new', 'name': 'New', type: 'New' })}
       {list.map(renderItem)}
     </wired-combo>
-  </div>
+    {!dsId && <QuickFileUpload onDsCreated={onDsCreated}>
+      ...or drop a spreadsheet here
+    </QuickFileUpload>}
+  </>
 }
 
 export default DsList;

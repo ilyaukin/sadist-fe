@@ -120,6 +120,7 @@ export class WiredComboLazy extends WiredBase {
   }
 
   @property({ type: Boolean, reflect: true }) disabled = false;
+  @property({ type: String }) placeholder = '';
 
   @query('#card') private card?: WiredCard;
   private cardShowing = false;
@@ -236,7 +237,7 @@ export class WiredComboLazy extends WiredBase {
     <div id="container" @click="${this.onCombo}">
       <div id="textPanel" class="inline" data-wired-shape="rectangle">
         <div id="text">
-          <span>${this.value && this.value.text}</span>
+          <span>${this.value && this.value.text || this.placeholder}</span>
         </div>
       </div><!-- to remove whitespace
       --><div id="dropPanel" class="inline" data-wired-shape="rectangle;arrow-down:offset-top=5,offset-left=8,offset-bottom=5,offset-right=8"></div>
