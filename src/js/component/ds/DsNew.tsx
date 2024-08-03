@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import AbstractProvider from "../provider/AbstractProvider";
 import ValidationError from "../provider/ValidationError";
 import NullProvider from "../provider/NullProvider";
+import LocalFileProvider from '../provider/LocalFileProvider';
 import GoogleSheetProvider from '../provider/GoogleSheetProvider';
 import WebCrawlerProvider from '../provider/WebCrawlerProvider';
 import ErrorDialog from "../common/ErrorDialog";
@@ -36,6 +37,7 @@ class DsNew extends Component<DsNewProps, DsNewState> {
       onUpdateScreens: this.onUpdateScreens,
     }
     this.providers = [
+      new LocalFileProvider(providerProps),
       new GoogleSheetProvider(providerProps),
       new WebCrawlerProvider(providerProps),
     ];
@@ -112,8 +114,9 @@ class DsNew extends Component<DsNewProps, DsNewState> {
 
   renderTypeCombo() {
     return <DelayedRender>
-      Source Type:<br/>
+      <label htmlFor="source-type">Source Type:<br/></label>
       <wired-combo
+          id="source-type"
           style={{ width: '100%' }}
           onselected={(event) => this.onProviderSelected(event.detail.selected, event)}
       >
