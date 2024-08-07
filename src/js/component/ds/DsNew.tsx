@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import AbstractProvider from "../provider/AbstractProvider";
 import ValidationError from "../provider/ValidationError";
 import NullProvider from "../provider/NullProvider";
+import LocalFileProvider from '../provider/LocalFileProvider';
 import GoogleSheetProvider from '../provider/GoogleSheetProvider';
 import WebCrawlerProvider from '../provider/WebCrawlerProvider';
 import ErrorDialog from "../common/ErrorDialog";
@@ -9,6 +10,7 @@ import Loader from "../common/Loader";
 import Block from '../common/Block';
 import DelayedRender from '../common/DelayedRender';
 import { isVal } from "../../helper/wired-helper";
+import { createDs } from '../../helper/data-helper';
 import { DsMeta } from '../../model/ds';
 
 interface DsNewProps {
@@ -36,6 +38,7 @@ class DsNew extends Component<DsNewProps, DsNewState> {
       onUpdateScreens: this.onUpdateScreens,
     }
     this.providers = [
+      new LocalFileProvider(providerProps),
       new GoogleSheetProvider(providerProps),
       new WebCrawlerProvider(providerProps),
     ];
@@ -73,32 +76,14 @@ class DsNew extends Component<DsNewProps, DsNewState> {
   onCreate = () => {
     this.setState({ loading: true }, () => {
       this.state.provider.loadCSV().then((result) => {
-        let data;
-        data = new FormData();
-        data.set('csv', result.csv, result.filename || 'Unnamed.csv');
-        data.set('type', result.type);
-        data.set('extra', JSON.stringify(result.extra));
-        fetch('/ds', {
-          method: 'PUT',
-          body: data
-        }).then((response) => {
-          response.json()
-              .then((data) => {
-                if (data.success && data.item) {
-                  const { onDsCreated } = this.props;
-                  onDsCreated(data.item);
-                } else {
-                  ErrorDialog.raise('Error saving data: ' + ( data.error || 'Unknown error' ));
-                }
-                this.setState({ loading: false });
-              }).catch((e) => {
-            ErrorDialog.raise('Error parsing json: ' + e.toString());
-            this.setState({ loading: false });
-          })
-        }).catch((e) => {
-          ErrorDialog.raise('Error putting data source: ' + e.toString());
-          this.setState({ loading: false });
-        })
+        createDs(result)
+            .then((item) => this.props.onDsCreated(item))
+            .catch((e) => {
+              ErrorDialog.raise(e.toString());
+            })
+            .finally(() => {
+              this.setState({ loading: false });
+            });
       }).catch((e: any) => {
         if (e instanceof ValidationError) {
           //let user fix an error....
@@ -112,8 +97,9 @@ class DsNew extends Component<DsNewProps, DsNewState> {
 
   renderTypeCombo() {
     return <DelayedRender>
-      Source Type:<br/>
+      <label htmlFor="source-type">Source Type:<br/></label>
       <wired-combo
+          id="source-type"
           style={{ width: '100%' }}
           onselected={(event) => this.onProviderSelected(event.detail.selected, event)}
       >

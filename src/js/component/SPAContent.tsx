@@ -75,6 +75,7 @@ const SPAContent = () => {
 
     <div className="block-container-vertical">
       <Block style={{ minHeight: '200px', overflow: 'visible' }}
+             className="block block-container-vertical"
              size={`${b1HeightInit}px`} splitter="horizontal"
              allowCollapse={false}
              onSizeChanged={setB1Height}>

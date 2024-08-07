@@ -14,6 +14,7 @@ import { CellType, DsInfo } from "../../model/ds";
 import { DsInfoAction } from '../../reducer/dsInfo-reducer';
 import { useQueuedRequest } from '../../hook/queued-hook';
 import { scrollToVisible } from '../../helper/scroll-helper';
+import { getDs } from '../../helper/data-helper';
 
 interface DsTableProps {
   style?: React.CSSProperties;
@@ -77,20 +78,13 @@ const DsTable = (props: DsTableProps) => {
     colRefs.current = undefined;
     setState({ ...state, loading: true });
 
-    return fetch(!query ?
-        `/ds/${dsId}` :
-        `/ds/${dsId}/filter?query=${encodeURIComponent(JSON.stringify(query))}`)
-        .then((response) => response.json())
-        .then((data) => {
+    return getDs(dsId, query)
+        .then((list) => {
           // for the current DS colRefs will be assigned after rendering with received data
           colRefs.current = new Array(cols.length);
-          if (data.success) {
-            onLoadDs(data.list);
-          } else {
-            handleError('Error: ' + ( data.error || 'Unknown error' ));
-          }
+          onLoadDs(list);
         }).catch((err) => {
-          handleError(`Error fetching ${dsId}: ` + err.toString());
+          handleError(err);
         });
   }, [props.dsInfo]);
 

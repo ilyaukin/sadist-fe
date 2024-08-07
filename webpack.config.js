@@ -95,6 +95,11 @@ module.exports = {
           name: "react",
           chunks: "all"
         },
+        xlsx: {
+          test: /node_modules\/xlsx.*/,
+          name: "xlsx",
+          chunks: "all"
+        },
         // ace: {
         //   test: /node_modules\/ace.*/,
         //   name: "ace",
