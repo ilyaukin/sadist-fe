@@ -246,6 +246,29 @@ export const defaultDsInfo: DsInfo = __as<DsInfo>({
             .reduce((a, b) => a && b, true);
   },
 
+  setViz(vizMeta: VizMeta) {
+    // Just set vizMeta; proposed viz's won't affect by it.
+    this.vizMeta = vizMeta;
+  },
+
+  setFilters(filters: Filter[]) {
+    // 1. Each filter must be initialized by filterFactory.
+    // 2. Since proposed filters are stored in the same mutable objects,
+    // update them too.
+    this.filters = [];
+    this.filtersByCol = {};
+    for (let filter of filters) {
+      const f = filterFactory(filter);
+      if (!f) {
+        continue;
+      }
+      this.filters.push(f);
+      if ('col' in f) {
+        ( this.filtersByCol[f.col] ||= [] ).push(f);
+      }
+    }
+  },
+
   __rolloutVizMeta: function (callback: (key: string, vizMeta: VizMeta) => any): any {
     // roll out tail recursion
     if (this.vizMeta) {
@@ -315,7 +338,21 @@ export function reduceDsInfo(dsInfo: DsInfo, action: DsInfoAction): DsInfo {
       return {
         ...dsInfo,
         anchor: action.anchor,
-      }
+      };
+
+    case DsInfoActionType.SET_FILTERS:
+      dsInfo = { ...dsInfo };
+      dsInfo.setFilters(action.filters);
+      return dsInfo;
+
+    case DsInfoActionType.SET_VIZ:
+      dsInfo = { ...dsInfo };
+      dsInfo.setViz(action.vizMeta);
+      return dsInfo;
+
+    default:
+      console.error(`Can't dispatch action: ${JSON.stringify(action)}`);
+      return dsInfo;
   }
 }
 
@@ -353,6 +390,16 @@ export enum DsInfoActionType {
    * Select/anchor a cell
    */
   SET_ANCHOR,
+
+  /**
+   * Set filters directly as JSON
+   */
+  SET_FILTERS,
+
+  /**
+   * Set vizMeta directly as JSON
+   */
+  SET_VIZ,
 }
 
 export type DsInfoAction = {
@@ -372,4 +419,10 @@ export type DsInfoAction = {
 } | {
   type: DsInfoActionType.SET_ANCHOR;
   anchor: CellType;
+} | {
+  type: DsInfoActionType.SET_FILTERS;
+  filters: Filter[];
+} | {
+  type: DsInfoActionType.SET_VIZ;
+  vizMeta: VizMeta;
 }

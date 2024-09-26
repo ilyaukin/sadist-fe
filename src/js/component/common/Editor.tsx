@@ -1,14 +1,19 @@
 import React, { Component, HTMLProps } from 'react';
-import monaco, { editor, languages, Uri } from 'monaco-editor';
+import monaco, { editor, languages, MarkerSeverity, Uri } from 'monaco-editor';
 import EditorOption = editor.EditorOption;
 
-export type ScriptEditorLib = { uri: string; source: string; };
+export type TypescriptLib = { uri: string; source: string; };
 
-interface ScriptEditorProps extends HTMLProps<any> {
+interface EditorProps extends HTMLProps<HTMLDivElement> {
   /**
    * UNIQUE id of the editor
    */
   id: string;
+
+  /**
+   * Language
+   */
+  language: 'javascript' | 'json';
 
   /**
    * Initial text of the script, can be changed
@@ -25,10 +30,15 @@ interface ScriptEditorProps extends HTMLProps<any> {
   /**
    * Additional typescript libs that are used for type hints.
    */
-  libs?: ScriptEditorLib[];
+  libs?: TypescriptLib[];
+
+  /**
+   * JSON schema that is used for hints and validation
+   */
+  schema?: object;
 }
 
-interface ScriptEditorState {
+interface EditorState {
 }
 
 /**
@@ -48,13 +58,14 @@ export interface ChangeEvent {
 }
 
 /**
- * Script editor with aid of monaco-editor.
+ * JavaScript/JSON editor with aid of monaco-editor.
  *
  * Generally it's just a wrapper, but keep it in case of changing underlying
  * component in the future.
  */
-class ScriptEditor extends Component<ScriptEditorProps, ScriptEditorState> {
+class Editor extends Component<EditorProps, EditorState> {
   static defaultProps = {
+    language: 'javascript',
     readonly: false,
   }
 
@@ -62,26 +73,49 @@ class ScriptEditor extends Component<ScriptEditorProps, ScriptEditorState> {
 
   private container!: HTMLDivElement | null;
   private editor!: editor.IStandaloneCodeEditor;
-  private functions: { [name: string]: { native: monaco.IDisposable, our: Function }[]; } = {};
+  private functions: {
+    [name: string]: { native: monaco.IDisposable, our: Function }[];
+  } = {};
+  private modelUri!: Uri;
 
   componentDidMount() {
-    const { text, readonly, libs } = this.props;
+    const { id, language, text, readonly, libs, schema } = this.props;
 
     libs?.forEach(lib => {
       this.__addlib(lib.uri, lib.source);
     });
+
+    // for JSON schema we need an URI to associate it with the model,
+    // let make it from ID.
+    this.modelUri = monaco.Uri.parse(`editor://${id}.json`);
+    const model = editor.createModel(text, language, this.modelUri);
+
+    // Attach schema to model
+    if (language == 'json' && schema) {
+      monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
+        validate: true,
+        schemas: [
+          ...( monaco.languages.json.jsonDefaults.diagnosticsOptions.schemas || [] ),
+          {
+            uri: `editor://${id}-schema.json`,
+            fileMatch: [this.modelUri.toString()],
+            schema: schema
+          }
+        ]
+      });
+    }
 
     this.editor = editor.create(this.container!, {
       automaticLayout: true,
       minimap: { enabled: false },
       tabSize: 2,
       language: 'javascript',
-      value: text,
+      model,
       readOnly: readonly,
     });
   }
 
-  componentDidUpdate(_prevProps: Readonly<ScriptEditorProps>, _prevState: Readonly<ScriptEditorState>, _snapshot?: any) {
+  componentDidUpdate(_prevProps: Readonly<EditorProps>, _prevState: Readonly<EditorState>, _snapshot?: any) {
     const { text, readonly } = this.props;
 
     this.editor.setValue(text);
@@ -140,11 +174,17 @@ class ScriptEditor extends Component<ScriptEditorProps, ScriptEditorState> {
   }
 
   find(text: string): Position | undefined {
-    const matches = this.editor.getModel()?.findMatches(text,
-        false, false, true, null, false);
+    const matches = this.__findMatches(text);
     return matches && matches.length ?
         this.__range(matches[0].range)[0] :
         undefined;
+  }
+
+  findAll(text: string): Position[] {
+    const matches = this.__findMatches(text);
+    return matches && matches.length ?
+        matches.map((match) => this.__range(match.range)[0]) :
+        [];
   }
 
   getTextAt(range: Range): string {
@@ -212,6 +252,19 @@ class ScriptEditor extends Component<ScriptEditorProps, ScriptEditorState> {
     this.editor.focus();
   }
 
+  fold(lines: number[]) {
+    this.editor.trigger(null, 'editor.fold', { selectionLines: lines });
+  }
+
+  validate() {
+    for (let marker of editor.getModelMarkers({})) {
+      // Schema violation is Warning
+      if (marker.severity >= MarkerSeverity.Warning) {
+        throw marker;
+      }
+    }
+  }
+
   __pos(point: monaco.IPosition): Position {
     return [point.lineNumber - 1, point.column - 1];
   }
@@ -234,13 +287,18 @@ class ScriptEditor extends Component<ScriptEditorProps, ScriptEditorState> {
     };
   }
 
+  __findMatches(text: string) {
+    return this.editor.getModel()?.findMatches(text,
+        false, false, true, null, false);
+  }
+
   __addlib(uri: string, source: string) {
-    if (ScriptEditor.models[uri]) {
+    if (Editor.models[uri]) {
       return;
     }
 
     languages.typescript.javascriptDefaults.addExtraLib(source, uri);
-    ScriptEditor.models[uri] = editor.createModel(source, 'typescript', Uri.parse(uri));
+    Editor.models[uri] = editor.createModel(source, 'typescript', Uri.parse(uri));
   }
 
   render() {
@@ -253,4 +311,4 @@ class ScriptEditor extends Component<ScriptEditorProps, ScriptEditorState> {
   }
 }
 
-export default ScriptEditor;
+export default Editor;

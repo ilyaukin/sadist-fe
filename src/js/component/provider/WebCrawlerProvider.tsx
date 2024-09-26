@@ -7,7 +7,7 @@ import AbstractProvider, {
 } from './AbstractProvider';
 import WebCrawlerSetupScreen from './WebCrawlerSetupScreen';
 import { WebCrawlerResultRef } from './WebCrawlerScreen';
-import { ScriptEditorLib } from '../common/ScriptEditor';
+import { TypescriptLib } from '../common/Editor';
 import { WebCrawlerScriptTemplate } from '../../webcrawler-model/webcrawler';
 import ValidationError from './ValidationError';
 import pageDef from '!raw-loader!../../webcrawler-model/page';
@@ -25,7 +25,7 @@ class WebCrawlerProvider extends AbstractProvider {
   private urlError: string | undefined;
   private templateError: string | undefined;
   private resultRef?: WebCrawlerResultRef;
-  private libs: ScriptEditorLib[];
+  private libs: TypescriptLib[];
 
   constructor(props: ProviderProps) {
     super(props);

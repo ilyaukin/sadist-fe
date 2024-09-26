@@ -1,0 +1,476 @@
+{
+  "$id": "viz",
+  "$ref": "#/definitions/viz",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "AccumulateProps": {
+      "anyOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "accumulater": {
+              "description": "function which reduces values to the single accumulated value, one of pre-defined or custom (TBD)",
+              "enum": [
+                "count",
+                "avg",
+                "median",
+                "min",
+                "max"
+              ],
+              "type": "string"
+            },
+            "action": {
+              "const": "accumulate",
+              "type": "string"
+            },
+            "col": {
+              "description": "column for grouping or filter",
+              "type": "string"
+            },
+            "label": {
+              "description": "the label key in the classification collection for the given column; classified (detailed) value by this key is used instead of column value; if not specified, column value directly is used",
+              "type": "string"
+            },
+            "predicate": {
+              "$ref": "#/definitions/Predicate",
+              "description": "the predicate which defines if the row get into result, e.g. we may want to group values inside 3 sigma interval only; if not specified, all rows are used."
+            }
+          },
+          "required": [
+            "action",
+            "col"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "accumulater": {
+              "description": "function which reduces values to the single accumulated value, one of pre-defined or custom (TBD)",
+              "enum": [
+                "count",
+                "avg",
+                "median",
+                "min",
+                "max"
+              ],
+              "type": "string"
+            },
+            "action": {
+              "const": "accumulate",
+              "type": "string"
+            }
+          },
+          "required": [
+            "action"
+          ],
+          "type": "object"
+        }
+      ],
+      "description": "Properties of \"accumulate\" action"
+    },
+    "AndPredicate": {
+      "additionalProperties": false,
+      "description": "{@link  Predicate }  that matches number of predicate with AND condition",
+      "properties": {
+        "expression": {
+          "items": {
+            "$ref": "#/definitions/Predicate"
+          },
+          "type": "array"
+        },
+        "op": {
+          "const": "and",
+          "type": "string"
+        }
+      },
+      "required": [
+        "op",
+        "expression"
+      ],
+      "type": "object"
+    },
+    "EqPredicate<ValueType>": {
+      "additionalProperties": false,
+      "description": "{@link  Predicate }  that matches exact value",
+      "properties": {
+        "op": {
+          "const": "eq",
+          "type": "string"
+        },
+        "value": {
+          "$ref": "#/definitions/ValueType"
+        }
+      },
+      "required": [
+        "op",
+        "value"
+      ],
+      "type": "object"
+    },
+    "GroupProps": {
+      "anyOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "action": {
+              "const": "group",
+              "type": "string"
+            },
+            "col": {
+              "description": "column for grouping or filter",
+              "type": "string"
+            },
+            "label": {
+              "description": "the label key in the classification collection for the given column; classified (detailed) value by this key is used instead of column value; if not specified, column value directly is used",
+              "type": "string"
+            },
+            "predicate": {
+              "$ref": "#/definitions/Predicate",
+              "description": "the predicate which defines if the row get into result, e.g. we may want to group values inside 3 sigma interval only; if not specified, all rows are used."
+            },
+            "reducer": {
+              "$ref": "#/definitions/Reducer",
+              "description": "function which reduces groups i.e. defines which value goes to which group; for example we may want to divide the interval to 10 sub-intervals and group values within them; if not specified, each value makes its own group"
+            }
+          },
+          "required": [
+            "action",
+            "col"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "action": {
+              "const": "group",
+              "type": "string"
+            },
+            "reducer": {
+              "$ref": "#/definitions/Reducer",
+              "description": "function which reduces groups i.e. defines which value goes to which group; for example we may want to divide the interval to 10 sub-intervals and group values within them; if not specified, each value makes its own group"
+            }
+          },
+          "required": [
+            "action"
+          ],
+          "type": "object"
+        }
+      ],
+      "description": "Properties of \"group\" action"
+    },
+    "GtPredicate": {
+      "additionalProperties": false,
+      "description": "{@link  Predicate }  that matches numeric value to be greater than",
+      "properties": {
+        "op": {
+          "const": "gt",
+          "type": "string"
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "op",
+        "value"
+      ],
+      "type": "object"
+    },
+    "GtePredicate": {
+      "additionalProperties": false,
+      "description": "{@link  Predicate }  that matches numeric value to be greater or equal than",
+      "properties": {
+        "op": {
+          "const": "gte",
+          "type": "string"
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "op",
+        "value"
+      ],
+      "type": "object"
+    },
+    "InPredicate<ValueType>": {
+      "additionalProperties": false,
+      "description": "{@link  Predicate }  that matches on of values in the list",
+      "properties": {
+        "op": {
+          "const": "in",
+          "type": "string"
+        },
+        "values": {
+          "items": {
+            "$ref": "#/definitions/ValueType"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "op",
+        "values"
+      ],
+      "type": "object"
+    },
+    "InRangePredicate": {
+      "additionalProperties": false,
+      "description": "{@link  Predicate }  that matches numeric value by range inclusion, including the lower bound and excluding the upper bound",
+      "properties": {
+        "op": {
+          "const": "inrange",
+          "type": "string"
+        },
+        "range_max": {
+          "type": "number"
+        },
+        "range_min": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "op",
+        "range_min",
+        "range_max"
+      ],
+      "type": "object"
+    },
+    "InStrPredicate<ValueType>": {
+      "additionalProperties": false,
+      "description": "Predicate that matches string value by inclusion",
+      "properties": {
+        "op": {
+          "const": "instr",
+          "type": "string"
+        },
+        "value": {
+          "$ref": "#/definitions/ValueType"
+        }
+      },
+      "required": [
+        "op",
+        "value"
+      ],
+      "type": "object"
+    },
+    "LtPredicate": {
+      "additionalProperties": false,
+      "description": "{@link  Predicate }  that matches numeric value to be lower than",
+      "properties": {
+        "op": {
+          "const": "lt",
+          "type": "string"
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "op",
+        "value"
+      ],
+      "type": "object"
+    },
+    "LtePredicate": {
+      "additionalProperties": false,
+      "description": "{@link  Predicate }  that matches numeric value to be lower or equal than",
+      "properties": {
+        "op": {
+          "const": "lte",
+          "type": "string"
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "op",
+        "value"
+      ],
+      "type": "object"
+    },
+    "NotPredicate": {
+      "additionalProperties": false,
+      "description": "{@link  Predicate }  that matches NOT a predicate",
+      "properties": {
+        "expression": {
+          "$ref": "#/definitions/Predicate"
+        },
+        "op": {
+          "const": "not",
+          "type": "string"
+        }
+      },
+      "required": [
+        "op",
+        "expression"
+      ],
+      "type": "object"
+    },
+    "OrPredicate": {
+      "additionalProperties": false,
+      "description": "{@link  Predicate }  that matches number of predicate with OR condition",
+      "properties": {
+        "expression": {
+          "items": {
+            "$ref": "#/definitions/Predicate"
+          },
+          "type": "array"
+        },
+        "op": {
+          "const": "or",
+          "type": "string"
+        }
+      },
+      "required": [
+        "op",
+        "expression"
+      ],
+      "type": "object"
+    },
+    "Predicate": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/EqPredicate%3CValueType%3E"
+        },
+        {
+          "$ref": "#/definitions/InPredicate%3CValueType%3E"
+        },
+        {
+          "$ref": "#/definitions/InRangePredicate"
+        },
+        {
+          "$ref": "#/definitions/GtPredicate"
+        },
+        {
+          "$ref": "#/definitions/GtePredicate"
+        },
+        {
+          "$ref": "#/definitions/LtPredicate"
+        },
+        {
+          "$ref": "#/definitions/LtePredicate"
+        },
+        {
+          "$ref": "#/definitions/OrPredicate"
+        },
+        {
+          "$ref": "#/definitions/AndPredicate"
+        },
+        {
+          "$ref": "#/definitions/NotPredicate"
+        },
+        {
+          "$ref": "#/definitions/InStrPredicate%3CValueType%3E"
+        }
+      ],
+      "description": "Part of meta information about group or filter. Will be extended while implementing"
+    },
+    "RangeReducer": {
+      "additionalProperties": false,
+      "description": "{@link  Reducer }  to group values by ranges",
+      "properties": {
+        "max": {
+          "description": "Maximum bound of the ranges. If not specified, defined automatically by data distribution",
+          "type": "number"
+        },
+        "min": {
+          "description": "Minimum bound of the ranges. If not specified, defined automatically by data distribution",
+          "type": "number"
+        },
+        "step": {
+          "description": "Step, i.e. width of one range. If not specified, defined automatically by data distribution",
+          "type": "number"
+        },
+        "type": {
+          "const": "range",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "type": "object"
+    },
+    "Reducer": {
+      "$ref": "#/definitions/RangeReducer",
+      "description": "All known reducers"
+    },
+    "ValueType": {
+      "description": "Any value that can appear in the DS",
+      "type": [
+        "string",
+        "number",
+        "boolean",
+        "null"
+      ]
+    },
+    "VizMeta": {
+      "additionalProperties": false,
+      "description": "Meta information about visualization which defines both visualization pipeline request to the server and (together with visualization data from the server) rendering. Visualization is a hierarchy of graphs, e.g. a histogram has a child graph of type bar or several of them, which positioning and style are defined by the parent graph but rendering is defined by the child graph and data is defined by the visualization data on a child level",
+      "properties": {
+        "children": {
+          "additionalProperties": {
+            "$ref": "#/definitions/VizMeta"
+          },
+          "description": "child graphs",
+          "type": "object"
+        },
+        "key": {
+          "description": "Key of the visualization graph, if many of them appears on the same level. Can be used in the hints, legend etc.",
+          "type": "string"
+        },
+        "labelselector": {
+          "description": "Selector for label of a visualization item in the graph, in format of  `@gizt/selector`. Applying to  {@link  VizDataItem }  If not defined,  {@link  VizDataItem.id }  will be used",
+          "type": "string"
+        },
+        "props": {
+          "$ref": "#/definitions/VizProps",
+          "description": "properties of visualization, depending on the type"
+        },
+        "stringrepr": {
+          "description": "String representation is used in UI",
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/definitions/VizType",
+          "description": "visualization type, see  {@link  VizType }"
+        }
+      },
+      "required": [
+        "key",
+        "type",
+        "props"
+      ],
+      "type": "object"
+    },
+    "VizProps": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/AccumulateProps"
+        },
+        {
+          "$ref": "#/definitions/GroupProps"
+        }
+      ],
+      "description": "Properties of visualization data retrieving, such as interval and granularity for grouping ect."
+    },
+    "VizType": {
+      "description": "Type of visualization such as histogram, trend, timeline etc., that will be extended while implementing",
+      "enum": [
+        "marker",
+        "bar",
+        "histogram",
+        "globe"
+      ],
+      "type": "string"
+    },
+    "viz": {
+      "$ref": "#/definitions/VizMeta"
+    }
+  }
+}

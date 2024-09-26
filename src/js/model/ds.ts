@@ -524,6 +524,7 @@ export interface DsInfo {
 
   /**
    * Proposed visualization for each column
+   * @deprecated
    */
   vizMetaProposedByCol?: { [col: string]: VizMeta[]; };
 
@@ -540,6 +541,7 @@ export interface DsInfo {
 
   /**
    * Filters by column
+   * @deprecated
    */
   filtersByCol?: { [col: string]: Filter[]; }
 
@@ -594,4 +596,16 @@ export interface DsInfo {
    * If {@link meta} is final, i.e. all server-side processing of the DS is done
    */
   isMetaFinal(): boolean;
+
+  /**
+   * Set new visualization, e.g. from saved one, hand-written JSON etc.
+   * @param vizMeta
+   */
+  setViz(vizMeta: VizMeta): void;
+
+  /**
+   * Set new filters, e.g. from saved ones, hand-written JSON etc.
+   * @param filters
+   */
+  setFilters(filters: Filter[]): void;
 }

@@ -1,5 +1,6 @@
 import file from '~/img/file.png';
 import filePrivate from '~/img/file-private.png';
+import fileJson from '~/img/file-json.png';
 import google from '~/img/google-logo.png';
 import bug from '~/img/bug.png';
 import plus from '~/img/plus-sign.png';
@@ -21,6 +22,7 @@ import refresh from '~/img/refresh.png';
 export default {
   file,
   filePrivate,
+  fileJson,
   google,
   bug,
   plus,

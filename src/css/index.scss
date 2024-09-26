@@ -93,6 +93,40 @@ img.item {
     float: right;
 }
 
+#ds .toolbox {
+    display: none;
+}
+
+#ds:hover .toolbox {
+    display: flex;
+}
+
+#viz .toolbox {
+    display: none;
+}
+
+#viz:hover .toolbox {
+    display: flex;
+}
+
+.json-editor-dialog .dialog-content {
+    @extend .block-container-vertical;
+    width: 300px;
+    min-height: 100px;
+}
+
+// make an editor block itself to set full height
+.json-editor-block {
+    @extend .block;
+    flex: 1 1 auto;
+}
+
+.json-editor-dialog button {
+    width: 80px;
+    margin: 10px;
+    float: right;
+}
+
 .dialog-icon-pane {
     position: absolute;
     top: 5px;
