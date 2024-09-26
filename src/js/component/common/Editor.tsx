@@ -4,17 +4,22 @@ import React, {
   useImperativeHandle,
   useRef
 } from 'react';
-import monaco, { editor, languages, Uri } from 'monaco-editor';
+import monaco, { editor, languages, MarkerSeverity, Uri } from 'monaco-editor';
 import EditorOption = editor.EditorOption;
 import { useResizeDetector } from 'react-resize-detector';
 
-export type ScriptEditorLib = { uri: string; source: string; };
+export type TypescriptLib = { uri: string; source: string; };
 
-export interface ScriptEditorProps extends HTMLProps<any> {
+export interface EditorProps extends HTMLProps<HTMLDivElement> {
   /**
    * UNIQUE id of the editor
    */
   id: string;
+
+  /**
+   * Language
+   */
+  language: 'javascript' | 'json';
 
   /**
    * Initial text of the script, can be changed
@@ -31,13 +36,18 @@ export interface ScriptEditorProps extends HTMLProps<any> {
   /**
    * Additional typescript libs that are used for type hints.
    */
-  libs?: ScriptEditorLib[];
+  libs?: TypescriptLib[];
+
+  /**
+   * JSON schema that is used for hints and validation
+   */
+  schema?: object;
 }
 
 /**
  * Interface for Editor reference
  */
-export interface ScriptEditorInterface {
+export interface EditorInterface {
   getText(): string;
 
   setText(text: string): void;
@@ -95,12 +105,12 @@ export interface ChangeEvent {
 const models: { [uri: string]: editor.ITextModel } = {};
 
 /**
- * Script editor with aid of monaco-editor.
+ * JavaScript/JSON editor with aid of monaco-editor.
  *
  * Generally it's just a wrapper, but keep it in case of changing underlying
  * component in the future.
  */
-const __ScriptEditor = function (props: ScriptEditorProps, ref: React.ForwardedRef<ScriptEditorInterface>) {
+const __Editor = function (props: EditorProps, ref: React.ForwardedRef<EditorInterface>) {
 
   // const containerRef = useRef<HTMLDivElement | null>(null);
   const { width, height, ref: containerRef } = useResizeDetector();
@@ -109,24 +119,41 @@ const __ScriptEditor = function (props: ScriptEditorProps, ref: React.ForwardedR
   const cbMapRef = useRef<{
     [name: string]: { native: monaco.IDisposable, our: Function }[];
   }>({});
-  const { id, text, readonly, libs, ...other } = props;
-
-  libs?.forEach(lib => {
-    __addlib(lib.uri, lib.source);
-  });
+  const { id, language, text, readonly, libs, schema, ...other } = props;
 
   useEffect(() => {
     if (containerRef.current) {
+      // for JSON schema we need an URI to associate it with the model,
+      // let make it from ID.
+      const modelUri = monaco.Uri.parse(`editor://${id}.json`);
+      const model = editor.createModel(text, language, modelUri);
+
+      // Attach schema to model
+      if (language == 'json' && schema) {
+        monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
+          validate: true,
+          schemas: [
+            ...( monaco.languages.json.jsonDefaults.diagnosticsOptions.schemas || [] ),
+            {
+              uri: `editor://${id}-schema.json`,
+              fileMatch: [modelUri.toString()],
+              schema: schema,
+            }
+          ]
+        });
+      }
+
       editorRef.current = editor.create(containerRef.current, {
         automaticLayout: false,
         minimap: { enabled: false },
         tabSize: 2,
         language: 'javascript',
         value: text,
+        model,
         readOnly: readonly,
       });
     }
-  }, [containerRef.current]);
+  });
 
   useEffect(() => {
     if (width === undefined || height === undefined) {
@@ -153,7 +180,7 @@ const __ScriptEditor = function (props: ScriptEditorProps, ref: React.ForwardedR
   }, [readonly]);
 
   useImperativeHandle(ref, () => {
-    return ({
+    return ( {
       getText(): string {
         if (!editorRef.current) {
           return '';
@@ -247,6 +274,13 @@ const __ScriptEditor = function (props: ScriptEditorProps, ref: React.ForwardedR
         return editorRef.current.getModel()?.getValueInRange(this.__mrange(range)) || '';
       },
 
+      findAll(text: string): Position[] {
+        const matches = this.__findMatches(text);
+        return matches && matches.length ?
+            matches.map((match) => this.__range(match.range)[0]) :
+            [];
+      },
+
       on(name: string, callback: Function) {
         if (!editorRef.current) {
           return;
@@ -310,6 +344,19 @@ const __ScriptEditor = function (props: ScriptEditorProps, ref: React.ForwardedR
         editorRef.current.focus();
       },
 
+      fold(lines: number[]) {
+        editorRef.current?.trigger(null, 'editor.fold', { selectionLines: lines });
+      },
+
+      validate() {
+        for (let marker of editor.getModelMarkers({})) {
+          // Schema violation is Warning
+          if (marker.severity >= MarkerSeverity.Warning) {
+            throw marker;
+          }
+        }
+      },
+
       __pos(point: monaco.IPosition): Position {
         return [point.lineNumber - 1, point.column - 1];
       },
@@ -332,7 +379,11 @@ const __ScriptEditor = function (props: ScriptEditorProps, ref: React.ForwardedR
         };
       },
 
-    });
+      __findMatches(text: string) {
+        return editorRef.current?.getModel()?.findMatches(text,
+            false, false, true, null, false);
+      },
+    } );
   }, [editorRef.current]);
 
   function __addlib(uri: string, source: string) {
@@ -344,6 +395,10 @@ const __ScriptEditor = function (props: ScriptEditorProps, ref: React.ForwardedR
     models[uri] = editor.createModel(source, 'typescript', Uri.parse(uri));
   }
 
+  libs?.forEach(lib => {
+    __addlib(lib.uri, lib.source);
+  });
+
   return <div
       ref={containerRef}
       id={id}
@@ -351,10 +406,11 @@ const __ScriptEditor = function (props: ScriptEditorProps, ref: React.ForwardedR
   />;
 };
 
-const ScriptEditor = React.forwardRef(__ScriptEditor);
+const Editor = React.forwardRef(__Editor);
 
-ScriptEditor.defaultProps = {
+Editor.defaultProps = {
+  language: 'javascript',
   readonly: false,
 }
 
-export default ScriptEditor;
+export default Editor;
