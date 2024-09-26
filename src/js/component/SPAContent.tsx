@@ -9,6 +9,8 @@ import DsList from './ds/DsList';
 import DsTable from './ds/DsTable';
 import Viz from './visualization/Viz';
 import Footer from './common/Footer';
+import DsToolbox from './ds/DsToolbox';
+import VizToolbox from './visualization/VizToolbox';
 import {
   defaultDsInfo,
   DsInfoActionType,
@@ -74,12 +76,16 @@ const SPAContent = () => {
     <wired-divider/>
 
     <div className="block-container-vertical">
-      <Block style={{ minHeight: '200px', overflow: 'visible' }}
-             className="block block-container-vertical"
-             size={`${b1HeightInit}px`} splitter="horizontal"
-             allowCollapse={false}
-             onSizeChanged={setB1Height}>
+      <Block
+          id="ds"
+          style={{ minHeight: '200px', overflow: 'visible' }}
+          className="block block-container-vertical"
+          size={`${b1HeightInit}px`} splitter="horizontal"
+          allowCollapse={false}
+          onSizeChanged={setB1Height}
+      >
         <h2>1. Get the data</h2>
+        <DsToolbox dsInfo={dsInfo} dispatchDsInfo={dispatchDsInfo}/>
         <DsList
             dsId={dsInfo.meta.id}
             onLoadList={(list: DsMeta[]) => {
@@ -114,9 +120,13 @@ const SPAContent = () => {
         />
       </Block>
 
-      {dsInfo.meta.id && <Block size="auto" splitter="horizontal"
-                                onSizeChanged={setB2Height}>
+      {dsInfo.meta.id && <Block
+          id="viz" size="auto"
+          splitter="horizontal"
+          onSizeChanged={setB2Height}
+      >
         <h2>2. Visualize</h2>
+        <VizToolbox dsInfo={dsInfo} dispatchDsInfo={dispatchDsInfo}/>
         <Viz
             style={{ height: typeof b2Height == 'number' ? `${b2Height - 68}px` : 'auto' }}
             dsId={dsInfo.meta.id}

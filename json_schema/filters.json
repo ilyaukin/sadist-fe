@@ -1,0 +1,232 @@
+{
+  "$id": "filters",
+  "$ref": "#/definitions/filters",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "ComplexValueType": {
+      "anyOf": [
+        {
+          "properties": {
+            "id": {
+              "$ref": "#/definitions/ValueType"
+            }
+          },
+          "required": [
+            "id"
+          ],
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "Type of the classified values"
+    },
+    "Filter": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/MultiselectFilter%3CValueType%3E"
+        },
+        {
+          "$ref": "#/definitions/MultiselectFilter%3CComplexValueType%3E"
+        },
+        {
+          "$ref": "#/definitions/RangeFilter"
+        },
+        {
+          "$ref": "#/definitions/SearchFilter"
+        }
+      ],
+      "description": "Meta information about a filter applied to DS"
+    },
+    "MultiselectFilter<ComplexValueType>": {
+      "additionalProperties": false,
+      "properties": {
+        "col": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "labelselector": {
+          "description": "Selector for label of an item in the list, in format of `@gizt/selector`. Applying to `T`",
+          "type": "string"
+        },
+        "selected": {
+          "items": {
+            "$ref": "#/definitions/ComplexValueType"
+          },
+          "type": "array"
+        },
+        "type": {
+          "const": "multiselect",
+          "type": "string"
+        },
+        "valuefield": {
+          "description": "Field name in the DB",
+          "type": "string"
+        },
+        "values": {
+          "items": {
+            "$ref": "#/definitions/ComplexValueType"
+          },
+          "type": "array"
+        },
+        "valueselector": {
+          "description": "Selector for value of an item which is filter applied to, in format of `@gizt/selector`. Applying to `T`",
+          "type": "string"
+        }
+      },
+      "required": [
+        "col",
+        "label",
+        "selected",
+        "type",
+        "values"
+      ],
+      "type": "object"
+    },
+    "MultiselectFilter<ValueType>": {
+      "additionalProperties": false,
+      "properties": {
+        "col": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "labelselector": {
+          "description": "Selector for label of an item in the list, in format of `@gizt/selector`. Applying to `T`",
+          "type": "string"
+        },
+        "selected": {
+          "items": {
+            "$ref": "#/definitions/ValueType"
+          },
+          "type": "array"
+        },
+        "type": {
+          "const": "multiselect",
+          "type": "string"
+        },
+        "valuefield": {
+          "description": "Field name in the DB",
+          "type": "string"
+        },
+        "values": {
+          "items": {
+            "$ref": "#/definitions/ValueType"
+          },
+          "type": "array"
+        },
+        "valueselector": {
+          "description": "Selector for value of an item which is filter applied to, in format of `@gizt/selector`. Applying to `T`",
+          "type": "string"
+        }
+      },
+      "required": [
+        "col",
+        "label",
+        "selected",
+        "type",
+        "values"
+      ],
+      "type": "object"
+    },
+    "RangeFilter": {
+      "additionalProperties": false,
+      "properties": {
+        "all": {
+          "description": "if include all values, in this case boundaries ignored",
+          "type": "boolean"
+        },
+        "col": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "labelformat": {
+          "description": "format of the label, by default 'number'",
+          "enum": [
+            "number",
+            "datetime"
+          ],
+          "type": "string"
+        },
+        "max": {
+          "description": "maximum limit of the range",
+          "type": "number"
+        },
+        "min": {
+          "description": "minimum limit of the range",
+          "type": "number"
+        },
+        "outliers": {
+          "description": "if include outliers (not within [min, max)) values, in this case boundaries ignored",
+          "type": "boolean"
+        },
+        "range_max": {
+          "description": "upper boundary of the range, exclusive",
+          "type": "number"
+        },
+        "range_min": {
+          "description": "lower boundary of the range, inclusive",
+          "type": "number"
+        },
+        "type": {
+          "const": "range",
+          "type": "string"
+        },
+        "uncategorized": {
+          "description": "if include uncategorized (non-numeric) values, in this case boundaries ignored",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "all",
+        "col",
+        "label",
+        "max",
+        "min",
+        "outliers",
+        "range_max",
+        "range_min",
+        "type",
+        "uncategorized"
+      ],
+      "type": "object"
+    },
+    "SearchFilter": {
+      "additionalProperties": false,
+      "properties": {
+        "term": {
+          "type": "string"
+        },
+        "type": {
+          "const": "search",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "type": "object"
+    },
+    "ValueType": {
+      "description": "Any value that can appear in the DS",
+      "type": [
+        "string",
+        "number",
+        "boolean",
+        "null"
+      ]
+    },
+    "filters": {
+      "items": {
+        "$ref": "#/definitions/Filter"
+      },
+      "type": "array"
+    }
+  }
+}
