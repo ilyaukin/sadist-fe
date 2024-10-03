@@ -565,7 +565,7 @@ export interface DsInfo {
    * pre-set visualization and filters
    * @return new copy of the object
    */
-  init(info: Partial<DsInfo>): DsInfo;
+  init(info: DsInfoInit): DsInfo;
 
   /**
    * Add proposed graph to visualization.
@@ -593,11 +593,6 @@ export interface DsInfo {
   getFilterQuery(): FilterQuery | undefined;
 
   /**
-   * If {@link meta} is final, i.e. all server-side processing of the DS is done
-   */
-  isMetaFinal(): boolean;
-
-  /**
    * Set new visualization, e.g. from saved one, hand-written JSON etc.
    * @param vizMeta
    */
@@ -608,4 +603,29 @@ export interface DsInfo {
    * @param filters
    */
   setFilters(filters: Filter[]): void;
+}
+
+/**
+ * Part of {@link DsInfo} that can be used in init.
+ */
+export interface DsInfoInit {
+  /**
+   * Mandatory meta
+   */
+  meta: DsInfo["meta"];
+
+  /**
+   * Visualization, e.g. saved on the server or browser storage.
+   */
+  vizMeta?: DsInfo["vizMeta"];
+
+  /**
+   * Filters, e.g. saved on the server or browser storage.
+   */
+  filters?: DsInfo["filters"];
+
+  /**
+   * Anchor, e.g. saved on the server, browser storage or URL.
+   */
+  anchor?: DsInfo["anchor"];
 }

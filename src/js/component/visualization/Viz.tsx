@@ -4,9 +4,9 @@ import Loader from '../common/Loader';
 import VizHint from './VizHint';
 import VizGraph from './VizGraph';
 import { DsInfo, VizData } from '../../model/ds';
-import { DsInfoAction, DsInfoActionType } from '../../reducer/dsInfo-reducer';
+import { DsInfoAction } from '../../reducer/dsInfo-reducer';
 import { useQueuedRequest } from '../../hook/queued-hook';
-import { getMeta, getVizData } from '../../helper/data-helper';
+import { getVizData } from '../../helper/data-helper';
 
 interface VizProps {
   style?: React.CSSProperties;
@@ -21,7 +21,6 @@ interface VizState {
 
 const Viz = (props: VizProps) => {
   const [state, setState] = useState<VizState>({});
-  const [updateMetaCounter, setUpdateMetaCounter] = useState(0);
 
   const { dsId, dsInfo } = props;
   const pipeline = dsInfo.getPipeline();
@@ -45,26 +44,6 @@ const Viz = (props: VizProps) => {
     });
   }, [dsId, dsInfo.vizMeta]);
 
-  const metaLoading = useQueuedRequest({ dsId }, ({ dsId }) =>
-      getMeta(dsId)
-          .then((meta) => {
-            dispatchDsInfo({
-              type: DsInfoActionType.UPDATE_META_SUCCESS,
-              meta,
-            });
-            setTimeout(() => {
-              if (!dsInfo.isMetaFinal()) {
-                setUpdateMetaCounter(counter => counter + 1);
-              }
-            }, 1000);
-          })
-          .catch((err) => {
-            dispatchDsInfo({
-              type: DsInfoActionType.UPDATE_META_ERROR,
-              err: err.toString(),
-            })
-          }), [dsId, updateMetaCounter], true);
-
   const { style, dispatchDsInfo } = props;
   const { vizData } = state;
   const { vizMeta } = dsInfo;
@@ -79,7 +58,7 @@ const Viz = (props: VizProps) => {
   //     graph(s).
 
   return <div>
-    <Loader loading={loading || metaLoading}/>
+    <Loader loading={loading}/>
     {
       vizMeta && vizData ?
           <VizGraph
