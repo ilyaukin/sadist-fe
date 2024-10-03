@@ -39,6 +39,20 @@ export function getMeta(dsId: string): Promise<DsMeta> {
 }
 
 /**
+ * If meta is final, i.e. all server-side processing of the DS is done
+ */
+export function isMetaFinal(meta: DsMeta): boolean {
+  let { classification, detailization } = meta;
+  classification = classification || {};
+  detailization = detailization || {};
+
+  return classification.status === 'finished' &&
+      Object.entries(detailization)
+          .map(kv => kv[1].status === 'finished')
+          .reduce((a, b) => a && b, true);
+}
+
+/**
  * Create DS
  * @param ds DS in the format returned by a provider
  */

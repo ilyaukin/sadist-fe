@@ -279,8 +279,12 @@ const DsTable = (props: DsTableProps) => {
     </div>
   }
 
-  if (!dsId || !colnames) {
+  if (!dsId) {
     return <br/>;
+  } else if (!colnames) {
+    // If we know ID (from URL) but don't know meta.
+    // May replace to better message but let it be this for now.
+    return <>Loading DS #{dsId}...<br/></>;
   }
 
   return <div>
