@@ -1,7 +1,7 @@
 import equal from 'deep-equal'
 import {
   CellType,
-  DsInfo,
+  DsInfo, DsInfoInit,
   DsMeta,
   Filter,
   FilterProposal,
@@ -119,8 +119,8 @@ export const defaultDsInfo: DsInfo = __as<DsInfo>({
 
   meta: {},
 
-  init({ meta, vizMeta, filters, anchor }: DsInfo): DsInfo {
-    const dsInfo = this.meta.id != meta.id ?
+  init({ meta, vizMeta, filters, anchor }: DsInfoInit): DsInfo {
+    const dsInfo = !this.meta.id || ( this.meta.id != meta?.id ) ?
         { ...defaultDsInfo, meta, vizMeta, filters, anchor } : {
           ...defaultDsInfo,
           meta,
@@ -228,22 +228,6 @@ export const defaultDsInfo: DsInfo = __as<DsInfo>({
   getFilterQuery(): FilterQuery | undefined {
     let ff = this.filters?.map(f => f.q()).filter(f => f);
     return ff?.length ? ff as FilterQueryItem[] : undefined;
-  },
-
-  isMetaFinal(): boolean {
-    if (this.err) {
-      // no automatic update if got an error once
-      return true;
-    }
-
-    let { classification, detailization } = this.meta;
-    classification = classification || {};
-    detailization = detailization || {};
-
-    return classification.status === 'finished' &&
-        Object.entries(detailization)
-            .map(kv => kv[1].status === 'finished')
-            .reduce((a, b) => a && b, true);
   },
 
   setViz(vizMeta: VizMeta) {

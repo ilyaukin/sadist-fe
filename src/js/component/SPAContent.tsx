@@ -17,6 +17,8 @@ import {
   reduceDsInfo
 } from '../reducer/dsInfo-reducer';
 import { CellType, DsInfo, DsMeta } from '../model/ds';
+import { useQueuedRequest } from '../hook/queued-hook';
+import { getMeta, isMetaFinal } from '../helper/data-helper';
 
 const SPAContent = () => {
 
@@ -24,6 +26,8 @@ const SPAContent = () => {
   const [err, setErr] = React.useState<string>();
   const [ds, setDs] = React.useState<any[]>([]);
   const [dsInfo, dispatchDsInfo] = React.useReducer(reduceDsInfo, defaultDsInfo);
+
+  const updateDsMetaTimeoutHandlerRef = React.useRef<NodeJS.Timeout>();
 
   function propagateDsInfoToURL(dsInfo: DsInfo) {
     const params: { [p: string]: string; } = {};
@@ -49,8 +53,50 @@ const SPAContent = () => {
     setSearchParams(params);
   }
 
+  function updateDsMeta({ dsId }: { dsId: string | undefined }) {
+    if (!dsId) {
+      return Promise.resolve();
+    }
+    return getMeta(dsId)
+        .then((meta) => {
+          dispatchDsInfo({
+            type: DsInfoActionType.UPDATE_META_SUCCESS,
+            meta,
+          });
+          if (!isMetaFinal(meta)) {
+            updateDsMetaTimeoutHandlerRef.current = setTimeout(() => updateDsMeta({ dsId }), 1000);
+          }
+        })
+        .catch((err) => {
+          dispatchDsInfo({
+            type: DsInfoActionType.UPDATE_META_ERROR,
+            err: err.toString(),
+          })
+        });
+  }
+
+  useEffect(() => {
+    const dsId = searchParams.get('id');
+    if (dsId) {
+      const anchor = searchParams.get('anchor');
+      dispatchDsInfo({
+        type: DsInfoActionType.SELECT_DS,
+        meta: { id: dsId },
+        anchor: anchor && JSON.parse(anchor),
+      });
+    }
+  }, []);
+
   useEffect(() => {
     propagateDsInfoToURL(dsInfo);
+  }, [dsInfo.meta.id]);
+
+  useQueuedRequest({ dsId: dsInfo.meta.id }, updateDsMeta, [dsInfo.meta.id]);
+
+  useEffect(() => {
+    if (updateDsMetaTimeoutHandlerRef.current) {
+      clearTimeout(updateDsMetaTimeoutHandlerRef.current);
+    }
   }, [dsInfo.meta.id]);
 
   ErrorDialog.raise = setErr;
@@ -88,20 +134,6 @@ const SPAContent = () => {
         <DsToolbox dsInfo={dsInfo} dispatchDsInfo={dispatchDsInfo}/>
         <DsList
             dsId={dsInfo.meta.id}
-            onLoadList={(list: DsMeta[]) => {
-              const dsId = searchParams.get('id');
-              if (dsId) {
-                const meta = list.find(item => item.id === dsId);
-                if (meta) {
-                  const anchor = searchParams.get('anchor');
-                  dispatchDsInfo({
-                    type: DsInfoActionType.SELECT_DS,
-                    meta,
-                    anchor: anchor && JSON.parse(anchor),
-                  });
-                }
-              }
-            }}
             onDsSelected={(meta: DsMeta) => {
               dispatchDsInfo({
                 type: DsInfoActionType.SELECT_DS,
