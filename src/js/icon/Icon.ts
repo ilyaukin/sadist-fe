@@ -1,3 +1,4 @@
+import favicon from '~/img/favicon.ico';
 import file from '~/img/file.png';
 import filePrivate from '~/img/file-private.png';
 import google from '~/img/google-logo.png';
@@ -19,6 +20,7 @@ import forward from '~/img/forward.png';
 import refresh from '~/img/refresh.png';
 
 export default {
+  favicon,
   file,
   filePrivate,
   google,
