@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { WiredDialog } from '/wired-elements/lib/wired-dialog';
 import Icon from "../../icon/Icon";
 
@@ -16,8 +16,16 @@ interface DialogProps extends React.HTMLProps<WiredDialog> {
 }
 
 const Dialog: React.FC<DialogProps> = (props: DialogProps) => {
-  let { onClose, children, buttons } = props;
+  let { open, onClose, children, buttons } = props;
   const [isFull, setFull] = useState(false);
+
+  const dialogRef = useRef<WiredDialog | null>(null);
+
+  useEffect(() => {
+    if (open && dialogRef.current) {
+      dialogRef.current?.requestUpdate();
+    }
+  }, [open]);
 
   const style: React.CSSProperties = {};
   if (isFull) {
@@ -25,7 +33,7 @@ const Dialog: React.FC<DialogProps> = (props: DialogProps) => {
     style.width = '100vw';
   }
 
-  return <wired-dialog {...props}>
+  return <wired-dialog ref={dialogRef} {...props}>
     <div key="content" className="dialog-content" style={style}>
       {children}
     </div>
