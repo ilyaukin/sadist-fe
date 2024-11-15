@@ -3,7 +3,7 @@ import ErrorDialog from '../common/ErrorDialog';
 import Loader from '../common/Loader';
 import VizHint from './VizHint';
 import VizGraph from './VizGraph';
-import { DsInfo, VizData, VizMeta } from '../../model/ds';
+import { DsInfo, VizData } from '../../model/ds';
 import { DsInfoAction } from '../../reducer/dsInfo-reducer';
 import { useQueuedRequest } from '../../hook/queued-hook';
 import { getVizData } from '../../helper/data-helper';
@@ -17,7 +17,6 @@ interface VizProps {
 
 interface VizState {
   vizData?: VizData;
-  vizMeta?: VizMeta;
 }
 
 const Viz = (props: VizProps) => {
@@ -26,22 +25,28 @@ const Viz = (props: VizProps) => {
   const { dsId, dsInfo } = props;
   const pipeline = dsInfo.getPipeline();
 
+  function invalidateVizData() {
+    setState({ ...state, vizData: undefined });
+  }
+
   const loading = useQueuedRequest({ dsId, pipeline }, ({ dsId, pipeline }) => {
+    // invalidate vizData to avoid viaMeta/vizData inconsistency
+    invalidateVizData();
+
     if (!pipeline || !pipeline.length) {
-      setState({ ...state, vizData: undefined });
       return Promise.resolve();
     }
 
     return getVizData(dsId, pipeline).then((list) => {
-      // put vizMeta to the state to make it consistent with vizData
-      setState({ ...state, vizData: list, vizMeta: dsInfo.vizMeta });
+      setState({ ...state, vizData: list });
     }).catch((e) => {
       ErrorDialog.raise(e.toString());
     });
   }, [dsId, dsInfo.vizMeta]);
 
   const { style, dispatchDsInfo } = props;
-  const { vizData, vizMeta } = state;
+  const { vizData } = state;
+  const { vizMeta } = dsInfo;
 
   // here can be several situations.
   // (1) a user didn't yet select any visualisation,
