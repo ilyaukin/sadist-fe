@@ -88,7 +88,7 @@ export class WiredDialog extends LitElement {
   }
 
   updated() {
-    if (this.card) {
+    if (this.card && this.open) {
       this.card.requestUpdate();
     }
   }
