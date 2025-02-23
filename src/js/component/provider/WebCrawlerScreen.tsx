@@ -683,7 +683,7 @@ export default function WebCrawlerScreen(props: WebCrawlerProps) {
                   }}
               />
             </Block>
-            <Block key="search" size="content" splitter="horizontal">
+            <Block key="search" size="content" splitter="horizontal" allowChangeSize={false}>
               <Block key="search">
                 <wired-search-input
                     ref={searchRef}
