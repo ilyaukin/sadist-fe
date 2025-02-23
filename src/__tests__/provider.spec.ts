@@ -43,6 +43,9 @@ test('test', async ({ page }) => {
   const w0 = await page.locator('.site-html-tree-block').evaluate(
       (element) => element.clientWidth,
   );
+  const w_editor0 = await page.locator('#script .monaco-editor').evaluate(
+      (element) => element.clientWidth,
+  );
 
   // Click vertical divider
   await page.locator('.new-dialog .dialog-content div > div:nth-child(2) wired-divider').first().dblclick();
@@ -51,12 +54,20 @@ test('test', async ({ page }) => {
   const w1 = await page.locator('.site-html-tree-block').evaluate(
       (element) => element.clientWidth,
   );
+  const w_editor1 = await page.locator('#script .monaco-editor').evaluate(
+      (element) => element.clientWidth,
+  );
   expect(w1).toBeGreaterThan(w0);
+  expect(w_editor1).toBeGreaterThan(w_editor0);
 
   // Bug: it crawls to the right indefinitely...
   await page.waitForTimeout(500);
   const w2 = await page.locator('.site-html-tree-block').evaluate(
       (element) => element.clientWidth,
   );
+  const w_editor2 = await page.locator('#script .monaco-editor').evaluate(
+      (element) => element.clientWidth,
+  )
   expect(w2).toEqual(w1);
+  expect(w_editor2).toEqual(w_editor1);
 });
