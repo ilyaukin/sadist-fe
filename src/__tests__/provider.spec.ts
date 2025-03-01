@@ -120,3 +120,30 @@ test('switch to full screen, switch back, close the dialog and open again', asyn
   expect(await page.locator('.new-dialog #container > div > div > wired-card #overlay > svg')
       .evaluate((element) => element.clientHeight)).toBeGreaterThanOrEqual(card_h2);
 });
+
+test('construct script from the template', async ({ page }) => {
+  await page.goto('/');
+  await page.getByText('Choose data source...').click();
+  await page.getByRole('button', { name: '[+]New' }).click();
+  await page.locator('#source-type #textPanel').click();
+  await page.getByRole('button', { name: 'WebWeb Crawler' }).click();
+  await page.getByRole('textbox').click();
+  await page.getByRole('textbox').fill('http://example.com');
+  await page.getByRole('textbox').press('Tab');
+  await page.locator('wired-combo-lazy').press('ArrowDown');
+  await page.locator('wired-combo-lazy #searchInput').press('Enter');
+  await page.getByRole('button', { name: 'Next' }).click();
+  await page.getByRole('searchbox', { name: 'css selector' }).click();
+  await page.getByRole('searchbox', { name: 'css selector' }).fill('tr');
+  await page.getByRole('searchbox', { name: 'css selector' }).press('Enter');
+
+  await page.getByText('Use as row').click();
+  await expect(page.locator('#script .view-lines')).toContainText('page.$$("tr")');
+
+  await page.getByRole('searchbox', { name: 'css selector' }).fill('td:nth-child(1)');
+  await page.getByRole('searchbox', { name: 'css selector' }).press('Enter');
+
+  await page.getByText('Use as field').click();
+  await page.getByRole('textbox', { name: 'Editor content' }).pressSequentially('company');
+  await expect(page.locator('#script .view-lines')).toContainText('const company = row.querySelector("td:nth-child(1)")?.textContent?.trim();');
+});

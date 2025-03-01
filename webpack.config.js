@@ -490,11 +490,45 @@ module.exports = {
       // To mock sadist-proxy
       devServer.app.get('/proxy/session', function (req, res) {
         res.send({
-          id: '1',
+          session: '1',
+          endpoint: null,  // TODO mock websocket
           success: true,
         });
-      })
-      // TODO complete the rest of API
+      });
+      devServer.app.delete('/proxy/1', function (req, res) {
+        res.send({
+          success: true,
+        });
+      });
+      devServer.app.get('/proxy/1/visit/http%3A%2F%2Fexample.com%2F', function (req, res) {
+        res.send(`<!--DOCTYPE html--><html lang="en_US"><head><title>Test Page</title></head><body>
+<table style="width:100%">
+  <tr>
+    <th>Company</th>
+    <th>Contact</th>
+    <th>Country</th>
+  </tr>
+  <tr>
+    <td>Alfreds Futterkiste</td>
+    <td>Maria Anders</td>
+    <td>Germany</td>
+  </tr>
+  <tr>
+    <td>Centro comercial Moctezuma</td>
+    <td>Francisco Chang</td>
+    <td>Mexico</td>
+  </tr>
+</table>
+</body></html>`);
+      });
+      devServer.app.get('/proxy/1/go-back', function (req, res) {
+        res.send(`<!--DOCTYPE html--><html lang="en_US"><head><title>Test Page</title></head><body>
+<p>Previous page.</p></body></html>`);
+      });
+      devServer.app.get('/proxy/1/go-forward', function (req, res) {
+        res.send(`<!--DOCTYPE html--><html lang="en_US"><head><title>Test Page</title></head><body>
+<p>Next page.</p></body></html>`);
+      });
     },
 
     // To use sadist-proxy
