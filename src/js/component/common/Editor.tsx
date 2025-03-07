@@ -153,7 +153,7 @@ const __Editor = function (props: EditorProps, ref: React.ForwardedRef<EditorInt
         readOnly: readonly,
       });
     }
-  });
+  }, [containerRef.current]);
 
   useEffect(() => {
     if (width === undefined || height === undefined) {
