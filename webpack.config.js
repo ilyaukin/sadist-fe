@@ -1,7 +1,6 @@
 const path = require('path');
 const HtmlWebPackPlugin = require("html-webpack-plugin");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
-const express = require('express');
 const MonacoEditorWebpackPlugin = require('monaco-editor-webpack-plugin');
 
 module.exports = {
@@ -14,7 +13,9 @@ module.exports = {
   },
   output: {
     filename: '[name].js',
-    chunkFilename: "[name].bundle.js"
+    chunkFilename: "[name].bundle.js",
+    publicPath: '/static/',
+    assetModuleFilename: '[name]-[hash][ext]',
   },
   module: {
     rules: [
@@ -36,18 +37,9 @@ module.exports = {
         use: ["style-loader", "css-loader", "sass-loader"]
       },
       {
-        test: /\.(ico|png|svg|jpg|gif)$/,
-        loader: "file-loader",
-        options: {
-          name: '[path][name].[ext]',
-          context: 'src',
-          publicPath: 'static',
-        }
+        test: /\.(ico|png|svg|jpg|gif|ttf)$/,
+        type: "asset/resource",
       },
-      {
-        test: /\.ttf$/,
-        type: "asset/resource"
-      }
     ]
   },
   plugins: [
@@ -67,12 +59,6 @@ module.exports = {
       filename: "./component-demo.html",
       chunks: ["demo"]
     }),
-    new CopyWebpackPlugin({
-      patterns: [{
-        from: './src/*.geojson',
-        to: '[name][ext]'
-      }]
-    }),
     new HtmlWebPackPlugin({
       template: "./src/privacy-policy.html",
       filename: "./privacy-policy.html",
@@ -83,6 +69,15 @@ module.exports = {
       filename: "./tos.html",
       chunks: ["tos"]
     }),
+    // copy GeoJSON separately because it's not imported in the code
+    new CopyWebpackPlugin({
+      patterns: [
+        {
+          from: './assets/*.geojson',
+          to: '[name][ext]',
+        }
+      ]
+    })
   ],
   resolve: {
     extensions: [".js", ".jsx", ".ts", ".tsx"]
@@ -110,11 +105,13 @@ module.exports = {
   },
   // API mock
   devServer: {
-    setup(app) {
-      app.use('/static/', express.static(path.join(__dirname, 'dist')))
-    },
-    after(app) {
-      app.get('/user/whoami', function (req, res) {
+    static: path.join(__dirname, 'dist'),
+    onAfterSetupMiddleware: (devServer) => {
+      if (!devServer) {
+        throw new Error('webpack-dev-server is not defined');
+      }
+
+      devServer.app.get('/user/whoami', function (req, res) {
         res.send({
           user: {
             type: 'google',
@@ -124,7 +121,7 @@ module.exports = {
           success: true
         })
       });
-      app.post('/user/login', function (req, res) {
+      devServer.app.post('/user/login', function (req, res) {
         res.send({
           user: {
             type: 'google',
@@ -134,7 +131,7 @@ module.exports = {
           success: true
         })
       });
-      app.post('/user/logout', function (req, res) {
+      devServer.app.post('/user/logout', function (req, res) {
         res.send({
           user: {
             type: 'anon'
@@ -142,7 +139,7 @@ module.exports = {
           success: true
         })
       });
-      app.get('/ls', function (req, res) {
+      devServer.app.get('/ls', function (req, res) {
         res.send({
           list: [
             {
@@ -231,7 +228,7 @@ module.exports = {
           success: true
         })
       });
-      app.get('/ds/1111', function (req, res) {
+      devServer.app.get('/ds/1111', function (req, res) {
         res.send({
           list: [
             {
@@ -250,7 +247,7 @@ module.exports = {
           success: true
         })
       });
-      app.get('/ds/2222', function (req, res) {
+      devServer.app.get('/ds/2222', function (req, res) {
         res.send({
           list: [
             {
@@ -278,7 +275,7 @@ module.exports = {
         })
 
       });
-      app.get('/ds/3333', function (req, res) {
+      devServer.app.get('/ds/3333', function (req, res) {
         res.send({
           list: [
             {
@@ -297,7 +294,7 @@ module.exports = {
           success: true
         })
       });
-      app.get('/ds/2222/visualize', function (req, res) {
+      devServer.app.get('/ds/2222/visualize', function (req, res) {
         res.send({
           list: [
             {
@@ -328,7 +325,7 @@ module.exports = {
           success: true
         })
       });
-      app.get('/ds/2222/filter', function (req, res) {
+      devServer.app.get('/ds/2222/filter', function (req, res) {
         res.send({
           list: [
             {
@@ -345,7 +342,7 @@ module.exports = {
           success: true
         })
       });
-      app.get('/ds/2222/label-values', function (req, res) {
+      devServer.app.get('/ds/2222/label-values', function (req, res) {
         res.send({
           list: [
             { id: 1, name: 'Moscow', },
@@ -355,7 +352,7 @@ module.exports = {
           success: true
         })
       });
-      app.put('/ds', function (req, res) {
+      devServer.app.put('/ds', function (req, res) {
         res.send({
           item: {
             id: '3333',
@@ -369,7 +366,7 @@ module.exports = {
           success: true
         })
       })
-      app.get('/dl/session/s1234', function (req, res) {
+      devServer.app.get('/dl/session/s1234', function (req, res) {
         res.send({
           text: 'slowo za slowo',
           sequence: [{token: 'slowo', label: 'word'}, {token: ' ', label: 'whitespace'},
@@ -377,7 +374,7 @@ module.exports = {
           success: true
         })
       });
-      app.post('/dl/session/s1234', function (req, res) {
+      devServer.app.post('/dl/session/s1234', function (req, res) {
         res.send({
           text: 'hue´m po stolu',
           success: true
@@ -385,13 +382,13 @@ module.exports = {
       });
 
 
-      // app.post('/dl/session/s1234', function (req, res) {
+      // devServer.app.post('/dl/session/s1234', function (req, res) {
       //   res.send({
       //     status: 'finished',
       //     success: true
       //   })
       // })
-      // app.post('/dl/session/s1234/merge', function (req, res) {
+      // devServer.app.post('/dl/session/s1234/merge', function (req, res) {
       //   res.send({
       //     status: 'merging',
       //     conflicts: [
@@ -433,12 +430,12 @@ module.exports = {
       //   })
       // })
 
-      app.put('/wc/template', function (req, res) {
+      devServer.app.put('/wc/template', function (req, res) {
         res.send({
           success: true
         })
       });
-      app.get('/wc/template', function (req, res) {
+      devServer.app.get('/wc/template', function (req, res) {
         res.send(`[{"name":"simple single-page scrapper","text":"function scratch(page) {\\n  return page.goto(\u003C%url\\"http:\u002F\u002Flj.rossia.org\u002Fusers\u002Fdodjer\u002F18590.html\\"%\u003E)\\n      .then(async () =\u003E {\\n        const r = [[\u003C%title%\u003E]];\\n        await page.$$(\u003C%row%\u003E)\\n            .forEach((row, i) =\u003E {\u003C%fields%\u003E\\n              r.push([\u003C%values%\u003E]);\\n            });\\n        return r;\\n      });\\n}","$Use as row":function $UseAsRow(s) {
         this.__replace('row', JSON.stringify(s));
       },"$Use as field":function $UseAsField(s, name) {
@@ -489,12 +486,57 @@ module.exports = {
         return this.text.replace(/<%\\w+/g, '').replace(/%>/g, '');
       }}]`)
       });
+
+      // To mock sadist-proxy
+      devServer.app.get('/proxy/session', function (req, res) {
+        res.send({
+          session: '1',
+          endpoint: null,  // TODO mock websocket
+          success: true,
+        });
+      });
+      devServer.app.delete('/proxy/1', function (req, res) {
+        res.send({
+          success: true,
+        });
+      });
+      devServer.app.get('/proxy/1/visit/http%3A%2F%2Fexample.com%2F', function (req, res) {
+        res.send(`<!--DOCTYPE html--><html lang="en_US"><head><title>Test Page</title></head><body>
+<table style="width:100%">
+  <tr>
+    <th>Company</th>
+    <th>Contact</th>
+    <th>Country</th>
+  </tr>
+  <tr>
+    <td>Alfreds Futterkiste</td>
+    <td>Maria Anders</td>
+    <td>Germany</td>
+  </tr>
+  <tr>
+    <td>Centro comercial Moctezuma</td>
+    <td>Francisco Chang</td>
+    <td>Mexico</td>
+  </tr>
+</table>
+</body></html>`);
+      });
+      devServer.app.get('/proxy/1/go-back', function (req, res) {
+        res.send(`<!--DOCTYPE html--><html lang="en_US"><head><title>Test Page</title></head><body>
+<p>Previous page.</p></body></html>`);
+      });
+      devServer.app.get('/proxy/1/go-forward', function (req, res) {
+        res.send(`<!--DOCTYPE html--><html lang="en_US"><head><title>Test Page</title></head><body>
+<p>Next page.</p></body></html>`);
+      });
     },
-    proxy: {
-      '/proxy': {
-        target: 'http://localhost:8080',
-        router: () => 'http://localhost:8090',
-      }
-    }
+
+    // To use sadist-proxy
+    // proxy: {
+    //   '/proxy': {
+    //     target: 'http://localhost:8080',
+    //     router: () => 'http://localhost:8090',
+    //   }
+    // }
   }
 }

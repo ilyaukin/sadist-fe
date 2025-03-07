@@ -5,7 +5,7 @@
     {
       "paths": [{
         "rootPathPrefix": "~/",
-        "rootPathSuffix": "./src"
+        "rootPathSuffix": "./assets"
       }, {
         "rootPathPrefix": "/",
         "rootPathSuffix": "./"

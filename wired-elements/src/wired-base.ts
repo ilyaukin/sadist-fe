@@ -50,16 +50,16 @@ export abstract class WiredBase extends LitElement {
     }
   });
 
-  protected firstUpdated(_changedProperties: PropertyValues) {
-    super.firstUpdated(_changedProperties);
+  protected firstUpdated(changedProperties: PropertyValues) {
+    super.firstUpdated(changedProperties);
     WiredBase.resizeobserver.observe(this);
   }
 
-  updated(_changed?: PropertyValues) {
+  updated(changed?: PropertyValues) {
     if (this.svg) {
       // condition to render: size is changed
       const point = this.getSize();
-      if (!this.shouldUpdateWiredShapes(point, _changed)) {
+      if (!this.shouldUpdateWiredShapes(point, changed)) {
         return;
       }
       // set size of svg to size of this

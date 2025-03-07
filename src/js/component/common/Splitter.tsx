@@ -48,7 +48,7 @@ const Splitter: React.FC<SplitterProps> = (
   if (orientation == 'vertical') {
     return <div
         {...rest}
-        style={{ position: 'relative', flex: '1 1 auto' }}
+        style={{ position: 'relative', flex: '0 0 auto' }}
         onMouseDown={onMouseDown}
     >
       <div style={{
