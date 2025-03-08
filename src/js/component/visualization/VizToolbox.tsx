@@ -60,15 +60,15 @@ const VizToolbox = (props: VizToolboxProps) => {
           }}
       />
       <Block size="content">
-        {/*Using button instead of wired-button here because of issue w/ width. TODO Fix it.*/}
-        <button key="ok" onClick={() => {
+        {/*margin-left, margin-right to make it wider.*/}
+        <wired-button key="ok" onClick={() => {
           vizEditorRef.current?.save();
-        }}><strong>OK</strong>
-        </button>
-        <button key="cancel" onClick={() => {
+        }}><strong style={{ marginLeft: '20px', marginRight: '20px' }}>OK</strong>
+        </wired-button>
+        <wired-button key="cancel" onClick={() => {
           setVizEditor(false);
         }}>Cancel
-        </button>
+        </wired-button>
       </Block>
     </Dialog>
     <Toolbox>

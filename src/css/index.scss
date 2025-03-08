@@ -88,7 +88,7 @@ img.item {
     height: calc(100vh - var(--button-pane--h));
 }
 
-.new-dialog wired-button {
+.new-dialog wired-button, .json-editor-dialog wired-button {
     margin: 10px;
     float: right;
 }
