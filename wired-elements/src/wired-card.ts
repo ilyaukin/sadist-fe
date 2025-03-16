@@ -38,7 +38,7 @@ export class WiredCard extends WiredBase {
     return html`
     <div id="overlay"><svg></svg></div>
     <div style="position: relative;">
-      <slot @slotchange="${this.updated}"></slot>
+      <slot @slotchange="${() => this.updated()}"></slot>
     </div>
     `;
   }

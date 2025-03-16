@@ -88,7 +88,7 @@ img.item {
     height: calc(100vh - var(--button-pane--h));
 }
 
-.new-dialog wired-button, .json-editor-dialog wired-button {
+.new-dialog wired-button, .ds-dialog wired-button {
     margin: 10px;
     float: right;
 }
@@ -109,19 +109,24 @@ img.item {
     display: flex;
 }
 
-.json-editor-dialog .dialog-content {
+.ds-dialog .dialog-content {
     @extend .block-container-vertical;
     width: 300px;
-    min-height: 100px;
 }
 
-// make an editor block itself to set full height
-.json-editor-block {
+.ds-dialog .dialog-content wired-tabs,
+.ds-dialog .dialog-content wired-tab,
+.ds-dialog .dialog-content wired-tab>div {
+    height: calc(100% - 2 * var(--block-margin));
+}
+
+.object-editor-block {
     @extend .block;
     flex: 1 1 auto;
+    min-height: 200px;
 }
 
-.json-editor-dialog button {
+.ds-dialog button {
     width: 80px;
     margin: 10px;
     float: right;

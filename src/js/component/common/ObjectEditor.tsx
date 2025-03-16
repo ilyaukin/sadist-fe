@@ -1,6 +1,12 @@
-import React, { lazy, Suspense, useEffect, useRef } from 'react';
+import React, {
+  lazy,
+  Suspense,
+  useEffect,
+  useImperativeHandle,
+  useRef
+} from 'react';
 import equal from 'deep-equal';
-import type Editor from './Editor';
+import type { EditorInterface } from './Editor';
 import Block from './Block';
 
 interface ObjectEditorParams<T> extends React.HTMLProps<HTMLDivElement> {
@@ -9,32 +15,32 @@ interface ObjectEditorParams<T> extends React.HTMLProps<HTMLDivElement> {
   // TODO think of interface of Visual Editor
   visualEditor?: React.FC<{ obj: T }>;
 
-  setRef?(ref: ObjectEditorRef): void;
+  onChanging?(): void;
 
   onChanged?(newObj: T): void;
 
   onUnchanged?(): void;
 }
 
-export interface ObjectEditorRef {
-  underlying: Editor | null;
+export interface ObjectEditorInterface {
+  underlying: EditorInterface | null;
 
-  save(): void;
+  save(): boolean;
 }
 
 /**
  * General-purpose editor of (almost) any object.
  */
-const ObjectEditor = <T extends any>(params: ObjectEditorParams<T>) => {
+const ObjectEditor = <T extends any>(params: ObjectEditorParams<T>, ref: React.ForwardedRef<ObjectEditorInterface>) => {
   const _JsonEditor = lazy(() => import('./Editor')),
-      jsonEditorRef = useRef<Editor | null>(null);
+      jsonEditorRef = useRef<EditorInterface | null>(null);
 
   const {
     id,
     obj,
     schema,
     visualEditor,
-    setRef,
+    onChanging,
     onChanged,
     onUnchanged,
     ...divProps
@@ -60,16 +66,15 @@ const ObjectEditor = <T extends any>(params: ObjectEditorParams<T>) => {
     }
   }
 
-  // I prefer setRef over ExoticComponent...
-  setRef?.({
+  useImperativeHandle(ref, () => ( {
     underlying: jsonEditorRef.current,
 
-    save: function () {
+    save(): boolean {
       if (!jsonEditorRef.current) {
         // If editor ref isn't yet set, we can fairly conclude
         // that object isn't changed
         onUnchanged?.();
-        return;
+        return true;
       }
       try {
         const text = jsonEditorRef.current!.getText();
@@ -81,25 +86,37 @@ const ObjectEditor = <T extends any>(params: ObjectEditorParams<T>) => {
         } else {
           onChanged?.(newObj);
         }
+        return true;
       } catch (e: any) {
         setError(e.message);
         // monaco-style positioning. Not very good to stick to it, but let it be...
         if (typeof e.startLineNumber == 'number' && typeof e.startColumn == 'number') {
           jsonEditorRef.current!.setCursor([e.startLineNumber - 1, e.startColumn - 1]);
         }
+        return false;
       }
     }
-  });
+  } ));
 
   useEffect(() => {
     clearError();
   });
 
+  useEffect(() => {
+    if (jsonEditorRef.current && onChanging) {
+      jsonEditorRef.current.on('change', onChanging);
+
+      return () => jsonEditorRef.current?.off('change', onChanging);
+    }
+
+    return undefined;
+  }, [jsonEditorRef.current]);
+
   // If object is undefined, let a user start from the empty slate,
   // otherwise it must be non-empty JSON serialization.
   let text = obj == undefined ? '' : JSON.stringify(obj, undefined, 2);
   return <Suspense fallback="loading...">
-    <Block className="block block-container-vertical">
+    <div className="block-container-vertical">
       <_JsonEditor
           // @ts-ignore I honestly don't know why TS goes off here
           ref={jsonEditorRef}
@@ -113,8 +130,8 @@ const ObjectEditor = <T extends any>(params: ObjectEditorParams<T>) => {
       <Block size="content">
         <span ref={errorElementRef} className="field-error"/>
       </Block>
-    </Block>
+    </div>
   </Suspense>;
 };
 
-export default ObjectEditor;
+export default React.forwardRef(ObjectEditor);

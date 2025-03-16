@@ -9,6 +9,7 @@ import DsList from './ds/DsList';
 import DsTable from './ds/DsTable';
 import Viz from './visualization/Viz';
 import Footer from './common/Footer';
+import DsDialog from './ds/DsDialog';
 import DsToolbox from './ds/DsToolbox';
 import VizToolbox from './visualization/VizToolbox';
 import {
@@ -19,6 +20,10 @@ import {
 import { CellType, DsInfo, DsMeta } from '../model/ds';
 import { useQueuedRequest } from '../hook/queued-hook';
 import { getMeta, isMetaFinal } from '../helper/data-helper';
+import {
+  defaultDsDialogState,
+  reduceDsDialogState
+} from '../reducer/dsDialog-reducer';
 
 const SPAContent = () => {
 
@@ -26,6 +31,7 @@ const SPAContent = () => {
   const [err, setErr] = React.useState<string>();
   const [ds, setDs] = React.useState<any[]>([]);
   const [dsInfo, dispatchDsInfo] = React.useReducer(reduceDsInfo, defaultDsInfo);
+  const [dsDialogState, dispatchDsDialogState] = React.useReducer(reduceDsDialogState, defaultDsDialogState);
 
   const updateDsMetaTimeoutHandlerRef = React.useRef<NodeJS.Timeout>();
 
@@ -114,6 +120,7 @@ const SPAContent = () => {
   const [b2Height, setB2Height] = React.useState<number | 'auto'>('auto');
   return React.useMemo(() => <div className="content">
     <ErrorDialog err={err}/>
+    <DsDialog dsInfo={dsInfo} dispatchDsInfo={dispatchDsInfo} state={dsDialogState} dispatchState={dispatchDsDialogState}/>
 
     <UserDropdown/>
     <h1>
@@ -131,7 +138,7 @@ const SPAContent = () => {
           onSizeChanged={setB1Height}
       >
         <h2>1. Get the data</h2>
-        <DsToolbox dsInfo={dsInfo} dispatchDsInfo={dispatchDsInfo}/>
+        <DsToolbox dispatchState={dispatchDsDialogState}/>
         <DsList
             dsId={dsInfo.meta.id}
             onDsSelected={(meta: DsMeta) => {
@@ -158,7 +165,7 @@ const SPAContent = () => {
           onSizeChanged={setB2Height}
       >
         <h2>2. Visualize</h2>
-        <VizToolbox dsInfo={dsInfo} dispatchDsInfo={dispatchDsInfo}/>
+        <VizToolbox dispatchState={dispatchDsDialogState}/>
         <Viz
             style={{ height: typeof b2Height == 'number' ? `${b2Height - 68}px` : 'auto' }}
             dsId={dsInfo.meta.id}
@@ -168,7 +175,7 @@ const SPAContent = () => {
       </Block>}
     </div>
     <Footer/>
-  </div>, [err, ds, dsInfo, b1Height, b2Height]);
+  </div>, [err, ds, dsInfo, dsDialogState, b1Height, b2Height]);
 };
 
 export default SPAContent;
