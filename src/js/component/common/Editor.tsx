@@ -352,13 +352,14 @@ const __Editor = function (props: EditorProps, ref: React.ForwardedRef<EditorInt
 
   useEffect(() => {
     if (containerRef.current) {
-      // for JSON schema we need an URI to associate it with the model,
-      // let make it from ID.
-      const modelUri = monaco.Uri.parse(`editor://${id}.json`);
-      const model = editor.createModel(text, language, modelUri);
-
-      // Attach schema to model
+      let model: editor.ITextModel | undefined = undefined;
       if (language == 'json' && schema) {
+        // for JSON schema we need an URI to associate it with the model,
+        // let make it from ID.
+        const modelUri = monaco.Uri.parse(`editor://${id}.json`);
+        model = editor.createModel(text, language, modelUri);
+
+        // Attach schema to model
         monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
           validate: true,
           schemas: [

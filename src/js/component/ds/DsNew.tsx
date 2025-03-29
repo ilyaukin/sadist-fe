@@ -134,7 +134,7 @@ class DsNew extends Component<DsNewProps, DsNewState> {
     return <Block
         key={`screen${i}`}
         className="block new-dialog-screen-limit"
-        style={{ ...this.visibilityStyle(screenNo === i), overflow: 'visible' }}
+        style={{ ...this.visibilityStyle(screenNo === i), overflowY: 'visible', overflowX: 'hidden' }}
     >
       {screen}
     </Block>;

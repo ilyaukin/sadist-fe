@@ -1,5 +1,5 @@
 import { Frame } from '@playwright/test';
-import { expect, test } from './pageobject/ds-dialog-page';
+import { expect, test } from './fixture/base-fixture';
 
 let onWebpackOverlay = (frame: Frame) => {
   let promise = frame

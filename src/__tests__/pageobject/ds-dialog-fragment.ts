@@ -1,11 +1,4 @@
-import { Locator, Page, test as playwrightTest, expect as playwrightExpect } from '@playwright/test';
-
-export interface BasePage extends Page {
-  dsDialog: DsDialogFragment;
-
-  land(url?: string): Promise<BasePage>;
-  openDsDialog(): Promise<DsDialogFragment>;
-}
+import { Locator, Page } from '@playwright/test';
 
 export interface DsDialogFragment extends Locator {
   tab: Locator;
@@ -16,39 +9,7 @@ export interface DsDialogFragment extends Locator {
   setEditorContent(content: string): Promise<void>;
 }
 
-export const test = playwrightTest.extend<{ page: BasePage }>({
-  page: async ({ page }, use) => use(basePage(page)),
-});
-
-export const expect = playwrightExpect.extend({
-  async toBeOpen(dialog: DsDialogFragment) {
-    const open = await dialog.getAttribute('open');
-    return {
-      pass: open !== null,
-      message: () => `Expected ${dialog} ${open !== null ? 'not ' : ''}to be open`,
-    }
-  }
-});
-
-const basePage = (page: Page) => {
-  const p: BasePage = Object.create(page);
-
-  p.land = async function(url: string = '/') {
-    await this.goto(url);
-    return this;
-  }
-
-  p.openDsDialog = async function () {
-    await this.locator('#ds').hover();
-    await this.getByRole('img', { name: 'Filtering' }).click();
-
-    return dsDialogFragment(this);
-  }
-
-  return p;
-}
-
-const dsDialogFragment = (page: Page) => {
+export const dsDialogFragment = (page: Page) => {
   const p: DsDialogFragment = Object.create(page.locator('.ds-dialog'));
 
   p.tab = p.locator('wired-tabs wired-item');
