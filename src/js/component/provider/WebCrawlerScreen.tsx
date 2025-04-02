@@ -3,7 +3,7 @@ import { WiredSearchInput } from '/wired-elements/lib/wired-search-input';
 import Loader from '../common/Loader';
 import HTMLTree from '../common/HTMLTree';
 import Editor, {
-  ChangeEvent,
+  ChangeEvent, EditorInterface,
   Range,
   TypescriptLib
 } from '../common/Editor';
@@ -71,7 +71,7 @@ export default function WebCrawlerScreen(props: WebCrawlerProps) {
   const searchElementsRef = useRef<Element[]>([]);
   const searchPositionRef = useRef<number>(-1);
   const searchCommentRef = useRef<HTMLSpanElement | null>(null);
-  const editorRef = useRef<Editor | null>(null);
+  const editorRef = useRef<EditorInterface | null>(null);
   const editorCommentRef = useRef<HTMLSpanElement | null>(null);
   const editorErrorRef = useRef<HTMLSpanElement | null>(null);
   const transformerRef = useRef<( (...args: string[]) => void ) | undefined>();
@@ -743,8 +743,7 @@ export default function WebCrawlerScreen(props: WebCrawlerProps) {
                     className="script"
                     text={getScriptText() || ''}
                     readonly={scriptToolboxStateRef.current ? scriptToolboxStateRef.current.isLocked : true}
-                    libs={libs}
-                />
+                    libs={libs} language={'javascript'}                />
               </Block>
               <Block key="comment" style={{ overflow: 'visible' }} size="content">
                 <span ref={editorCommentRef} className="comment"></span>

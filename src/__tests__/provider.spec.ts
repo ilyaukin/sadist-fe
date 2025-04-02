@@ -1,3 +1,5 @@
+import { spawn } from 'node:child_process';
+import { ChildProcessWithoutNullStreams } from 'child_process';
 import { Frame } from '@playwright/test';
 import { expect, test } from './fixture/base-fixture';
 import { webCrawlerProviderTest } from './fixture/webcrawler-provider-fixture';
@@ -25,6 +27,18 @@ test.beforeEach(({ page }) => {
 test.afterEach(async ({ page }) => {
   await Promise.all(onWebpackOverlayPromise);
   page.off('frameattached', onWebpackOverlay);
+});
+
+let websocketMockProcess: ChildProcessWithoutNullStreams;
+
+test.beforeAll(() => {
+  websocketMockProcess = spawn('node',
+      ['websocket-mock.js'],
+      { stdio: 'pipe' });
+});
+
+test.afterAll(() => {
+  websocketMockProcess.kill();
 })
 
 test('that entering values into the webcrawler\'s setup fields does not raspidoraśivat them', async ({ page }) => {
@@ -128,4 +142,28 @@ webCrawlerProviderTest('construct script from the template', async ({ newDialog 
   await newDialog.getByText('Use as field').click();
   await newDialog.getByRole('textbox', { name: 'Editor content' }).pressSequentially('company');
   await expect(newDialog.locator('#script .view-lines')).toContainText('const company = row.querySelector("td:nth-child(1)")?.textContent?.trim();');
+});
+
+webCrawlerProviderTest('execute script via websocket', async ({ page, newDialog }) => {
+  // run websocket mock in before()....
+
+  await page.getByRole('img', { name: 'Edit script' }).click();
+
+  await newDialog.editor.setContent('ABOBA');
+  await newDialog.getByRole('img', { name: '>' }).click();
+  await expect(newDialog.locator('.script-result-block span:nth-child(1)')).toHaveText('[["script"],["ABOBA"]]');
+
+  // expect that request with the grabbed data is sent
+  let requestData: string | null | undefined = undefined;
+  page.route('/ds', (route) => {
+    if (route.request().method() === 'PUT') {
+      requestData = route.request().postData();
+    }
+  });
+  await newDialog.getByRole('button', { name: 'Create' }).click();
+  expect(requestData, { message: 'Expected PUT request' }).toBeTruthy();
+  // to properly parse form data isn't easy here, so test string inclusion
+  expect(requestData).toContain('script\nABOBA');
+
+  // stop websocket in after()...
 });

@@ -1,8 +1,11 @@
 import { Locator, Page } from '@playwright/test';
+import { editorFragment, EditorFragment } from './editor-fragment';
 
 export interface NewDialogFragment extends Locator {
   url: Locator;
   template: Locator;
+  // TODO should it be on a separate fragment?
+  editor: EditorFragment;
 
   chooseWebCrawler(): Promise<void>;
 
@@ -16,6 +19,7 @@ export function newDialogFragment(page: Page) {
 
   p.url = page.locator('#webcrawler-provider-url input');
   p.template = page.locator('#webcrawler-provider-template');
+  p.editor = editorFragment(page, p);
 
   p.chooseWebCrawler = async function () {
     await page.locator('#source-type #textPanel').click();

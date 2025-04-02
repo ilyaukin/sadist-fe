@@ -32,7 +32,7 @@ test('open dialog for different Dses', async ({ page, }) => {
   const dsDialog = await page.openDsDialog();
 
   // Must be empty on empty DS
-  expect(await dsDialog.getEditorContent()).toMatch(/^\s*$/);
+  expect(await dsDialog.editor.getContent()).toMatch(/^\s*$/);
   expect(await dsDialog.tab.first().textContent()).toEqual('Filtering');
 
   // Switch to a DS with filtering available
@@ -42,7 +42,7 @@ test('open dialog for different Dses', async ({ page, }) => {
   await page.getByRole('img', { name: 'Filtering' }).click();
 
   // Must be non-empty filtering JSON. Tab title must be the same.
-  expect(await dsDialog.getEditorContent()).not.toMatch(/^\s*$/);
+  expect(await dsDialog.editor.getContent()).not.toMatch(/^\s*$/);
   expect(await dsDialog.tab.first().textContent()).toEqual('Filtering');
 });
 
@@ -52,7 +52,7 @@ test('edit filter as JSON and apply', async ({ page, }) => {
   const dsDialog = await page.openDsDialog();
 
   // Fill new content (by parsing and updating existing content as an object)
-  let content = await dsDialog.getEditorContent();
+  let content = await dsDialog.editor.getContent();
   let obj: any;
   try {
     obj = JSON.parse(content);
@@ -64,7 +64,7 @@ test('edit filter as JSON and apply', async ({ page, }) => {
   expect(obj[0].selected).toEqual([]);
   obj[0].selected = [{ id: '1', name: 'Moscow' }];
   content = JSON.stringify(obj, undefined, 2);
-  await dsDialog.setEditorContent(content);
+  await dsDialog.editor.setContent(content);
   // await page.waitForTimeout(2000);
   await page.getByText('OK', { exact: true }).click();
 
