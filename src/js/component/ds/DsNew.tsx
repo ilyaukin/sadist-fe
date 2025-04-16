@@ -142,13 +142,16 @@ class DsNew extends Component<DsNewProps, DsNewState> {
 
   renderButtons = (screenNo: number, screenCount: number) => {
     const createButton = <wired-button
+        className="nav-button"
         disabled={isVal(!this.state.provider.type || this.state.loading)}
         onClick={this.onCreate}>Create
     </wired-button>;
     const nextButton = <wired-button
+        className="nav-button"
         onClick={this.onNextScreen}>Next
     </wired-button>;
     const prevButton = <wired-button
+        className="nav-button"
         onClick={this.onPrevScreen}>Back
     </wired-button>;
     return <Block>

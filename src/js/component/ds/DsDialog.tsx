@@ -201,11 +201,11 @@ const DsDialog = (props: DsDialogProps) => {
     </Block>
     <Block size="content">
       {/*margin-left, margin-right to make it wider.*/}
-      <wired-button key="ok" onClick={() => {
+      <wired-button key="ok" className="nav-button" onClick={() => {
         save();
       }}><strong style={{ marginLeft: '20px', marginRight: '20px' }}>OK</strong>
       </wired-button>
-      <wired-button key="cancel" onClick={() => {
+      <wired-button key="cancel" className="nav-button" onClick={() => {
         close();
       }}>Cancel
       </wired-button>

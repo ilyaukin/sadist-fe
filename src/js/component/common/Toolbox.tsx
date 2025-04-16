@@ -1,8 +1,15 @@
 import React from 'react';
 import Dropdown from './Dropdown';
+import draggable from './draggable';
+import Icon from '../../icon/Icon';
 
 interface ToolboxProps {
+  allowCollapse: boolean;
   children?: React.ReactNode;
+}
+
+interface ToolboxState {
+  collapsed: boolean;
 }
 
 interface ToolboxItemProps {
@@ -68,17 +75,38 @@ const ToolboxSwitch = ({ src, alt, state, onClick }: ToolboxSwitchProps) => {
   </div>;
 }
 
-class Toolbox extends React.Component<ToolboxProps, {}> {
+class Toolbox extends React.Component<ToolboxProps, ToolboxState> {
   static Item = ToolboxItem;
   static Button = ToolboxButton;
   static Dropdown = ToolboxDropdown;
   static Switch = ToolboxSwitch;
 
+  static defaultProps = {
+    allowCollapse: true,
+  }
+
+  constructor(props: Readonly<ToolboxProps> | ToolboxProps) {
+    super(props);
+    this.state = { collapsed: false };
+  }
+
+  collapse = () => {
+    this.setState({ ...this.state, collapsed: !this.state.collapsed });
+  }
+
+  renderCollapseIcon = () => <wired-button
+      className="toolbox-collapse-button"
+      onClick={this.collapse}
+  >
+    <img src={Icon.dots}/>
+  </wired-button>;
+
   render() {
     return <div className="toolbox">
-      {this.props.children}
+      {!this.state.collapsed && this.props.children}
+      {this.props.allowCollapse && this.renderCollapseIcon()}
     </div>;
   }
 }
 
-export default Toolbox;
+export default draggable(Toolbox) as unknown as typeof Toolbox;
