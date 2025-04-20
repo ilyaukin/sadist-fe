@@ -24,6 +24,7 @@ const DsToolbox = (props: DsToolboxProps) => {
       <Toolbox.Button
           src={Icon.fileJson}
           alt="Filtering"
+          title="Edit filter query"
           onClick={() => dispatchState({ type: DsDialogActionType.OPEN, tab: 'filtering' })}
       />
     </Toolbox>
