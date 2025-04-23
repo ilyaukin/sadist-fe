@@ -28,6 +28,9 @@ const draggable = <P extends object>(Component: React.ComponentType<P & {
       const target = selector === null ? node : node?.querySelector(selector);
       if (target instanceof HTMLElement) {
         const onDrag = (event: MouseEvent) => {
+          if (!(event.buttons & 1)) {
+            return;
+          }
           event.preventDefault();
           const [pinpointX, pinpointY] = [event.clientX, event.clientY];
           const onDrop = (event: MouseEvent) => {
