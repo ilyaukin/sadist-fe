@@ -31,11 +31,11 @@ export class WiredDialog extends LitElement {
       }
       #overlay {
         position: absolute;
+        display: none;
         top: 0;
         left: 0;
         right: 0;
         bottom: 0;
-        opacity: 0;
         transform: translateY(150px);
         transition: transform 0.5s ease, opacity 0.5s ease;
       }
@@ -67,7 +67,7 @@ export class WiredDialog extends LitElement {
         opacity: 1;
       }
       :host([open]) #overlay {
-        opacity: 1;
+        display: flex;
         transform: none;
       }
     `;

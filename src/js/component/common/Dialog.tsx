@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { WiredDialog } from '/wired-elements/lib/wired-dialog';
 import Icon from "../../icon/Icon";
+import { useHotkeys } from '../../hook/hotkey-hook';
 
 export enum DialogButton {
   CLOSE,
@@ -26,6 +27,18 @@ const Dialog: React.FC<DialogProps> = (props: DialogProps) => {
       dialogRef.current?.requestUpdate();
     }
   }, [open]);
+
+  useHotkeys(dialogRef, [{
+    key: 'Alt+Enter',
+    title: 'Full screen',
+    callback: () => {
+      setFull(full => !full);
+    },
+  }, {
+    key: 'Escape',
+    title: 'Close dialog',
+    callback: onClose,
+  }], [isFull]);
 
   const style: React.CSSProperties = {};
   if (isFull) {

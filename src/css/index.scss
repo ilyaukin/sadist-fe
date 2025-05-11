@@ -191,6 +191,25 @@ wired-dialog#error-dialog {
   font-weight: bold;
 }
 
+.hotkey-helper {
+  position: absolute;
+  top: 30px;
+  left: 20px;
+  width: 200px;
+  min-height: 100px;
+  background: #d0d73f;
+  padding: 10px;
+  border-radius: 10px;
+  z-index: 10000;
+  opacity: .7;
+  font-size: smaller;
+}
+
+.hotkey-helper table, .hotkey-helper tr, .hotkey-helper td {
+  border: none;
+  padding: 10px;
+}
+
 .dropdown {
   position: absolute;
   right: 1px;

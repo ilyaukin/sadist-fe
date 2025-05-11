@@ -74,3 +74,17 @@ test('edit filter as JSON and apply', async ({ page, }) => {
   // Expect that only 2 rows remain shown
   await expect(page.locator('table[style="table-layout: fixed;"] tbody tr[data-id]')).toHaveCount(2);
 });
+
+test('close dialog by Esc hotkey', async ({ page }) => {
+  await page.land('/');
+  const dsDialog = await page.openDsDialog();
+
+  await expect(dsDialog).toBeOpen();
+
+  await dsDialog.editor.press('Escape');
+
+  await expect(dsDialog).not.toBeOpen();
+
+  // Check that focus isn't inside the dialog
+  expect(await dsDialog.evaluate((element) => element.contains(document.activeElement))).toBeFalsy();
+});
