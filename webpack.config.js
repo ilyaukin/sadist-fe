@@ -491,7 +491,7 @@ module.exports = {
       devServer.app.get('/proxy/session', function (req, res) {
         res.send({
           session: '1',
-          endpoint: null,  // TODO mock websocket
+          endpoint: 'ws://localhost:8090',  // must run websokcet-mock.js to make it work
           success: true,
         });
       });

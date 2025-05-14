@@ -65,7 +65,7 @@ export class WiredButton extends WiredBase {
   render(): TemplateResult {
     return html`
     <button ?disabled="${this.disabled}">
-      <slot @slotchange="${this.updated}"></slot>
+      <slot @slotchange="${() => this.updated()}"></slot>
       <div id="overlay">
         <svg></svg>
       </div>

@@ -1,5 +1,6 @@
 import React, { useRef } from 'react';
 import { WiredInput } from '/wired-elements/lib/wired-input';
+import Block from '../common/Block';
 import { WebCrawlerScriptTemplate } from '../../webcrawler-model/webcrawler';
 
 interface WebCrawlerSetupScreenProps {
@@ -18,23 +19,27 @@ export default function WebCrawlerSetupScreen(props: WebCrawlerSetupScreenProps)
 
   const inputRef = useRef<WiredInput | null>(null);
 
-  return <>
-    <div key="url" className="field">
-      URL:
+  return <div className="block-container-vertical" style={{ overflow: 'visible' }}>
+    <Block key="url">
+      <label htmlFor="webcrawler-provider-url">URL:</label>
       <wired-input
           ref={inputRef}
-          style={{ width: '100%' }}
+          style={{ width: 'calc(100% - 2 * var(--block-margin))' }}
+          id="webcrawler-provider-url"
+          name="webcrawler-provider-url"
           value={url}
           onchange={(_event: CustomEvent<any>) => {
             onChangeURL(inputRef.current?.value);
           }}
       />
       <span className="field-error">{urlError || ''}</span>
-    </div>
-    <div key="template" className="field">
-      Script Template:
+    </Block>
+    <Block key="template" style={{ overflow: 'visible' }}>
+      <label htmlFor="webcrawler-provider-template">Script Template:</label>
       <wired-combo-lazy
-          style={{ width: '100%' }}
+          style={{ width: 'calc(100% - 2 * var(--block-margin))' }}
+          id="webcrawler-provider-template"
+          name="webcrawler-provider-template"
           values={templateList.map(template => {
             return { value: template.name, text: template.name };
           })}
@@ -45,6 +50,6 @@ export default function WebCrawlerSetupScreen(props: WebCrawlerSetupScreenProps)
       >
       </wired-combo-lazy>
       <span className="field-error">{templateError || ''}</span>
-    </div>
-  </>;
+    </Block>
+  </div>;
 }

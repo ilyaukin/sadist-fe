@@ -46,8 +46,8 @@ export function ScriptToolbox(props: ScriptToolboxProps,
         <wired-item value="proxy">on Proxy Server</wired-item>
       </wired-combo>
     </Toolbox.Item>
-    <Toolbox.Button src={Icon.run} alt=">" onClick={executeScript}/>
-    <Toolbox.Dropdown src={Icon.gear} alt="Settings">
+    <Toolbox.Button src={Icon.run} alt=">" title="Run" onClick={executeScript}/>
+    <Toolbox.Dropdown src={Icon.gear} alt="Settings" title="Settings">
       <wired-checkbox
           checked={state.isSaveTemplate}
           onchange={(event) => {
@@ -73,8 +73,9 @@ export function ScriptToolbox(props: ScriptToolboxProps,
       ></wired-input>
     </Toolbox.Dropdown>
     <Toolbox.Switch
-        src={state.isLocked ? Icon.lockOn : Icon.lockOff}
-        alt={state.isLocked ? 'Edit script' : 'Lock script'}
+        src={{ on: Icon.lockOn, off: Icon.lockOff }}
+        alt={{ on: 'Edit script', off: 'Lock script' }}
+        title={{ on: 'Unlock', off: 'Lock' }}
         state={state.isLocked ? 'on' : 'off'}
         onClick={() => {
           if (state.isLocked) {

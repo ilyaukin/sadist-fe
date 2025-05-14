@@ -18,3 +18,5 @@ export * from './wired-search-input';
 export * from './wired-spinner';
 export * from './wired-slider';
 export * from './wired-dual-slider';
+export * from './wired-tab';
+export * from './wired-tabs';

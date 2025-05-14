@@ -2,11 +2,11 @@ import React, { useEffect, useRef, useState } from 'react';
 import { WiredSearchInput } from '/wired-elements/lib/wired-search-input';
 import Loader from '../common/Loader';
 import HTMLTree from '../common/HTMLTree';
-import ScriptEditor, {
-  ChangeEvent,
+import Editor, {
+  ChangeEvent, EditorInterface,
   Range,
-  ScriptEditorLib
-} from '../common/ScriptEditor';
+  TypescriptLib
+} from '../common/Editor';
 import Uniselector from '../common/Uniselector';
 import Block, { BlockElement } from '../common/Block';
 import Toolbox from '../common/Toolbox';
@@ -27,7 +27,7 @@ import { scrollToVisible } from '../../helper/scroll-helper';
 interface WebCrawlerProps {
   url?: URL;
   template?: WebCrawlerScriptTemplate;
-  libs?: ScriptEditorLib[];
+  libs?: TypescriptLib[];
 
   setRef(ref: WebCrawlerResultRef): void;
 
@@ -71,7 +71,7 @@ export default function WebCrawlerScreen(props: WebCrawlerProps) {
   const searchElementsRef = useRef<Element[]>([]);
   const searchPositionRef = useRef<number>(-1);
   const searchCommentRef = useRef<HTMLSpanElement | null>(null);
-  const editorRef = useRef<ScriptEditor | null>(null);
+  const editorRef = useRef<EditorInterface | null>(null);
   const editorCommentRef = useRef<HTMLSpanElement | null>(null);
   const editorErrorRef = useRef<HTMLSpanElement | null>(null);
   const transformerRef = useRef<( (...args: string[]) => void ) | undefined>();
@@ -737,14 +737,13 @@ export default function WebCrawlerScreen(props: WebCrawlerProps) {
                       isTemplateTrueRef.current = false;
                     }}
                 />
-                <ScriptEditor
+                <Editor
                     ref={editorRef}
                     id="script"
                     className="script"
                     text={getScriptText() || ''}
                     readonly={scriptToolboxStateRef.current ? scriptToolboxStateRef.current.isLocked : true}
-                    libs={libs}
-                />
+                    libs={libs} language={'javascript'}                />
               </Block>
               <Block key="comment" style={{ overflow: 'visible' }} size="content">
                 <span ref={editorCommentRef} className="comment"></span>

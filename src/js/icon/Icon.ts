@@ -1,6 +1,7 @@
 import favicon from '~/img/favicon.ico';
 import file from '~/img/file.png';
 import filePrivate from '~/img/file-private.png';
+import fileJson from '~/img/file-json.png';
 import google from '~/img/google-logo.png';
 import bug from '~/img/bug.png';
 import plus from '~/img/plus-sign.png';
@@ -11,6 +12,7 @@ import fullScreenOn from '~/img/full_screen_on.png';
 import fullScreenOff from '~/img/full_screen_off.png';
 import filter from '~/img/filter-unselected.png';
 import filterSelected from '~/img/filter-selected.png';
+import dots from '~/img/dots.png';
 import run from '~/img/run.png';
 import gear from '~/img/gear.png';
 import lockOn from '~/img/lock.png';
@@ -23,6 +25,7 @@ export default {
   favicon,
   file,
   filePrivate,
+  fileJson,
   google,
   bug,
   plus,
@@ -33,6 +36,7 @@ export default {
   fullScreenOff,
   filter,
   filterSelected,
+  dots,
   run,
   gear,
   lockOn,

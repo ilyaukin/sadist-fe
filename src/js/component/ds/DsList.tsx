@@ -12,7 +12,7 @@ import UserContext from '../../context/UserContext';
 
 interface DsListProps {
   dsId?: string;
-  onLoadList: (dsList: DsMeta[]) => any;
+  onLoadList?: (dsList: DsMeta[]) => any;
   onDsSelected: (dsMeta: DsMeta) => any;
 }
 
@@ -57,7 +57,7 @@ const DsList = (props: DsListProps) => {
               index,
               loading: false
             });
-            onLoadList(list);
+            onLoadList?.(list);
           }).catch((err) => {
         ErrorDialog.raise(err.toString());
       });
